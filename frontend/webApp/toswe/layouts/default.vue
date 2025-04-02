@@ -18,6 +18,7 @@
         <TwFooter />
       </footer>
     </div>
+    <TwCookie />
 </template>
   
 <style lang="scss" scoped>
