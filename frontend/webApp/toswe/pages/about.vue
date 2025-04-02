@@ -20,8 +20,8 @@ Nous sommes basés à Abomey-Calavi
     </section><br><br><br>
     <section class="testimony">
       <h2>· Témoignages ·</h2>
-      <div>
-        <div>
+      <div class="mix">
+        <div class="bkgcolors">
           <div class="testimoner">
             <img src="/public/images/avatar.jpg" alt="">
             <div>
@@ -93,17 +93,39 @@ section {
 }
 
 .testimony {
-  & div {
+  .mix {
     margin-top: 20px;
     // height: 519px;
     // width: 100%;
     background: rgba(45, 27, 20, 1);
 
-    & div {
+    .bkgcolors {
       background: rgba(239, 232, 232, 0.1);
       border: none;
       // width: 100%;
       height: 100%;
+    }
+  }
+}
+
+.testimoner {
+  display: flex;
+  align-items: center;
+  // justify-content: space-around;
+  gap: 50px;
+  padding: 100px;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+
+    span {
+      color: #EFE8E8;
+      font: {
+        size: 22px;
+      }
     }
   }
 }
@@ -117,6 +139,7 @@ img {
   margin-top: 20px;
   display: flex;
   align-items: center;
+  // flex-wrap: wrap;
   // justify-content: space-between;
   gap: 80px;
 }
@@ -126,6 +149,14 @@ img {
   align-items: flex-end;
   justify-content: space-between;
   flex-direction: column;
+
+  span {
+    color: #EFE8E8;
+    font: {
+      size: 20px;
+      weight: 100;
+    }
+  }
 }
 
 .sam {
@@ -133,6 +164,14 @@ img {
   align-items: flex-start;
   justify-content: space-between;
   flex-direction: column;
+
+  span {
+    color: #EFE8E8;
+    font: {
+      size: 20px;
+      weight: 100;
+    }
+  }
 }
 
 hr {

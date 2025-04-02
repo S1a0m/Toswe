@@ -18,7 +18,7 @@
 article {
     background: rgba(245, 230, 218, 0.7);
     width: 325px;
-    height: 460px;
+    height: 420px;
     border-radius: 15px;
     display: flex;
     align-items: center;
@@ -47,7 +47,7 @@ article {
 
     div {
         button {
-            background: none;
+            background: rgba(245, 230, 218, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
