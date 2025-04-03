@@ -1,3 +1,33 @@
+<script setup>
+import { ref, computed } from "vue";
+
+const showPopup = ref(true);
+const searchQuery = ref("");
+
+const results = ref([
+  "Téléphone Android",
+  "iPhone 13",
+  "Casque Bluetooth",
+  "Montre connectée",
+  "Ordinateur portable",
+  "Clavier mécanique",
+  "Souris gaming",
+]);
+
+const filteredResults = computed(() => {
+  if (!searchQuery.value) return [];
+  return results.value.filter(item => 
+    item.toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
+});
+
+const emit = defineEmits(['close-searchpopup']);
+
+const closeSearchPopup = () => {
+  emit('close-searchpopup');
+};
+</script>
+
 <template>
     <div v-if="showPopup" class="popup-container">
       <div class="popup">
@@ -18,43 +48,10 @@
           </ul>
         </div>
   
-        <button class="close-btn" @click="closePopup">Fermer</button>
+        <button class="close-btn" @click="closeSearchPopup">Fermer</button>
       </div>
     </div>
   </template>
-  
-  <script setup>
-  import { ref, computed } from "vue";
-  
-  const showPopup = ref(true);
-  const searchQuery = ref("");
-  
-  const results = ref([
-    "Téléphone Android",
-    "iPhone 13",
-    "Casque Bluetooth",
-    "Montre connectée",
-    "Ordinateur portable",
-    "Clavier mécanique",
-    "Souris gaming",
-  ]);
-  
-  const filteredResults = computed(() => {
-    if (!searchQuery.value) return [];
-    return results.value.filter(item => 
-      item.toLowerCase().includes(searchQuery.value.toLowerCase())
-    );
-  });
-  
-  const openPopup = () => {
-    showPopup.value = true;
-  };
-  
-  const closePopup = () => {
-    showPopup.value = false;
-    searchQuery.value = "";
-  };
-  </script>
   
   <style scoped>
   .popup-container {
@@ -67,6 +64,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 4;
   }
   
   .popup {

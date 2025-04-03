@@ -31,9 +31,9 @@
             </div>
         </address>
         <div class="tw-rules">
-            <Nuxtlink>
-                <span>Conditions générales de ventes · Politiques de confidentialités · Cookies</span>
-            </Nuxtlink>
+            <NuxtLink to="/rules">
+                <span class="rules">Conditions générales de ventes · Politiques de confidentialités · Cookies</span>
+            </NuxtLink>
             <p>© 2024 Copyright - Tôswè Africa</p>
         </div>
     </div>
@@ -99,5 +99,15 @@ address {
     font: {
         size: 14px;
     }
+}
+
+a {
+    color: #2D1B14;
+    text-decoration: none;
+}
+
+.rules:hover {
+    text-decoration: underline;
+    cursor: pointer;
 }
 </style>

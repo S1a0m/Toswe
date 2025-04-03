@@ -4,7 +4,6 @@
       <NuxtPage />
     </NuxtLayout>
   </div>
-  <TwDownloadApp />
   <TwAlert />
 </template>
 
