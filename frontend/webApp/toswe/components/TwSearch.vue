@@ -65,6 +65,7 @@ const closeSearchPopup = () => {
     justify-content: center;
     align-items: center;
     z-index: 4;
+    font-family: "Inter";
   }
   
   .popup {
@@ -83,7 +84,7 @@ const closeSearchPopup = () => {
   }
   
   .search-input {
-    width: 100%;
+    width: 90%;
     padding: 10px;
     border-radius: 5px;
     border: none;

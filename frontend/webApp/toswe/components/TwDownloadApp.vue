@@ -1,7 +1,8 @@
 <template>
   <div v-if="showPopup" class="popup-container">
     <div class="popup">
-      <h1>Téléchargez notre application</h1>
+      <h1>Téléchargez notre application</h1><br>
+      <hr><br>
       <p>Accédez à notre service en toute simplicité depuis votre mobile.</p>
       
       <div class="download-buttons">
@@ -10,7 +11,7 @@
           <p>Scanner ce code QR si vous etes sur android</p>
           <img src="/images/qr-code.webp" alt="QR Code Android" class="qr-code" />
         </div>
-        
+        <br><br>
         <div class="download-option">
           <a href="#" class="app-store" @click="redirectToStore">🍏 Télécharger sur l'App Store</a>ou<br>
           <p>Scanner ce code QR si vous etes sur iphone</p>
@@ -56,6 +57,7 @@ const closePopup = () => {
   justify-content: center;
   align-items: center;
   z-index: 5;
+  font-family: "Inter";
 }
 
 .popup {
@@ -69,7 +71,7 @@ const closePopup = () => {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-h1 {
+h1, hr {
   color: #C0A080;
 }
 

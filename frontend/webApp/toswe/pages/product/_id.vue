@@ -14,10 +14,14 @@
             <span class="in-stock">En stock</span>
           </div>
           <div class="order-actions">
-            <button>Ajouter au panier - <span>00</span></button>
+            <button>Ajouter au panier</button><br><br><br>
             <div class="go-order">
-              <span>Aller a l'achat</span>
-              <NustLink><span>Voir d'autres versions -></span></NustLink>
+              <NustLink>
+                <span class="gone-order">
+                  Voir d'autres versions 
+                  <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#C0A080"><path d="M440-800v487L216-537l-56 57 320 320 320-320-56-57-224 224v-487h-80Z"/></svg>
+                </span>
+              </NustLink>
             </div>
           </div>
         </div>
@@ -59,6 +63,7 @@ Caractéristiques:> Résistante à l’eau (IPX7) : Parfaite pour la plage, la p
 section {
   h2 {
     color: #EFE8E8;
+    font-family: "Playfair Display";
   }
 
   & p {
@@ -72,6 +77,7 @@ section {
 
     font: {
       size: 18px;
+      family: "Lora";
     };
   }
 }
@@ -140,21 +146,33 @@ section {
 }
 
 .product-name {
+  color: #F5E6DA;
   font: {
     size: 48px;
+    family: "Lora";
   }
 }
 
 .product-price {
+  color: #F5E6DA;
   font: {
     size: 70px;
+    family: "Lora";
   }
 }
 
 .product-category, .in-stock {
   font: {
     size: 36px;
+    family: "Lora";
   }
+}
+.product-category {
+  color: #F5E6DA;
+}
+
+.in-stock {
+  color: green;
 }
 
 .product-actions {
@@ -167,12 +185,32 @@ section {
 
 button {
   height: 60px;
-  border-radius: 20px;
+  // border-radius: 20px;
+  cursor: pointer;
   width: 500px;
   color: #2D1B14;
-  background: rgba(192, 160, 128, 0.5);
+  border-color: #2D1B14;
+  border-width: 1px;
+  background: rgba(192, 160, 128, 0.1);
+
+  &:hover {
+    background: rgba(192, 160, 128, 1);
+  }
   font: {
     size: 30px;
+  }
+}
+
+.gone-order {
+  color: #C0A080;
+  font-family: "Inter";
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+
+  &:hover {
+    font-weight: 800;
   }
 }
 </style>

@@ -50,7 +50,7 @@ lorsque nous contactez.
         </div>
         <hr>
         <div class="sam">
-          <img src="/public/images/gojo.jpg" alt="">
+          <img src="/public/images/gojo.jpg" alt=""><br><br>
           <span><strong>Precieux A.</strong></span>
           <p>
             Cofondateur de Tôswè,
@@ -75,6 +75,7 @@ Facebook: Précieux Amoussou
 section {
   h2 {
     color: #EFE8E8;
+    font-family: "Playfair Display";
   }
 
   & p {
@@ -88,6 +89,7 @@ section {
 
     font: {
       size: 18px;
+      family: "Lora";
     };
   }
 }
@@ -124,7 +126,8 @@ section {
     span {
       color: #EFE8E8;
       font: {
-        size: 22px;
+        size: 20px;
+        family: "Lora";
       }
     }
   }
@@ -154,7 +157,7 @@ img {
     color: #EFE8E8;
     font: {
       size: 20px;
-      weight: 100;
+      family: "Lora";
     }
   }
 }
@@ -169,7 +172,7 @@ img {
     color: #EFE8E8;
     font: {
       size: 20px;
-      weight: 100;
+      family: "Lora";
     }
   }
 }

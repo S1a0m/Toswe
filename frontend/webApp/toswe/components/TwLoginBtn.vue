@@ -22,7 +22,8 @@ button {
 
     font: {
         size: 18px;
-        // weight: 400;
+        family: "Inter";
+        weight: 500;
     }
 
     &:hover {

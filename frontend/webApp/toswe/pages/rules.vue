@@ -72,6 +72,7 @@ Vous pouvez configurer votre navigateur pour bloquer ou supprimer les cookies à
 section {
   h2 {
     color: #EFE8E8;
+    font-family: "Playfair Display";
   }
 
   & p {
@@ -85,6 +86,7 @@ section {
 
     font: {
       size: 18px;
+      family: "Lora";
     };
   }
 }

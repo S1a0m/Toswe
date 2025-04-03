@@ -54,6 +54,7 @@
     gap: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     max-width: 300px;
+    font-family: "Inter";
   }
   
   .alert-image {

@@ -16,7 +16,7 @@
             </div>
             <div>
                 <p><span class="ic facebook">F</span>acebook</p>
-                <p>Toswe Afriica</p>
+                <p>Tôswè Afriica</p>
             </div>
             <div>
                 <svg xmlns="http://www.w3.org/2000/svg" height="100px" viewBox="0 -960 960 960" width="100px" fill="#2D1B14"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm320-280L160-640v400h640v-400L480-440Zm0-80 320-200H160l320 200ZM160-640v-80 480-400Z"/></svg>
@@ -52,9 +52,11 @@
     padding-right: 10px;
     background: rgba(45, 27, 20, 0.2);
     height: 44px;
+    
 
     font: {
         size: 16px;
+        family: "Inter";
     }
 }
 
@@ -63,6 +65,7 @@ address {
     display: flex;
     justify-content: space-around;
     font-size: 16px;
+    font-family: "Inter";
 
     & div {
         display: flex;

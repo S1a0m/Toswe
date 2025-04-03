@@ -14,7 +14,8 @@ button {
 
     font: {
         size: 18px;
-        // weight: 800
+        family: "Inter";
+        weight: 500;
     }
 }
 </style>

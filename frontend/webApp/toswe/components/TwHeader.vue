@@ -138,6 +138,8 @@ const redirectToStore = () => {
 
         h1 {
             color: #7D260F;
+            font-family: "Playfair Display";
+            font-weight: 900;
         }
     }
 
@@ -170,7 +172,7 @@ const redirectToStore = () => {
                 font: {
                     size: 60px;
                     weight: 100;
-                    family: sans-serif;
+                    family: "Inter";
                 }
             }
 
@@ -184,6 +186,7 @@ const redirectToStore = () => {
                 font: {
                     size: 60px;
                     weight: 300;
+                    family: "Lora";
                 }  
             }
 
@@ -199,10 +202,21 @@ const redirectToStore = () => {
                 // border: none;
                 width: 549px;
                 height: 80px;
+                cursor: pointer;
+
+                &:hover {
+                    color: #7D260F;
+                    background: #F5E6DA;
+                }
+
+                &:hover svg {
+                    fill: #7D260F;
+                }
 
                 font: {
                     size: 30px;
-                    weight: bold;
+                    weight: 600;
+                    family: "Inter";
                 }
             }
         }
@@ -220,6 +234,7 @@ nav {
     display: flex;
     align-items: center;
     justify-content: space-around;
+    box-shadow: 0px 1px 1px black
 }
 
 .menu {
@@ -232,6 +247,7 @@ nav {
     border-right: none;
     border-width: 1px;
     border-color: rgba(45, 27, 20, 0.5);
+    position: sticky;
 
 
     background: rgba(45, 27, 20, 0.3);
@@ -252,12 +268,12 @@ nav {
     }
 
     .active-page {
-        color: #F5E6DA;
+        color: #C0A080;
         
         font: {
-            size: 25px;
+            size: 22px;
             weight: bold;
-            family: sans-serif;
+            family: "Inter";
         }
     }
 }

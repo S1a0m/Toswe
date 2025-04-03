@@ -2,7 +2,7 @@
     <article>
         <img src="/public/images/table-royal.webp" alt="">
         <div>
-            <h3>Table</h3>
+            <h3>Table</h3> ···
             <p>25 300 fcfa</p>
         </div>
         <div>
@@ -32,15 +32,24 @@ article {
     }
 
     div {
+        display: flex;
+        align-items: center;
+        // justify-content: space-between;
+        gap: 20px;
+        color: #7D260F;
+        margin: 15px 0px 0px 0px ;
         h3 {
             font: {
-                size: 30px;
+                size: 25px;
+                family: "Lora";
             }   
         }
 
         p {
             font: {
-                size: 25px;
+                size: 22px;
+                family: "Lora";
+                weight: 600;
             } 
         }
     }
@@ -63,6 +72,7 @@ article {
             font: {
                 size: 16px;
                 weight: bold;
+                family: "Inter"
             }
             /*width: 50px;
             height: 50px;

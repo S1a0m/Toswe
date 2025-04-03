@@ -13,9 +13,9 @@
 <style lang="scss" scoped>
 span {
     font: {
-        size: 22px;
+        size: 20px;
         // weight: 500;
-        family: sans-serif;
+        family: "Lora";
     }
 }
 </style>

@@ -18,6 +18,8 @@ const props = defineProps([
     cursor: pointer;
     font: {
         size: 20px;
+        weight: 500;
+        family: "Inter";
     }
 
     &:hover{

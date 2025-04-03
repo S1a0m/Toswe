@@ -33,6 +33,7 @@
 section {
   h2 {
     color: #EFE8E8;
+    font-family: "Playfair Display";
   }
 
   .inputs {
@@ -51,6 +52,7 @@ section {
 
       font: {
         size: 16px;
+        family: "Lora";
       }
     }
 
@@ -62,6 +64,7 @@ section {
 
       font: {
         size: 16px;
+        family: "Lora";
       }
     }
 
@@ -70,15 +73,25 @@ section {
       justify-content: center;
       align-items: center;
       color: #2D1B14;
-      width: 135px;
-      height: 63px;
-      border-radius: 20px;
-      background: #EFE8E8;
-      border-style: none;
+      /*width: 135px;
+      height: 63px;*/
+      // border-radius: 20px;
+      width: 120px;
+      height: 50px;
+      background: rgba(245, 230, 218, 0.2);
+      border-style: solid;
+      border-width: 1px;
+      border-color: #2D1B14;
+      cursor: pointer;
+
+      &:hover {
+        background: rgba(245, 230, 218, 1);
+      }
 
       font: {
         size: 18px;
-        weight: bold;
+        weight: 500;
+        family: "Inter";
       }
     }
   }
