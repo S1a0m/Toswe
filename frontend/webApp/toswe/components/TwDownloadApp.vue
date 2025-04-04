@@ -1,27 +1,29 @@
 <template>
-  <div v-if="showPopup" class="popup-container">
-    <div class="popup">
-      <h1>Téléchargez notre application</h1><br>
-      <hr><br>
-      <p>Accédez à notre service en toute simplicité depuis votre mobile.</p>
-      
-      <div class="download-buttons">
-        <div class="download-option">
-          <a href="#" class="google-play" @click="redirectToStore">📲 Télécharger sur Google Play</a>ou<br>
-          <p>Scanner ce code QR si vous etes sur android</p>
-          <img src="/images/qr-code.webp" alt="QR Code Android" class="qr-code" />
+  <transition name="slide-up">
+    <div v-if="showPopup" class="popup-container">
+      <div class="popup">
+        <h1>Téléchargez notre application</h1><br>
+        <hr><br>
+        <p>Accédez à notre service en toute simplicité depuis votre mobile.</p>
+        
+        <div class="download-buttons">
+          <div class="download-option">
+            <a href="#" class="google-play" @click="redirectToStore">📲 Télécharger sur Google Play</a>ou<br>
+            <p>Scanner ce code QR si vous etes sur android</p>
+            <img src="/images/qr-code.webp" alt="QR Code Android" class="qr-code" />
+          </div>
+          <br><br>
+          <div class="download-option">
+            <a href="#" class="app-store" @click="redirectToStore">🍏 Télécharger sur l'App Store</a>ou<br>
+            <p>Scanner ce code QR si vous etes sur iphone</p>
+            <img src="/images/qr-code.webp" alt="QR Code iOS" class="qr-code" />
+          </div>
         </div>
-        <br><br>
-        <div class="download-option">
-          <a href="#" class="app-store" @click="redirectToStore">🍏 Télécharger sur l'App Store</a>ou<br>
-          <p>Scanner ce code QR si vous etes sur iphone</p>
-          <img src="/images/qr-code.webp" alt="QR Code iOS" class="qr-code" />
-        </div>
-      </div>
 
-      <button class="close-btn" @click="closePopup">Fermer</button>
+        <button class="close-btn" @click="closePopup">Fermer</button>
+      </div>
     </div>
-  </div>
+  </transition>
 </template>
 
 <script setup>
@@ -126,4 +128,16 @@ p {
 .close-btn:hover {
   background: #C0A080;
 }
+
+  /* Animation d'apparition et disparition */
+  .slide-up-enter-active,
+  .slide-up-leave-active {
+    transition: transform 0.5s ease-out, opacity 0.5s ease-in;
+  }
+  
+  .slide-up-enter-from,
+  .slide-up-leave-to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
 </style>

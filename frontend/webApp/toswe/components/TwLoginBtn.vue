@@ -19,6 +19,7 @@ button {
     border: none;
     box-shadow: 0px 2px 0px #2D1B14;
     cursor: pointer;
+    transition: all 0.2s 0s ease;
 
     font: {
         size: 18px;

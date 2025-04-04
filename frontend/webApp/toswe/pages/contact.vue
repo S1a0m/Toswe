@@ -83,6 +83,7 @@ section {
       border-width: 1px;
       border-color: #2D1B14;
       cursor: pointer;
+      transition: all 0.5s 0s ease;
 
       &:hover {
         background: rgba(245, 230, 218, 1);

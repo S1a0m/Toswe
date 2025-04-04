@@ -100,20 +100,22 @@ const redirectToStore = () => {
                 <img src="/public/images/toswe-montre.png" alt="">
             </div>
         </div>
-        <div class="menu">
+        <div class="menu" id="nav-head">
             <span @click="toggleMenu" class="icon">
                 <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#C0A080"><path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/></svg>
             </span>
             <span class="active-page">{{ activePage }}</span>
         </div>
+        <transition name="slide-up-menu">
         <nav v-if="showMenu">
-            <TwPageLink link="/">Acceuil</TwPageLink>
-            <TwPageLink link="/about">A propos</TwPageLink>
-            <TwPageLink link="/contact">Nous contacter</TwPageLink>
+            <TwPageLink link="/#nav-head">Acceuil</TwPageLink>
+            <TwPageLink link="/about#nav-head">A propos</TwPageLink>
+            <TwPageLink link="/contact#nav-head">Nous contacter</TwPageLink>
             <!--<TwPageLink>Telecharger l'app</TwPageLink>-->
             <!--<TwPageLink>Rechercher un produit</TwPageLink>-->
-            <TwPageLink link="/basket">Panier</TwPageLink>
+            <TwPageLink link="/basket#nav-head">Panier</TwPageLink>
         </nav>
+        </transition>
     </div>
     <TwDownloadApp :showPopup="showPopup" @close="showPopup = false" />
 </template>
@@ -203,6 +205,7 @@ const redirectToStore = () => {
                 width: 549px;
                 height: 80px;
                 cursor: pointer;
+                transition: all 0.5s 0s ease;
 
                 &:hover {
                     color: #7D260F;
@@ -283,11 +286,26 @@ nav {
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.5s 0s ease;
+
+    &:hover {
+        transform: scale(1.15);
+    }
 }
-
-
 
 a {
   text-decoration: none;
 }
+
+  /* Animation d'apparition et disparition */
+  .slide-up-menu-enter-active,
+  .slide-up-menu-leave-active {
+    transition: transform 0.5s ease-out, opacity 0.5s ease-in;
+  }
+  
+  .slide-up-menu-enter-from,
+  .slide-up-menu-leave-to {
+    transform: translateX(-80%);
+    opacity: 0;
+  }
 </style>

@@ -192,6 +192,7 @@ button {
   border-color: #2D1B14;
   border-width: 1px;
   background: rgba(192, 160, 128, 0.1);
+  transition: all 0.5s 0s ease;
 
   &:hover {
     background: rgba(192, 160, 128, 1);
@@ -208,6 +209,7 @@ button {
   display: flex;
   align-items: center;
   cursor: pointer;
+  transition: all 0.5s 0s ease;
 
   &:hover {
     font-weight: 800;

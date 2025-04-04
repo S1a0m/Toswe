@@ -25,10 +25,17 @@ article {
     justify-content: center;
     flex-direction: column;
     backdrop-filter: blur(4px);
+    transition: all 0.45s 0s ease;
+
+    &:hover {
+        transform: translateY(-10px);
+        box-shadow: 0px 1px 4px black;
+    }
 
     img {
         width: 280px;
         height: 280px;
+        cursor: pointer;
     }
 
     div {

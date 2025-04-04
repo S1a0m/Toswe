@@ -31,7 +31,7 @@
             </div>
         </address>
         <div class="tw-rules">
-            <NuxtLink to="/rules">
+            <NuxtLink to="/rules#nav-head">
                 <span class="rules">Conditions générales de ventes · Politiques de confidentialités · Cookies</span>
             </NuxtLink>
             <p>© 2024 Copyright - Tôswè Africa</p>

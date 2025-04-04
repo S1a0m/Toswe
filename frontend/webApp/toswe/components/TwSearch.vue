@@ -29,6 +29,7 @@ const closeSearchPopup = () => {
 </script>
 
 <template>
+    <transition name="slide-up">
     <div v-if="showPopup" class="popup-container">
       <div class="popup">
         <h1>Rechercher</h1>
@@ -51,6 +52,7 @@ const closeSearchPopup = () => {
         <button class="close-btn" @click="closeSearchPopup">Fermer</button>
       </div>
     </div>
+  </transition>
   </template>
   
   <style scoped>
@@ -123,6 +125,17 @@ const closeSearchPopup = () => {
   
   .close-btn:hover {
     background: #C0A080;
+  }
+
+  .slide-up-enter-active,
+  .slide-up-leave-active {
+    transition: transform 0.5s ease-out, opacity 0.5s ease-in;
+  }
+  
+  .slide-up-enter-from,
+  .slide-up-leave-to {
+    transform: translateY(100%);
+    opacity: 0;
   }
   </style>
   

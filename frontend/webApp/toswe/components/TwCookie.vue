@@ -43,6 +43,7 @@
     justify-content: space-between;
     align-items: center;
     border-radius: 5px;
+    font-family: "Inter";
   }
   
   .cookie-container p {
@@ -50,13 +51,13 @@
   }
   
   .cookie-container a {
-    color: #ffcc00;
+    color: #7D260F;
     text-decoration: underline;
   }
   
   .cookie-container button {
     margin-left: 10px;
-    background: #ffcc00;
+    background: #7D260F;
     border: none;
     padding: 8px 15px;
     cursor: pointer;

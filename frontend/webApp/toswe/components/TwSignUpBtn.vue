@@ -11,11 +11,17 @@ button {
     border: none;
     box-shadow: 0px 1px 4px black;
     cursor: pointer;
+    transition: all 0.5s 0s ease;
 
     font: {
         size: 18px;
         family: "Inter";
         weight: 500;
+    }
+
+    &:hover {
+        color: #2D1B14;
+        background-color: rgba(245, 230, 218, 0.5);   
     }
 }
 </style>

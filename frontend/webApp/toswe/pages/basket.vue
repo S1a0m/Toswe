@@ -75,8 +75,8 @@ section {
   .title {
     background: rgba(239, 232, 232, 0.7);
     backdrop-filter: blur(4px);
-    height: 98px;
-    border-radius: 20px;
+    height: 40px;
+    border-radius: 15px;
     display: flex;
     align-items: center;
     justify-content: space-around;
@@ -134,6 +134,7 @@ button {
   height: 60px;
   width: 200px;
   cursor: pointer;
+  transition: all 0.5s 0s ease;
   font: {
     size: 18px;
     weight: 500;
