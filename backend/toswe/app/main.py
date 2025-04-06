@@ -1,15 +1,29 @@
 from fastapi import FastAPI
-from app.routes import customers, products, orders, notifications
-from app.database import engine
-from app.models import Base
+from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="Toswe API")
+from routes.v1.admin import admin_router
+from routes.v1.common import common_router
+from routes.v1.mobile import mobile_router
 
-# Création des tables si elles n'existent pas
-Base.metadata.create_all(bind=engine)
+app = FastAPI(
+    title="E-Commerce Backend API",
+    version="1.0.0"
+)
 
-# Inclusion des routes
-app.include_router(customers.router, prefix="/customers", tags=["Customers"])
-app.include_router(products.router, prefix="/products", tags=["Products"])
-app.include_router(orders.router, prefix="/orders", tags=["Orders"])
-app.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
+# CORS Middleware setup
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Change in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Prefix versioning
+app.include_router(admin_router, prefix="/api/v1/admin", tags=["Admin"])
+app.include_router(common_router, prefix="/api/v1/common", tags=["Common"])
+app.include_router(mobile_router, prefix="/api/v1/mobile", tags=["Mobile"])
+
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the E-Commerce API v1"}
