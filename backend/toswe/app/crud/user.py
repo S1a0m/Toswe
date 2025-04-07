@@ -1,10 +1,11 @@
 from sqlalchemy.orm import Session
-from models.user import User
-from schemas.user import UserCreate, UserUpdate
-
+from app.models.user import User
+from app.schemas.user import UserCreate, UserUpdate
+from app.core.security import hash_password, verify_password
 
 def create_user(db: Session, user: UserCreate):
-    db_user = User(**user.dict())
+    hashed_pw = hash_password(user.password)
+    db_user = User(**user.dict(exclude={"password"}), hashed_password=hashed_pw)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -35,3 +36,15 @@ def delete_user(db: Session, user_id: int):
         db.delete(db_user)
         db.commit()
     return db_user
+
+
+def delete_all_users(db: Session):
+    deleted = db.query(User).delete()
+    db.commit()
+    return {"deleted": deleted}
+
+def authenticate_user(db: Session, telephone: str, password: str):
+    user = db.query(User).filter(User.telephone == telephone).first()
+    if not user or not verify_password(password, user.hashed_password):
+        return None
+    return user

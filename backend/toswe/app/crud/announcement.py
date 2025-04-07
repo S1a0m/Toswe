@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models.announcement import Announcement
-from schemas.announcement import AnnouncementCreate, AnnouncementUpdate
+from app.models.announcement import Announcement
+from app.schemas.announcement import AnnouncementCreate, AnnouncementUpdate
 
 
 def create_announcement(db: Session, annonce: AnnouncementCreate):
@@ -35,3 +35,8 @@ def delete_announcement(db: Session, announcement_id: int):
         db.delete(annonce)
         db.commit()
     return annonce
+
+def delete_all_announcements(db: Session):
+    deleted = db.query(Announcement).delete()
+    db.commit()
+    return {"deleted": deleted}

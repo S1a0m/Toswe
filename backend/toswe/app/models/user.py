@@ -18,3 +18,4 @@ class User(Base):
     mobile_number = Column(String)
     address = Column(String)
     online = Column(Boolean, default=False)
+    # password

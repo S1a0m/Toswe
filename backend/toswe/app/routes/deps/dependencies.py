@@ -1,7 +1,8 @@
 from fastapi import Depends, HTTPException
 from jose import JWTError
 from fastapi.security import OAuth2PasswordBearer
-from core.security import decode_token
+from app.core.security import decode_token
+from app.core.db import SessionLocal
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -15,3 +16,10 @@ def require_admin(user=Depends(get_current_user)):
     if user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Admin only")
     return user
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

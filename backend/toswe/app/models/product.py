@@ -15,7 +15,7 @@ class Product(Base):
     name = Column(String, nullable=False)
     category = Column(Enum(ProductCategory), default=ProductCategory.local)
     price = Column(Float, nullable=False)
-    description = Column(String)
+    description = Column(ARRAY(String))
     images_list = Column(ARRAY(String))
     in_stock = Column(Boolean, default=True)
     published = Column(Boolean, default=False)

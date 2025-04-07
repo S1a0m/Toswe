@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models.order import Order
-from schemas.order import OrderCreate, OrderUpdate
+from app.models.order import Order
+from app.schemas.order import OrderCreate, OrderUpdate
 
 
 def create_order(db: Session, order: OrderCreate):
@@ -35,3 +35,8 @@ def delete_order(db: Session, order_id: int):
         db.delete(order)
         db.commit()
     return order
+
+def delete_all_orders(db: Session):
+    deleted = db.query(Order).delete()
+    db.commit()
+    return {"deleted": deleted}

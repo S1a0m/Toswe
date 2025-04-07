@@ -7,3 +7,8 @@ class Token(BaseModel):
 
 class TokenRefresh(BaseModel):
     refresh_token: str
+
+
+class LoginInput(BaseModel):
+    telephone: str
+    password: str

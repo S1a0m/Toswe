@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models.notification import Notification
-from schemas.notification import NotificationCreate, NotificationUpdate
+from app.models.notification import Notification
+from app.schemas.notification import NotificationCreate, NotificationUpdate
 
 
 def create_notification(db: Session, notif: NotificationCreate):
@@ -35,3 +35,8 @@ def delete_notification(db: Session, notification_id: int):
         db.delete(notif)
         db.commit()
     return notif
+
+def delete_all_notifications(db: Session):
+    deleted = db.query(Notification).delete()
+    db.commit()
+    return {"deleted": deleted}

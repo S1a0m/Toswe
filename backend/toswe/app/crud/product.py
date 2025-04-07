@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models.product import Product
-from schemas.product import ProductCreate, ProductUpdate
+from app.models.product import Product
+from app.schemas.product import ProductCreate, ProductUpdate
 
 
 def create_product(db: Session, product: ProductCreate):
@@ -35,3 +35,9 @@ def delete_product(db: Session, product_id: int):
         db.delete(db_product)
         db.commit()
     return db_product
+
+
+def delete_all_products(db: Session):
+    deleted = db.query(Product).delete()
+    db.commit()
+    return {"deleted": deleted}
