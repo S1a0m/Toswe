@@ -1,5 +1,4 @@
 from fastapi import Depends, HTTPException
-from jose import JWTError
 from fastapi.security import OAuth2PasswordBearer
 from app.core.security import decode_token
 from app.core.db import SessionLocal
@@ -10,7 +9,11 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     payload = decode_token(token)
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid token")
-    return {"id_user": int(payload["sub"]), "role": payload["role"]}
+    
+    return {
+        "id_user": int(payload["sub"]),
+        "role": payload["role"]
+    }
 
 def require_admin(user=Depends(get_current_user)):
     if user["role"] != "admin":

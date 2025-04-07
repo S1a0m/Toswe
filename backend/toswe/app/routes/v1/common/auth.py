@@ -5,6 +5,7 @@ from app.routes.deps.dependencies import get_db
 from app.core.security import create_access_token, create_refresh_token, decode_token
 from app.crud import user as crud_user
 from app.schemas.token import Token, TokenRefresh, LoginInput
+from services.auth_service import register_user, change_password
 # from datetime import timedelta
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -36,3 +37,11 @@ def refresh_token(token_data: TokenRefresh):
     new_refresh = create_refresh_token({"sub": payload["sub"], "role": payload["role"]})
 
     return {"access_token": new_access, "refresh_token": new_refresh, "token_type": "bearer"}
+
+@router.post("/register")
+def register(user_data: RegisterSchema, db: Session = Depends(get_db)):
+    return register_user(db, user_data)
+
+@router.post("/change-password")
+def change(user_pw: ChangePasswordSchema, user=Depends(get_current_user), db: Session = Depends(get_db)):
+    return change_password(db, user["id_user"], user_pw.old_password, user_pw.new_password)
