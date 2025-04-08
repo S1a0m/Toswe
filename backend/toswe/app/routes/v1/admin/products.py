@@ -5,13 +5,13 @@ from typing import List
 
 from app.routes.deps.dependencies import get_db, require_admin
 from app.models.product import Product
-from app.schemas.product import Product as ProductSchema
+from app.schemas.product import ProductSchema
 import app.crud.product as crud_product
 import app.schemas.product
 
 router = APIRouter(prefix="/admin/products", tags=["admin - products"])
 
-@router.post("/", response_model=app.schemas.product.Product)
+@router.post("/", response_model=app.schemas.product.ProductSchema)
 def create_product(
     product: app.schemas.product.ProductCreate,
     db: Session = Depends(get_db),
@@ -19,14 +19,14 @@ def create_product(
 ):
     return crud_product.create_product(db, product)
 
-@router.get("/", response_model=List[app.schemas.product.Product])
+@router.get("/", response_model=List[app.schemas.product.ProductSchema])
 def get_all_products(
     db: Session = Depends(get_db),
     user: dict = Depends(require_admin)
 ):
     return crud_product.get_products(db)
 
-@router.get("/{product_id}", response_model=app.schemas.product.Product)
+@router.get("/{product_id}", response_model=app.schemas.product.ProductSchema)
 def get_product(
     product_id: int,
     db: Session = Depends(get_db),
@@ -34,7 +34,7 @@ def get_product(
 ):
     return crud_product.get_product(db, product_id)
 
-@router.put("/{product_id}", response_model=app.schemas.product.Product)
+@router.put("/{product_id}", response_model=app.schemas.product.ProductSchema)
 def update_product(
     product_id: int,
     product_data: app.schemas.product.ProductCreate,
@@ -43,7 +43,7 @@ def update_product(
 ):
     return crud_product.update_product(db, product_id, product_data)
 
-@router.delete("/{product_id}", response_model=app.schemas.product.Product)
+@router.delete("/{product_id}", response_model=app.schemas.product.ProductSchema)
 def delete_product(
     product_id: int,
     db: Session = Depends(get_db),

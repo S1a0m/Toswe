@@ -23,8 +23,18 @@ class ProductUpdate(BaseModel):
     in_stock: Optional[bool] = True
     published: Optional[bool] = False
 
-class Product(ProductBase):
+class ProductSchema(ProductBase):
     id_product: int
+
+    class Config:
+        orm_mode = True
+
+class ProductAll(BaseModel):
+    id_product: int
+    name: str
+    price: float
+    images_list: List[str]
+    in_stock: bool
 
     class Config:
         orm_mode = True

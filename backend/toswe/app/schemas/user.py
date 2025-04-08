@@ -15,6 +15,7 @@ class UserBase(BaseModel):
     mobile_number: str
     address: str
     online: bool = False
+    password: str
 
 class UserCreate(UserBase):
     pass

@@ -5,6 +5,9 @@ from .routes.v1.admin import users, products, orders, notifications, announcemen
 from .routes.v1.mobile import products as mob_products, orders as mob_orders, notifications as mob_notifs
 from .routes.v1.common import auth
 
+from app.routes.v1.web import messages as client_message
+from app.routes.v1.admin import messages as admin_message
+
 
 app = FastAPI(
     title="Toswe Backend API",
@@ -30,3 +33,7 @@ app.include_router(mob_orders.router)
 app.include_router(mob_notifs.router)
 
 app.include_router(auth.router)
+
+
+app.include_router(client_message.router)
+app.include_router(admin_message.router)

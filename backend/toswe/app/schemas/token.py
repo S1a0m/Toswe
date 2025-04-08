@@ -10,5 +10,5 @@ class TokenRefresh(BaseModel):
 
 
 class LoginInput(BaseModel):
-    telephone: str
+    mobile_number: str
     password: str

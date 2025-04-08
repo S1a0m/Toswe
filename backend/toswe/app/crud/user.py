@@ -43,8 +43,8 @@ def delete_all_users(db: Session):
     db.commit()
     return {"deleted": deleted}
 
-def authenticate_user(db: Session, telephone: str, password: str):
-    user = db.query(User).filter(User.telephone == telephone).first()
+def authenticate_user(db: Session, mobile_number: str, password: str):
+    user = db.query(User).filter(User.mobile_number == mobile_number).first()
     if not user or not verify_password(password, user.hashed_password):
         return None
     return user
