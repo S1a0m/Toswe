@@ -1,4 +1,4 @@
-# schemas/order_item.py
+# app/schemas/order_item.py
 from pydantic import BaseModel
 from typing import Optional
 

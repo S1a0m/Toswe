@@ -1,4 +1,4 @@
-# schemas/order.py
+# app/schemas/order.py
 from pydantic import BaseModel
 from datetime import datetime
 from typing import List

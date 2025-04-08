@@ -27,6 +27,7 @@ app.include_router(products.router)
 app.include_router(orders.router)
 app.include_router(notifications.router)
 app.include_router(announcements.router)
+app.include_router(admin_message.router)
 
 app.include_router(mob_products.router)
 app.include_router(mob_orders.router)
@@ -36,4 +37,3 @@ app.include_router(auth.router)
 
 
 app.include_router(client_message.router)
-app.include_router(admin_message.router)
