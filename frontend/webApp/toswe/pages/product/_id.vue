@@ -1,10 +1,18 @@
+<script setup>
+const slideList = [
+  { id: 1, src: '/images/montre.jpg' },
+  { id: 2, src: '/images/chargeur.jpg' },
+  { id: 3, src: '/images/img3.jpg' },
+]
+</script>
+
 <template>
   <div class="about-content">
     <section>
       <h2>· Produit ·</h2>
       <div class="product-details">
         <div class="product-image">
-          <img src="/public/images/chargeur.jpg" alt="" class="active-product">
+          <TwCarouselProductOverview :slides="slideList" />
         </div>
         <div class="product-actions">
           <div class="price">
@@ -109,6 +117,7 @@ section {
 .version {
   width: 323px;
   height: 340px;
+  object-fit: cover;
 }
 
 .other-versions {
@@ -116,7 +125,11 @@ section {
   justify-content: space-between;
   align-items: center;
   gap: 80px;
-  overflow: auto;
+  overflow-x: auto;
+  white-space: nowrap;
+  scroll-behavior: smooth;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .product-details {

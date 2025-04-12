@@ -2,7 +2,7 @@
     <div v-if="showPopup" class="cookie-container">
       <p>
         Ce site utilise des cookies pour améliorer votre expérience.
-        <NuxtLink to="/politique-cookies">En savoir plus</NuxtLink>.
+        <NuxtLink to="/rules">En savoir plus</NuxtLink>.
       </p>
       <button @click="acceptCookies">Accepter</button>
       <button @click="declineCookies">Refuser</button>

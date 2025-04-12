@@ -1,3 +1,48 @@
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
+
+const slides = ref([
+  {
+    "id": 1,
+    "image": "/images/img1.jpg",
+    "testimonial": "Cette application a totalement changé la façon dont je communique avec mon équipe. Elle est rapide, sécurisée et intuitive.",
+    "name": "Amina Traoré"
+  },
+  {
+    "id": 2,
+    "image": "/images/img2.jpg",
+    "testimonial": "Je recommande vivement ! L'interface est fluide et le service client est à l'écoute.",
+    "name": "Jean-Baptiste Kouassi"
+  },
+  {
+    "id": 3,
+    "image": "/images/img3.jpg",
+    "testimonial": "Une solution complète pour mes besoins en sécurité et en partage confidentiel.",
+    "name": "Fatou Diop"
+  },
+  {
+    "id": 4,
+    "image": "/images/img4.jpg",
+    "testimonial": "Simple, efficace, et surtout très fiable. Je ne peux plus m’en passer !",
+    "name": "Mohamed Cissé"
+  }
+]
+)
+
+// alert(slides[currentIndex].src);
+
+const currentIndex = ref(0)
+let interval
+
+onMounted(() => {
+  interval = setInterval(() => {
+    currentIndex.value = (currentIndex.value + 1) % slides.value.length
+  }, 3000)
+})
+
+onUnmounted(() => clearInterval(interval))
+</script>
+
 <template>
   <div class="about-content">
     <section>
@@ -22,15 +67,17 @@ Nous sommes basés à Abomey-Calavi
       <h2>· Témoignages ·</h2>
       <div class="mix">
         <div class="bkgcolors">
-          <div class="testimoner">
-            <img src="/public/images/avatar.jpg" alt="">
-            <div>
-              <p>
-                "J'étais sceptique au début, mais après ma première commande chez Tôswè, j’ai été bluffé ! Le produit était exactement comme décrit, la livraison rapide et le service client super réactif. Je recommande à 100 % et je compte bien refaire d’autres achats !"
-              </p>
-              <span>— Alexandrine M.</span>
+          <transition name="slide-horizontal" mode="out-in">
+            <div class="testimoner" :key="currentIndex">
+              <img :src="slides[currentIndex].image" alt="">
+              <div>
+                <p>
+                  "{{ slides[currentIndex].testimonial }}"
+                </p>
+                <span>— {{ slides[currentIndex].name }}</span>
+              </div>
             </div>
-          </div>
+          </transition>
         </div>
       </div>
     </section><br><br><br>
@@ -102,10 +149,13 @@ section {
     background: rgba(45, 27, 20, 1);
 
     .bkgcolors {
+      position: relative;
+      overflow: hidden;
       background: rgba(239, 232, 232, 0.1);
       border: none;
       // width: 100%;
-      height: 100%;
+      // height: 100%;
+      min-height: 540px; 
     }
   }
 }
@@ -116,6 +166,8 @@ section {
   // justify-content: space-around;
   gap: 50px;
   padding: 100px;
+  inset: 0;
+  object-fit: cover;
 
   div {
     display: flex;
@@ -181,15 +233,18 @@ hr {
   height: 400px;
   color: rgba(239, 232, 232, 0.2);
 }
-/*.testimoner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 100px;
 
-  img {
-    width: 323px;
-    height: 340px;
-  }
-}*/
+:deep(.slide-horizontal-enter-active),
+:deep(.slide-horizontal-leave-active) {
+  transition: transform 0.5s ease;
+  position: absolute;
+  width: 100%;
+}
+:deep(.slide-horizontal-enter-from) {
+  transform: translateX(100%);
+}
+:deep(.slide-horizontal-leave-to) {
+  transform: translateX(-100%);
+}
+
 </style>
