@@ -10,9 +10,9 @@
       </div>
     </main>
 
-    <footer>
+    <!--<footer>
       <TwFooter />
-    </footer>
+    </footer>-->
   </div>
 </template>
 

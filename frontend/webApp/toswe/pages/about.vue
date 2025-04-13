@@ -3,33 +3,30 @@ import { ref, onMounted, onUnmounted } from 'vue'
 
 const slides = ref([
   {
-    "id": 1,
-    "image": "/images/img1.jpg",
-    "testimonial": "Cette application a totalement changé la façon dont je communique avec mon équipe. Elle est rapide, sécurisée et intuitive.",
-    "name": "Amina Traoré"
+    id: 1,
+    image: "/images/img1.jpg",
+    testimonial: "Cette application a radicalement transformé ma manière de collaborer avec mon équipe. Elle est rapide, sécurisée et incroyablement intuitive.",
+    name: "Amina Traoré"
   },
   {
-    "id": 2,
-    "image": "/images/img2.jpg",
-    "testimonial": "Je recommande vivement ! L'interface est fluide et le service client est à l'écoute.",
-    "name": "Jean-Baptiste Kouassi"
+    id: 2,
+    image: "/images/img2.jpg",
+    testimonial: "Un vrai coup de cœur ! L’interface est fluide, et le support client est à l’écoute et très réactif.",
+    name: "Jean-Baptiste Kouassi"
   },
   {
-    "id": 3,
-    "image": "/images/img3.jpg",
-    "testimonial": "Une solution complète pour mes besoins en sécurité et en partage confidentiel.",
-    "name": "Fatou Diop"
+    id: 3,
+    image: "/images/img3.jpg",
+    testimonial: "Une solution complète qui répond parfaitement à mes exigences en matière de sécurité et de confidentialité.",
+    name: "Fatou Diop"
   },
   {
-    "id": 4,
-    "image": "/images/img4.jpg",
-    "testimonial": "Simple, efficace, et surtout très fiable. Je ne peux plus m’en passer !",
-    "name": "Mohamed Cissé"
+    id: 4,
+    image: "/images/img4.jpg",
+    testimonial: "Simple, efficace et ultra fiable. Aujourd’hui, je ne peux plus m’en passer.",
+    name: "Mohamed Cissé"
   }
-]
-)
-
-// alert(slides[currentIndex].src);
+])
 
 const currentIndex = ref(0)
 let interval
@@ -43,26 +40,33 @@ onMounted(() => {
 onUnmounted(() => clearInterval(interval))
 </script>
 
+
 <template>
   <div class="about-content">
     <section>
       <h2>· Description ·</h2>
       <p>
-        Bienvenue chez Tôswè, votre boutique en ligne de référence pour des produits de qualité livrés directement chez vous, sans intermédiaires ! <br><br>
+        Bienvenue chez <strong>Tôswè</strong>, votre boutique en ligne de confiance ! Nous vous livrons des produits de qualité directement chez vous — sans intermédiaires ni complications. <br><br>
 
-Notre mission est de vous offrir une expérience d’achat simple, rapide et sécurisée en sélectionnant avec soin des articles tendances et innovants à des prix compétitifs. Grâce à notre modèle de dropshipping, nous travaillons avec des fournisseurs de confiance pour vous proposer un large choix de produits, allant de la mode aux gadgets high-tech, en passant par les accessoires de maison et bien plus encore. <br><br>
+        Notre mission ? Rendre votre expérience d’achat simple, rapide et 100 % sécurisée. Nous sélectionnons avec soin des articles tendances, innovants et à des prix imbattables. Grâce au dropshipping, nous collaborons avec des fournisseurs fiables pour vous offrir un large choix : mode, high-tech, maison, accessoires… il y en a pour tous les goûts ! <br><br>
 
-Pourquoi nous choisir ? <br> > Produits de qualité : Nous choisissons nos articles avec rigueur pour garantir satisfaction et durabilité. > Prix abordables : Profitez d'offres attractives sans compromis sur la qualité. > Livraison rapide et fiable : Recevez vos commandes à domicile sans stress. > Service client réactif : Notre équipe est disponible pour répondre à toutes vos questions via WhatsApp et e-mail. <br><br>
+        <strong>Pourquoi choisir Tôswè ?</strong><br>
+        ▸ <strong>Qualité garantie :</strong> chaque produit est choisi avec rigueur pour vous satisfaire durablement.<br>
+        ▸ <strong>Prix abordables :</strong> des offres exceptionnelles sans compromis sur la qualité.<br>
+        ▸ <strong>Livraison rapide et fiable :</strong> recevez vos colis à domicile sans stress.<br>
+        ▸ <strong>Support réactif :</strong> contactez-nous facilement via WhatsApp ou par e-mail, on vous répond vite !<br><br>
 
-Nous sommes basés à Abomey-Calavi
+        Basés à Abomey-Calavi, nous sommes fiers de servir toute la région… et bien plus encore !
       </p>
     </section><br><br><br>
+
     <section>
       <h2>· Objectif ·</h2>
       <p>
-        Revolutionner le système commercial au Bénin, en Afrique et dans le monde
+        Révolutionner le commerce au Bénin, en Afrique… et dans le monde entier.
       </p>
     </section><br><br><br>
+
     <section class="testimony">
       <h2>· Témoignages ·</h2>
       <div class="mix">
@@ -81,37 +85,39 @@ Nous sommes basés à Abomey-Calavi
         </div>
       </div>
     </section><br><br><br>
+
     <section>
       <h2>· Fondateurs ·</h2>
-      <div class="fonders">
-        <div class="dav">
-          <img src="/public/images/jack.jpg" alt="">
-          <span><strong>David I.</strong></span>
-          <p>
-            Cofondateur de Tôswè,
-C’est avec lui que vous communiquez très souvent
-lorsque nous contactez.
-
-                                              Facebook: David Idohou
-          </p>
+      <div class="founders">
+        <div class="founder-card" v-intersect>
+          <img src="/images/jack.jpg" alt="David I." />
+          <div class="info">
+            <span><strong>David I.</strong></span>
+            <p>
+              <strong>Co-fondateur & COO — Responsable Commercial et Relation Client</strong><br>
+              C’est avec lui que vous communiquez très souvent lorsque vous nous contactez.<br><br>
+              Facebook: David Idohou
+            </p>
+          </div>
         </div>
-        <hr>
-        <div class="sam">
-          <img src="/public/images/gojo.jpg" alt=""><br><br>
-          <span><strong>Precieux A.</strong></span>
-          <p>
-            Cofondateur de Tôswè,
-Il s’occupe le plus souvent de la livraison et est
-développeur chez Tôswè.
 
-Linkdin: Précieux Samson Amoussou
-Facebook: Précieux Amoussou
-          </p>
+        <div class="founder-card">
+          <img src="/images/gojo.jpg" alt="Precieux A." />
+          <div class="info">
+            <span><strong>Precieux A.</strong></span>
+            <p>
+              <strong>Co-fondateur & CTO — Responsable Design et Développement</strong><br>
+              Il s’occupe le plus souvent de la livraison et est développeur chez Tôswè.<br><br>
+              LinkedIn: Précieux Samson Amoussou<br>
+              Facebook: Précieux Amoussou
+            </p>
+          </div>
         </div>
       </div>
     </section><br><br><br>
   </div>
 </template>
+
   
 
 <style lang="scss" scoped>
@@ -190,14 +196,57 @@ img {
   height: 340px;
 }
 
-.fonders {
+.founders {
   margin-top: 20px;
   display: flex;
-  align-items: center;
-  // flex-wrap: wrap;
-  // justify-content: space-between;
-  gap: 80px;
+  gap: 60px;
+  flex-wrap: wrap;
+  justify-content: center;
+
+  .founder-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(239, 232, 232, 0.1);
+    border-radius: 20px;
+    padding: 30px;
+    width: 320px;
+    text-align: center;
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: translateY(-5px);
+      background: rgba(239, 232, 232, 0.15);
+    }
+
+    img {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 20px;
+      border: 2px solid #EFE8E8;
+    }
+
+    .info {
+      span {
+        color: #EFE8E8;
+        font-family: "Lora";
+        font-size: 20px;
+      }
+
+      p {
+        color: #2D1B14;
+        font-family: "Lora";
+        margin-top: 10px;
+        font-size: 16px;
+        background: transparent;
+        padding: 0;
+      }
+    }
+  }
 }
+
 
 .dav {
   display: flex;

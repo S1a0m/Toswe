@@ -3,52 +3,60 @@
     <section>
       <h2>· Conditions Générales de Vente (CGV) ·</h2>
       <div class="order-table">
-        <div class="title">
+        <div class="title-row">
           <span>Nom du produit</span>
           <span>Image</span>
-          <span>Prix unitaire(en fcfa)</span>
-          <span>Nombre dans le panier</span>
-          <span>Total(en fcfa)</span>
-        </div><br><br>
-        <div class="products">
-          <div class="order">
-            <div class="product">
-              <h4>Ouffer</h4>
-              <img src="/public/images/table-royal.webp" alt="">
-              <span>7 500</span>
-              <input type="number" name="" id="" placeholder="00">
-              <span>15 000</span>
-            </div>
-              <div class="del-product">
-                <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#C0A080"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
-              </div>
-          </div><br><br>
-          <div class="order">
-            <div class="product">
-              <h4>Ouffer</h4>
-              <img src="/public/images/table-royal.webp" alt="">
-              <span>7 500</span>
-              <input type="number" name="" id="" placeholder="00">
-              <span>15 000</span>
-            </div>
-              <div class="del-product">
-                <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#C0A080"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
-              </div>
-          </div><br><br>
-          <div class="order">
-            <div class="product">
-              <h4>Ouffer</h4>
-              <img src="/public/images/table-royal.webp" alt="">
-              <span>7 500</span>
-              <input type="number" name="" id="" placeholder="00">
-              <span>15 000</span>
-            </div>
-              <div class="del-product">
-                <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#C0A080"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
-              </div>
+          <span>Prix unitaire</span>
+          <span>Quantité</span>
+          <span>Total</span>
+          <span>Supprimer</span>
+        </div>
+
+        <div class="order-row">
+          <span class="product-name">Ouffer</span>
+          <img src="/public/images/table-royal.webp" alt="Table Royal" />
+          <span>7 500</span>
+          <input type="number" placeholder="00" />
+          <span>15 000</span>
+          <div class="del-product">
+            <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#C0A080"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
+          </div>
+        </div>
+
+        <div class="order-row">
+          <span class="product-name">Ouffer</span>
+          <img src="/public/images/table-royal.webp" alt="Table Royal" />
+          <span>7 500</span>
+          <input type="number" placeholder="00" />
+          <span>15 000</span>
+          <div class="del-product">
+            <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#C0A080"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
+          </div>
+        </div>
+
+        <div class="order-row">
+          <span class="product-name">Ouffer</span>
+          <img src="/public/images/table-royal.webp" alt="Table Royal" />
+          <span>7 500</span>
+          <input type="number" placeholder="00" />
+          <span>15 000</span>
+          <div class="del-product">
+            <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#C0A080"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
+          </div>
+        </div>
+
+        <div class="order-row">
+          <span class="product-name">Ouffer</span>
+          <img src="/public/images/table-royal.webp" alt="Table Royal" />
+          <span>7 500</span>
+          <input type="number" placeholder="00" />
+          <span>15 000</span>
+          <div class="del-product">
+            <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#C0A080"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
           </div>
         </div>
       </div>
+
     </section><br><br><br>
     <button type="submit">
       Soummettre
@@ -72,55 +80,57 @@ section {
 
 .order-table {
   margin-top: 20px;
-  .title {
-    background: rgba(239, 232, 232, 0.7);
-    backdrop-filter: blur(4px);
-    height: 40px;
-    border-radius: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    font-family: "Inter";
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  font-family: "Lora";
 
-    span {
-      font: {
-        size: 18px;
-        weight: 600;
-      }
+  .title-row, .order-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 0.5fr;
+    align-items: center;
+    padding: 10px 20px;
+    border-radius: 15px;
+    backdrop-filter: blur(4px);
+    background: rgba(239, 232, 232, 0.2);
+    color: #EFE8E8;
+    gap: 10px;
+
+    span, input {
+      font-size: 16px;
+      text-align: center;
+    }
+
+    img {
+      height: 100px;
+      width: 100px;
+      object-fit: cover;
+      border-radius: 10px;
+      justify-self: center;
+    }
+
+    input {
+      background: none;
+      border: none;
+      border-bottom: 1px solid #EFE8E8;
+      width: 60px;
+      text-align: center;
+      color: #EFE8E8;
+    }
+
+    .del-product {
+      justify-self: center;
+      cursor: pointer;
     }
   }
 
-  .products {
-
-    .order {
-      gap: 10px;
-      font-family: "Lora";
-
-      .product {
-        background: rgba(239, 232, 232, 0.2);
-        backdrop-filter: blur(4px);
-        // height: 98px;
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-around;
-        padding: 1em;
-
-        img {
-          height: 200px;
-          width: 200px;
-        }
-
-        span, h4 {
-          color: #EFE8E8;
-          font: {
-            size: 18px;
-          }
-        }
-      }
-    }
+  .title-row {
+    background: rgba(239, 232, 232, 0.5);
+    font-weight: 600;
+    font-family: "Inter";
   }
 }
+
 
 button {
   display: flex;

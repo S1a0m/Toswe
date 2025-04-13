@@ -11,10 +11,10 @@
       </div>
     </section><br><br><br>
     <section>
-      <h2>· Nous envoyer un mail ·</h2>
+      <h2>· Nous envoyer un message ·</h2>
       <div class="mail inputs">
-        <textarea name="" id="" placeholder="Ecrivez votre mail ici..."></textarea>
-        <input type="text" name="" id="" placeholder="Mentionnez votre nom...">
+        <textarea name="" id="" placeholder="Ecrivez votre message ici..."></textarea>
+        <input type="text" name="" id="" placeholder="01 45 78 65 47 / email@email.com...">
         <button type="submit">
           Envoyer
           <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#2D1B14"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>
