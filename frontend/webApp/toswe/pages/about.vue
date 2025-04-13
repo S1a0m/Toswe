@@ -153,6 +153,7 @@ section {
     // height: 519px;
     // width: 100%;
     background: rgba(45, 27, 20, 1);
+    border-radius: 20px;
 
     .bkgcolors {
       position: relative;
@@ -162,6 +163,7 @@ section {
       // width: 100%;
       // height: 100%;
       min-height: 540px; 
+      border-radius: 20px;
     }
   }
 }
@@ -207,7 +209,7 @@ img {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: rgba(239, 232, 232, 0.1);
+    background: rgba(239, 232, 232, 0.15);
     border-radius: 20px;
     padding: 30px;
     width: 320px;
@@ -216,7 +218,7 @@ img {
 
     &:hover {
       transform: translateY(-5px);
-      background: rgba(239, 232, 232, 0.15);
+      background: rgba(239, 232, 232, 0.2);
     }
 
     img {
