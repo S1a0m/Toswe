@@ -21,6 +21,7 @@
       </footer>
     </div>
     <TwCookie />
+    <TwAlert />
 </template>
   
 <style lang="scss" scoped>
