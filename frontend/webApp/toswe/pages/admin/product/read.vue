@@ -47,7 +47,7 @@
       <button class="edit" @click="onEdit">Modifier</button>
       <button class="delete" @click="onDelete">Supprimer</button>
     </div>
-  </div><br><br><br><br><br><br>
+  </div>
 </template>
 
 <script setup>

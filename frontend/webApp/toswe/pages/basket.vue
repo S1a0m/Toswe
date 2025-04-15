@@ -5,7 +5,7 @@ const items = ref([]);
 <template>
   <div class="about-content">
     <section>
-      <h2>· Conditions Générales de Vente (CGV) ·</h2>
+      <h2>· Commande ·</h2>
       <div class="order-table">
         <div class="title-row">
           <span>Nom du produit</span>

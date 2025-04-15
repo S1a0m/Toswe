@@ -37,7 +37,7 @@ async function handleLogin() {
 }
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'userlog'
 })
 </script>
 
@@ -73,10 +73,10 @@ definePageMeta({
     // background: linear-gradient(to bottom right, #f5e6da, #d5c5b0);
   
     .login-box {
-      background: rgba(245, 230, 218, 0.7);
+      background: rgba(245, 230, 218, 0.4);
       padding: 40px;
       border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
       width: 400px;
       text-align: center;
   
@@ -102,6 +102,7 @@ definePageMeta({
         margin-bottom: 10px;
         font-size: 16px;
         transition: 0.2s;
+        background: rgba(245, 230, 218, 0.4);
   
         &:focus {
           outline: none;

@@ -5,6 +5,7 @@ const layout = "admin";
 
 <template>
   <div id="app">
+  <NuxtLoadingIndicator />
     <NuxtLayout>
       <transition name="page">
         <NuxtPage />

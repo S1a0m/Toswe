@@ -286,7 +286,7 @@ nav {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.5s 0s ease;
+    transition: all 0.2s 0s ease;
     height: 40px;
     width: 40px;
 

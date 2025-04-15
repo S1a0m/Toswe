@@ -112,7 +112,7 @@ function handleFiles(event) {
         padding: 12px 16px;
         border-radius: 12px;
         border: 1px solid #ccc;
-        background: #fff;
+        background: rgba(245, 230, 218, 0.4);
         font-size: 16px;
         transition: border-color 0.3s ease;
 

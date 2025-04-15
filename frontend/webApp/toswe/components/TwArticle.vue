@@ -1,35 +1,51 @@
 <script setup>
 const props = defineProps([
-    "id",
-    "img",
-    "name",
-    "price",
-    "status",
+  "id",
+  "img",
+  "name",
+  "price",
 ])
+
+const router = useRouter()
+const isAdded = ref(false)
+const isAnimating = ref(false)
+
+function handleAddClick() {
+  if (isAdded.value) {
+    router.push('/basket#nav-head')
+    return
+  }
+
+  isAdded.value = true
+  isAnimating.value = true
+
+  setTimeout(() => {
+    isAnimating.value = false
+  }, 300)
+}
 </script>
 
 
 <template>
     <article>
-        <span :class="['status-dot', props.status]"></span>
-        <img :src="props.img" alt="">
+        <NuxtLink to="/product#nav-head">
+            <div class="image-wrapper">
+                <img :src="props.img" alt="" />
+                <div class="see-more">Voir plus...</div>
+            </div>
+        </NuxtLink>
         <div>
             <h3>{{ props.name }}</h3> ···
-            <p>{{ props.price }}</p>
+            <p>{{ props.price }} fcfa</p>
         </div>
         <div>
-            <NuxtLink to="/admin/product/read">
-                <button type="button">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#C0A080"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
-                </button>
-            </NuxtLink>
-            <NuxtLink to="/admin/product/edit">
-                <button type="button">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#C0A080"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>
-                </button>
-            </NuxtLink>
-            <button type="button">
-                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#C0A080"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
+            <button
+                type="button"
+                :class="{ animate: isAnimating }"
+                @click="handleAddClick"
+            >
+                {{ isAdded ? "Panier" : "Ajouter" }}
+                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#C0A080"><path d="M444-576v-132H312v-72h132v-132h72v132h132v72H516v132h-72ZM263.79-96Q234-96 213-117.21t-21-51Q192-198 213.21-219t51-21Q294-240 315-218.79t21 51Q336-138 314.79-117t-51 21Zm432 0Q666-96 645-117.21t-21-51Q624-198 645.21-219t51-21Q726-240 747-218.79t21 51Q768-138 746.79-117t-51 21ZM48-792v-72h133l155 360h301l113-264h78L703-476q-9 20-26.5 32T637-432H317l-42 72h493v72H276q-42 0-63-36.5t0-71.5l52-90-131-306H48Z"/></svg>
             </button>
         </div>
     </article>
@@ -102,9 +118,6 @@ article {
                 weight: bold;
                 family: "Inter"
             }
-            /*width: 50px;
-            height: 50px;
-            border-radius: 50%;*/
 
             &:hover {
                 box-shadow: 0px 1px 4px black;
@@ -113,9 +126,60 @@ article {
     }
 }
 
+.image-wrapper {
+  position: relative;
+  width: 280px;
+  height: 280px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 10px;
+  }
+
+  .see-more {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 8px 16px;
+    border-radius: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  &:hover .see-more {
+    opacity: 1;
+  }
+}
+
+button.animate {
+  animation: bounce 0.3s ease;
+}
+
+@keyframes bounce {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.15); }
+  60% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+
 .more {
     font: {
         size: 12px;
     }
 }
+
+a {
+    text-decoration: none;
+}
+
 </style>
+

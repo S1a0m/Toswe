@@ -120,6 +120,7 @@ definePageMeta({
       border: 1px solid #ccc;
       border-radius: 10px;
       transition: border-color 0.2s ease;
+      background: rgba(245, 230, 218, 0.4);
 
       &:focus {
         outline: none;
@@ -162,7 +163,7 @@ definePageMeta({
         }
 
         &.cancel {
-          background-color: #f0f0f0;
+          background: rgba(245, 230, 218, 0.4);
 
           &:hover {
             background-color: #e0e0e0;

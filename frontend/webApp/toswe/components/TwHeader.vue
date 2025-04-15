@@ -24,6 +24,9 @@ const updateActivePage = () => {
     case "/rules":
       activePage.value = 'Politiques d utilisation du site';
       break;
+    case "/product":
+      activePage.value = 'Produit';
+      break;
     default:
       activePage.value = 'Page inconnue';
   }
@@ -100,22 +103,24 @@ const redirectToStore = () => {
                 <img src="/public/images/toswe-montre.png" alt="">
             </div>
         </div>
-        <div class="menu" id="nav-head">
-            <span @click="toggleMenu" class="icon">
-                <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#C0A080"><path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/></svg>
-            </span>
-            <span class="active-page">{{ activePage }}</span>
+        <div class="main-menu">
+            <div class="menu" id="nav-head">
+                <span @click="toggleMenu" class="icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#C0A080"><path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/></svg>
+                </span>
+                <span class="active-page">{{ activePage }}</span>
+            </div>
+            <transition name="slide-up-menu">
+            <nav v-if="showMenu">
+                <TwPageLink link="/#nav-head">Acceuil</TwPageLink>
+                <TwPageLink link="/about#nav-head">A propos</TwPageLink>
+                <TwPageLink link="/contact#nav-head">Nous contacter</TwPageLink>
+                <!--<TwPageLink>Telecharger l'app</TwPageLink>-->
+                <!--<TwPageLink>Rechercher un produit</TwPageLink>-->
+                <TwPageLink link="/basket#nav-head">Panier</TwPageLink>
+            </nav>
+            </transition>
         </div>
-        <transition name="slide-up-menu">
-        <nav v-if="showMenu">
-            <TwPageLink link="/#nav-head">Acceuil</TwPageLink>
-            <TwPageLink link="/about#nav-head">A propos</TwPageLink>
-            <TwPageLink link="/contact#nav-head">Nous contacter</TwPageLink>
-            <!--<TwPageLink>Telecharger l'app</TwPageLink>-->
-            <!--<TwPageLink>Rechercher un produit</TwPageLink>-->
-            <TwPageLink link="/basket#nav-head">Panier</TwPageLink>
-        </nav>
-        </transition>
     </div>
     <TwDownloadApp :showPopup="showPopup" @close="showPopup = false" />
 </template>
@@ -286,10 +291,12 @@ nav {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.5s 0s ease;
+    transition: all 0.2s 0s ease;
+    height: 40px;
+    width: 40px;
 
     &:hover {
-        transform: scale(1.15);
+        box-shadow: 0px 1px 4px black;
     }
 }
 

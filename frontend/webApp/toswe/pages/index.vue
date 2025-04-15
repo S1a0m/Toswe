@@ -1,5 +1,12 @@
 <script setup>
-const articles = ref([]);
+const articles = ref([
+  {
+    id: 1,
+    name: "Chargeur",
+    img: "images/chargeur.jpg",
+    price: "2500"
+  },
+]);
 </script>
 
 <template>
@@ -23,7 +30,7 @@ const articles = ref([]);
         </nav>
       </header>
       <main>
-        <TwArticle v-for="article in articles" :key="article.id" :id="id" :img="img" :name="name" :price="price" :status="status"/>
+        <TwArticle v-for="article in articles" :key="article.id" :id="article.id" :img="article.img" :name="article.name" :price="article.price"/>
       </main>
     </div>
 </template>

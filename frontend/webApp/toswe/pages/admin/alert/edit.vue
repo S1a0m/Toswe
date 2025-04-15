@@ -109,6 +109,7 @@ definePageMeta({
       border-radius: 8px;
       border: 1px solid #ccc;
       font-size: 14px;
+      background: rgba(245, 230, 218, 0.4);
     }
 
     .preview {
@@ -142,7 +143,7 @@ definePageMeta({
       }
 
       &.cancel {
-        background-color: #eee;
+        background: rgba(245, 230, 218, 0.4);
         color: #444;
 
         &:hover {

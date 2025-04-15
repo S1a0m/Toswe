@@ -137,7 +137,7 @@ definePageMeta({
       }
 
       &.delete {
-        background-color: #ffdddd;
+        background: rgba(245, 230, 218, 0.4);
         color: #b80000;
 
         &:hover {

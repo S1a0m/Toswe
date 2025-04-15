@@ -5,6 +5,24 @@ const slideList = [
   { id: 2, src: '/images/chargeur.jpg' },
   { id: 3, src: '/images/img3.jpg' },
 ]
+
+const router = useRouter()
+const isAdded = ref(false)
+const isAnimating = ref(false)
+
+function handleAddClick() {
+  if (isAdded.value) {
+    router.push('/basket#nav-head')
+    return
+  }
+
+  isAdded.value = true
+  isAnimating.value = true
+
+  setTimeout(() => {
+    isAnimating.value = false
+  }, 300)
+}
 </script>
 
 <template>
@@ -28,16 +46,22 @@ const slideList = [
           </div>
 
           <div class="order-actions">
-            <button>Ajouter au panier</button><br><br><br>
+            <button
+                type="button"
+                :class="{ animate: isAnimating }"
+                @click="handleAddClick"
+            >
+            {{ isAdded ? "Consulter le" : "Ajouter au" }} panier
+            </button><br><br><br>
             <div class="go-order">
-              <NustLink>
+              <NuxtLink to="#other-versions">
                 <span class="gone-order">
                   Voir d'autres versions
                   <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="#C0A080">
                     <path d="M440-800v487L216-537l-56 57 320 320 320-320-56-57-224 224v-487h-80Z"/>
                   </svg>
                 </span>
-              </NustLink>
+              </NuxtLink>
             </div>
           </div>
         </div>
@@ -50,21 +74,20 @@ const slideList = [
     <section>
       <h2>· Description ·</h2>
       <p>
-        Son haute définition : Profitez de basses profondes et de sons cristallins grâce à la technologie X-BASS Boost. 
-        Bluetooth 5.0 : Connexion ultra-stable jusqu’à 15 mètres de distance. 
-        Autonomie longue durée : Jusqu’à 12 heures de musique non-stop avec une seule charge.<br><br>
-
-        Caractéristiques :<br>
-        · Résistante à l’eau (IPX7) : Parfaite pour la plage, la piscine ou la douche.<br>
-        · Mode Party Connect : Associez plusieurs enceintes pour une ambiance encore plus intense.<br>
-        · Port USB & Micro SD : Lisez vos musiques directement sans Bluetooth.
+        <ul>
+          <li>Résistante à l’eau (IPX7) : Parfaite pour la plage, la piscine ou la douche.</li>
+          <li>Mode Party Connect : Associez plusieurs enceintes pour une ambiance encore plus intense.</li>
+          <li>Port USB & Micro SD : Lisez vos musiques directement sans Bluetooth.</li>
+          <li>Bluetooth 5.0 : Connexion ultra-stable jusqu’à 15 mètres de distance.</li>
+          <li>Autonomie longue durée : Jusqu’à 12 heures de musique non-stop avec une seule charge.</li>
+        </ul>
       </p>
     </section>
 
     <br><br><br>
 
     <!-- Section Autres Versions -->
-    <section class="testimony">
+    <section class="testimony"  id="other-versions">
       <h2>· Autres versions du produit ·</h2>
       <div class="mix">
         <div class="bkgcolors">
@@ -98,15 +121,12 @@ section {
 
   p {
     margin-top: 20px;
-    padding: 15px;
+    padding: 50px;
     background: rgba(239, 232, 232, 0.5);
     color: #2D1B14;
     backdrop-filter: blur(4px);
     border-radius: 20px;
     width: fit-content;
-
-    font-size: 18px;
-    font-family: "Lora";
   }
 }
 
@@ -114,9 +134,11 @@ section {
   .mix {
     margin-top: 20px;
     background: rgba(45, 27, 20, 1);
+    border-radius: 20px;
 
     .bkgcolors {
       background: rgba(239, 232, 232, 0.1);
+      border-radius: 20px;
       height: 100%;
     }
   }
@@ -162,6 +184,11 @@ section {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.5s ease;
+
+  &:hover {
+    background: rgba(245, 230, 218, 0.4);
+  }
 }
 
 .active-product {
@@ -226,10 +253,30 @@ button {
   display: flex;
   align-items: center;
   cursor: pointer;
-  transition: font-weight 0.5s ease;
+  transition: all 1s 0s ease;
 
   &:hover {
-    font-weight: 800;
+    text-decoration: underline;
   }
+}
+
+button.animate {
+  animation: bounce 0.3s ease;
+}
+
+li {
+  font-size: 18px;
+  font-family: "Lora";
+}
+
+@keyframes bounce {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.15); }
+  60% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+a {
+  text-decoration: none;
 }
 </style>
