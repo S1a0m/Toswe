@@ -2,6 +2,17 @@
 definePageMeta({
   layout: 'admin'
 })
+
+const previews = ref([])
+
+function handleFiles(event) {
+  previews.value = []
+  const files = event.target.files
+  for (const file of files) {
+    const url = URL.createObjectURL(file)
+    previews.value.push(url)
+  }
+}
 </script>
 
 <template>
@@ -14,7 +25,10 @@ definePageMeta({
     <form class="product-form">
       <div class="form-group">
         <label for="product-images">Images du produit</label>
-        <input type="file" id="product-images" multiple accept="image/*" />
+        <input type="file" multiple accept="image/*" @change="handleFiles" />
+        <div v-for="(image, index) in previews" :key="index" class="pre">
+          <img :src="image" alt="preview" width="100" class="view"/>
+        </div>
       </div>
 
       <div class="form-group">
@@ -110,6 +124,18 @@ definePageMeta({
 
       textarea {
         resize: vertical;
+      }
+
+      .pre {
+        display: flex;
+        flex-direction: row;
+        .view {
+          margin-top: 10px;
+          max-width: 100%;
+          max-height: 200px;
+          border-radius: 10px;
+          border: 1px solid #ccc;
+        }
       }
     }
 

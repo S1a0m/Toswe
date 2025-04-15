@@ -1,15 +1,21 @@
 <script setup>
-const status = 'draft' // Change selon l’état réel : 'published', 'unpublished', 'draft'
+const props = defineProps([
+    "id",
+    "status", // connected, not-connected
+    "name",
+    "address",
+    "contact"
+])
 </script>
 
 <template>
     <article>
-        <span :class="['status-dot', status]"></span>
+        <span :class="['status-dot', props.status]"></span>
         <!--<img src="/public/images/table-royal.webp" alt="">-->
         <div class="info">
-            <h3>Prenom NOM</h3> ···
-            <p>Addresse</p>
-            <p>01 45 78 98 35</p>
+            <h3>{{ props.name }}</h3> ···
+            <p>{{ props.address }}</p>
+            <p>{{ props.contact }}</p>
         </div>
         <div class="actions">
             <button type="button">
@@ -118,13 +124,12 @@ article {
 }
 
 /* Couleurs selon le statut */
-.status-dot.published {
+.status-dot.connected {
   background-color: #16a34a; // vert
 }
-.status-dot.unpublished {
-  background-color: #dc2626; // rouge
-}
-.status-dot.draft {
+
+
+.status-dot.not-connected {
   background-color: #6b7280; // gris
 }
 </style>

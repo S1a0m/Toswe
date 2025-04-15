@@ -2,6 +2,8 @@
 definePageMeta({
   layout: 'admin'
 })
+
+const users = ref([])
 </script>
 
 <template>
@@ -9,18 +11,7 @@ definePageMeta({
       <header>
       </header>
       <main>
-        <TwUserAdmin />
-        <TwUserAdmin />
-        <TwUserAdmin />
-        <TwUserAdmin />
-        <TwUserAdmin />
-        <TwUserAdmin />
-        <TwUserAdmin />
-        <TwUserAdmin />
-        <TwUserAdmin />
-        <TwUserAdmin />
-        <TwUserAdmin />
-        <TwUserAdmin />
+        <TwUserAdmin v-for="user in users" :id="user.id" :status="user.status" :name="user.name" :address="user.address" :contact="user.contact"/>
       </main>
     </div>
     <button type="button">

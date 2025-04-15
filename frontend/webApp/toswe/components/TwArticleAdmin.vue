@@ -1,15 +1,21 @@
 <script setup>
-const status = 'draft' // Change selon l’état réel : 'published', 'unpublished', 'draft'
+const props = defineProps([
+    "id",
+    "img",
+    "name",
+    "price",
+    "status",
+])
 </script>
 
 
 <template>
     <article>
-        <span :class="['status-dot', status]"></span>
-        <img src="/public/images/table-royal.webp" alt="">
+        <span :class="['status-dot', props.status]"></span>
+        <img :src="props.img" alt="">
         <div>
-            <h3>Table</h3> ···
-            <p>25 300 fcfa</p>
+            <h3>{{ props.name }}</h3> ···
+            <p>{{ props.price }}</p>
         </div>
         <div>
             <NuxtLink to="/admin/product/read">

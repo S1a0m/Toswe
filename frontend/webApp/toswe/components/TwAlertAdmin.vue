@@ -1,13 +1,18 @@
 <script setup>
-const status = 'draft' // Change selon l’état réel : 'published', 'unpublished', 'draft'
+const props = defineProps([
+  "id",
+  "img",
+  "messagePreview",
+  "status"
+])
 </script>
 
 <template>
     <article>
-        <span :class="['status-dot', status]"></span>
-        <img src="/public/images/info.jpg" alt="">
+        <span :class="['status-dot', props.status]"></span>
+        <img :src="props.img" alt="">
         <div>
-            <p>Bref apercu de l'alert...</p>
+            <p>{{ props.messagePreview }}...</p>
         </div>
         <div>
             <NuxtLink to="/admin/alert/read">

@@ -1,3 +1,7 @@
+<script setup>
+const articles = ref([]);
+</script>
+
 <template>
     <div class="home">
       <header>
@@ -19,7 +23,7 @@
         </nav>
       </header>
       <main>
-        <TwArticle v-for="i in 21" :key="i" />
+        <TwArticle v-for="article in articles" :key="article.id" :id="id" :img="img" :name="name" :price="price" :status="status"/>
       </main>
     </div>
 </template>

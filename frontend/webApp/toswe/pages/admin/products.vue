@@ -2,6 +2,8 @@
 definePageMeta({
   layout: 'admin'
 })
+
+const articles = ref([]);
 </script>
 
 <template>
@@ -24,23 +26,7 @@ definePageMeta({
         </nav>
       </header>
       <main>
-        <TwArticleAdmin />
-        <TwArticleAdmin />
-        <TwArticleAdmin />
-        <TwArticleAdmin />
-        <TwArticleAdmin />
-        <TwArticleAdmin />
-        <TwArticleAdmin />
-        <TwArticleAdmin />
-        <TwArticleAdmin />
-        <TwArticleAdmin />
-        <TwArticleAdmin />
-        <TwArticleAdmin />
-        <TwArticleAdmin />
-        <TwArticleAdmin />
-        <TwArticleAdmin />
-        <TwArticleAdmin />
-        <TwArticleAdmin />
+        <TwArticleAdmin v-for="article in articles" :key="article.id" :id="id" :img="img" :name="name" :price="price" :status="status"/>
       </main>
     </div>
     <button type="button">

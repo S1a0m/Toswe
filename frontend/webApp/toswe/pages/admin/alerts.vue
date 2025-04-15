@@ -2,6 +2,8 @@
 definePageMeta({
   layout: 'admin'
 })
+
+const alerts = ref([]);
 </script>
 
 <template>
@@ -9,14 +11,12 @@ definePageMeta({
       <header>
       </header>
       <main>
-        <TwAlertAdmin />
-        <TwAlertAdmin />
-        <TwAlertAdmin />
-        <TwAlertAdmin />
-        <TwAlertAdmin />
-        <TwAlertAdmin />
-        <TwAlertAdmin />
-        <TwAlertAdmin />
+        <TwAlertAdmin v-for="alert in alerts"
+        :id="alert.id"
+        :img="alert.img"
+        :messagePreview="alert.messagePreview"
+        :status="alert.status"
+        />
       </main>
     </div>
     <button type="button">

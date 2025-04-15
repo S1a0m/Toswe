@@ -1,15 +1,20 @@
-<script setup>
-const status = 'draft' // Change selon l’état réel : 'published', 'unpublished', 'draft'
+<script setup> 
+const props = defineProps([
+  "id",
+  "title",
+  "messagePreview",
+  "status"
+])
 </script>
 
 
 <template>
     <article>
-        <span :class="['status-dot', status]"></span>
+        <span :class="['status-dot', props.status]"></span>
         <!--<img src="/public/images/table-royal.webp" alt="">-->
         <div class="info">
-            <h3>Titre de la notif</h3>
-            <p>Bref apercu de la notif...</p>
+            <h3>{{ props.title }}</h3>
+            <p>{{ props.messagePreview }}...</p>
         </div>
         <div class="actions">
             <NuxtLink to="/admin/notification/read">

@@ -1,3 +1,47 @@
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useCookie } from '#app' // pour manipuler les cookies
+
+const email = ref('')
+const password = ref('')
+const errorMessage = ref('')
+const router = useRouter()
+
+async function handleLogin() {
+  try {
+    const response = await $fetch('http://localhost:8000/auth/login', {
+      method: 'POST',
+      body: {
+        mobile_number: email.value, // remplace par email si besoin
+        password: password.value
+      }
+    })
+
+    const { access_token, refresh_token } = response
+
+    // Stockage des tokens dans localStorage ou cookie (selon ton choix de sécurité)
+    localStorage.setItem('access_token', access_token)
+    localStorage.setItem('refresh_token', refresh_token)
+
+    // OU : avec cookies pour sécurité + SSR friendly
+    // useCookie('access_token').value = access_token
+    // useCookie('refresh_token').value = refresh_token
+
+    // Redirection après succès
+    router.push('/admin/products')
+  } catch (err) {
+    console.error(err)
+    errorMessage.value = err?.data?.detail || 'Erreur lors de la connexion'
+  }
+}
+
+definePageMeta({
+  layout: 'admin'
+})
+</script>
+
+
 <template>
     <div class="admin-login">
       <div class="login-box">
@@ -19,33 +63,6 @@
       </div>
     </div>
   </template>
-  
-  <script setup>
-  import { ref } from 'vue'
-  
-  const email = ref('')
-  const password = ref('')
-  const errorMessage = ref('')
-  
-  function handleLogin() {
-    if (email.value === 'admin@example.com' && password.value === 'admin123') {
-      console.log('Connexion réussie')
-      // Rediriger ou stocker l'état de connexion ici
-    } else {
-      errorMessage.value = 'Identifiants incorrects'
-    }
-  }
-  
-  function reset() {
-    email.value = ''
-    password.value = ''
-    errorMessage.value = ''
-  }
-
-  definePageMeta({
-  layout: 'admin'
-})
-  </script>
   
   <style scoped lang="scss">
   .admin-login {

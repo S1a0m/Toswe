@@ -83,7 +83,7 @@ const redirectToStore = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#2D1B14"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></svg>
                 </div>
                 <TwSearch v-if="showSearchPopup" @close-searchpopup="toggleSearchPopup"/>
-                <TwLoginBtn @click="redirectToStore"/>
+                <TwLogoutBtn @click="redirectToStore"/>
                 <!--<TwSignUpBtn @click="redirectToStore"/>-->
             </div>
         </div>
@@ -287,9 +287,12 @@ nav {
     align-items: center;
     justify-content: center;
     transition: all 0.5s 0s ease;
+    height: 40px;
+    width: 40px;
 
     &:hover {
-        transform: scale(1.15);
+        // transform: scale(1.15);
+        box-shadow: 0px 1px 4px black;
     }
 }
 

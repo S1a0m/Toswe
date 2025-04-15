@@ -22,7 +22,7 @@ background-image: url("/public/images/toswe-africa-art.png");
 background-repeat: no-repeat;
 background-size: cover;
 background-attachment: fixed;
-// height: 100vh;
+min-height: 100vh;
 }
 
 .template {

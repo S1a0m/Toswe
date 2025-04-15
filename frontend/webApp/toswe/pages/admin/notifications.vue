@@ -2,6 +2,8 @@
 definePageMeta({
   layout: 'admin'
 })
+
+const notifications = ref([]);
 </script>
 
 <template>
@@ -9,11 +11,12 @@ definePageMeta({
       <header>
       </header>
       <main>
-        <TwNotificationAdmin />
-        <TwNotificationAdmin />
-        <TwNotificationAdmin />
-        <TwNotificationAdmin />
-        <TwNotificationAdmin />
+        <TwNotificationAdmin v-for="notification in notifications"
+        :id="notification.id"
+        :title="notification.title"
+        :messagePreview="notification.messagePreview"
+        :status="notification.status"
+        />
       </main>
     </div>
     <button type="button">

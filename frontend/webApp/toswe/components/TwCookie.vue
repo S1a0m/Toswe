@@ -65,7 +65,7 @@
   }
   
   .cookie-container button:hover {
-    background: #e6b800;
+    background: #C0A080;
   }
   </style>
   
