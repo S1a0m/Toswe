@@ -1,4 +1,6 @@
 <script setup>
+import { useCartStore } from "@/stores/cart"
+
 const props = defineProps([
   "id",
   "img",
@@ -10,12 +12,22 @@ const router = useRouter()
 const isAdded = ref(false)
 const isAnimating = ref(false)
 
+const cart = useCartStore()
+
+const product = {
+    id: props.id,
+    img: props.img,
+    name: props.name,
+    price: props.price
+}
+
 function handleAddClick() {
   if (isAdded.value) {
     router.push('/basket#nav-head')
     return
   }
 
+  cart.addToCart(product)
   isAdded.value = true
   isAnimating.value = true
 

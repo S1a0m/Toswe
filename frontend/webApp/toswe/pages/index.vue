@@ -23,6 +23,24 @@ const fetchArticleByCategory = (category) => {
       img: "images/chargeur.jpg",
       price: "2500"
     },
+    {
+      id: 2,
+      name: "Montre",
+      img: "images/montre.jpg",
+      price: "6000"
+    },
+    {
+      id: 3,
+      name: "Chargeur",
+      img: "images/chargeur.jpg",
+      price: "2500"
+    },
+    {
+      id: 4,
+      name: "Montre",
+      img: "images/montre.jpg",
+      price: "6000"
+    },
   ];
 };
 

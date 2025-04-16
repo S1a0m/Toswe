@@ -1,5 +1,7 @@
 <script setup>
-const items = ref([]);
+import { useCartStore } from "@/stores/cart"
+
+const cart = useCartStore()
 </script>
 
 <template>
@@ -16,21 +18,27 @@ const items = ref([]);
           <span>Supprimer</span>
         </div>
 
-        <TwArticleItem v-for="item in items"
-          :id="item.id",
+        <div v-if="cart.items.length > 0">
+        <TwArticleItem
+          v-for="item in cart.items"
+          :key="item.id"
+          :id="item.id"
           :name="item.name"
           :price="item.price"
-          :total="item.total"
+          :total="item.price * item.quantity"
           :img="item.img"
-          :number="item.number"
+          :number="item.quantity"
         />
+        <h3 class="total-row last-row">Total : {{ cart.totalAmount }} fcfa</h3><br>
+        <button type="submit">
+          Soummettre
+          <svg xmlns="http://www.w3.org/2000/svg" height="25px" viewBox="0 -960 960 960" width="25px" fill="#2D1B14"><path d="M560-440q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35ZM280-320q-33 0-56.5-23.5T200-400v-320q0-33 23.5-56.5T280-800h560q33 0 56.5 23.5T920-720v320q0 33-23.5 56.5T840-320H280Zm80-80h400q0-33 23.5-56.5T840-480v-160q-33 0-56.5-23.5T760-720H360q0 33-23.5 56.5T280-640v160q33 0 56.5 23.5T360-400Zm440 240H120q-33 0-56.5-23.5T40-240v-440h80v440h680v80ZM280-400v-320 320Z"/></svg>
+        </button>
       </div>
+      <p class="last-row" v-else>Votre panier est vide.</p>
 
+      </div>
     </section><br><br><br>
-    <button type="submit">
-      Soummettre
-      <svg xmlns="http://www.w3.org/2000/svg" height="25px" viewBox="0 -960 960 960" width="25px" fill="#2D1B14"><path d="M560-440q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35ZM280-320q-33 0-56.5-23.5T200-400v-320q0-33 23.5-56.5T280-800h560q33 0 56.5 23.5T920-720v320q0 33-23.5 56.5T840-320H280Zm80-80h400q0-33 23.5-56.5T840-480v-160q-33 0-56.5-23.5T760-720H360q0 33-23.5 56.5T280-640v160q33 0 56.5 23.5T360-400Zm440 240H120q-33 0-56.5-23.5T40-240v-440h80v440h680v80ZM280-400v-320 320Z"/></svg>
-    </button>
   </div>
 </template>
   
@@ -100,6 +108,17 @@ section {
   }
 }
 
+.last-row {
+    background: rgba(239, 232, 232, 0.5);
+    font-weight: 600;
+    font-family: "Inter";
+    border-radius: 15px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7D260F;
+}
 
 button {
   display: flex;

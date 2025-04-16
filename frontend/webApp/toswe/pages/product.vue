@@ -6,6 +6,12 @@ const slideList = [
   { id: 3, src: '/images/img3.jpg' },
 ]
 
+const product = {
+  id: 123,
+  title: "Nom du produit",
+  price: 29.99
+}
+
 const router = useRouter()
 const isAdded = ref(false)
 const isAnimating = ref(false)

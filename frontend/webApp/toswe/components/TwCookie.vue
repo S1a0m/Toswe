@@ -1,34 +1,54 @@
-<template>
-    <div v-if="showPopup" class="cookie-container">
-      <p>
-        Ce site utilise des cookies pour améliorer votre expérience.
-        <NuxtLink to="/rules">En savoir plus</NuxtLink>.
-      </p>
-      <button @click="acceptCookies">Accepter</button>
-      <button @click="declineCookies">Refuser</button>
-    </div>
-  </template>
-  
-  <script setup>
-  import { ref } from "vue";
-  import { useCookie } from "#app";
-  
-  // Vérifie si un cookie de consentement existe déjà
-  const cookieConsent = useCookie("cookieConsent");
-  const showPopup = ref(!cookieConsent.value);
-  
-  // Fonction pour accepter les cookies
-  const acceptCookies = () => {
+<script setup>
+import { ref } from "vue";
+import { useCookie } from "#app";
+
+const cookieConsent = useCookie("cookieConsent");
+const anonUserId = useCookie("anonUserId"); // on utilisera ça pour stocker l'ID anonyme
+const showPopup = ref(!cookieConsent.value);
+
+
+const acceptCookies = async () => {
+  try {
+    const response = await $fetch("http://localhost:8000/api/anonyme-user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({}), 
+    });
+
+    if (!response.ok) {
+      throw new Error("Erreur lors de la création de l'utilisateur anonyme.");
+    }
+
+    const data = await response.json();
+    // console.log(data) -> { id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" }
+
+    anonUserId.value = data.id;
     cookieConsent.value = "accepted";
     showPopup.value = false;
-  };
-  
-  // Fonction pour refuser les cookies
-  const declineCookies = () => {
-    cookieConsent.value = "declined";
-    showPopup.value = false;
-  };
-  </script>
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const declineCookies = () => {
+  cookieConsent.value = "declined";
+  showPopup.value = false;
+};
+</script>
+
+<template>
+  <div v-if="showPopup" class="cookie-container">
+    <p>
+      Ce site utilise des cookies pour améliorer votre expérience.
+      <NuxtLink to="/rules">En savoir plus</NuxtLink>.
+    </p>
+    <button @click="acceptCookies">Accepter</button>
+    <button @click="declineCookies">Refuser</button>
+  </div>
+</template>
+
   
   <style scoped>
   .cookie-container {
