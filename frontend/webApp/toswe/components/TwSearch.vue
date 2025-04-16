@@ -30,29 +30,29 @@ const closeSearchPopup = () => {
 
 <template>
     <transition name="slide-up">
-    <div v-if="showPopup" class="popup-container">
-      <div class="popup">
-        <h1>Rechercher</h1>
-        <input 
-          type="text" 
-          v-model="searchQuery" 
-          placeholder="Tapez votre recherche..." 
-          class="search-input"
-        />
-        
-        <div class="results">
-          <p v-if="searchQuery && filteredResults.length === 0">Aucun résultat trouvé.</p>
-          <ul v-else>
-            <li v-for="(result, index) in filteredResults" :key="index">
-              {{ result }}
-            </li>
-          </ul>
+      <div v-if="showPopup" class="popup-container">
+        <div class="popup">
+          <h1>Rechercher</h1>
+          <input 
+            type="text" 
+            v-model="searchQuery" 
+            placeholder="Tapez votre recherche..." 
+            class="search-input"
+          />
+          
+          <div class="results">
+            <p v-if="searchQuery && filteredResults.length === 0">Aucun résultat trouvé.</p>
+            <ul v-else>
+              <li v-for="(result, index) in filteredResults" :key="index">
+                {{ result }}
+              </li>
+            </ul>
+          </div>
+    
+          <button class="close-btn" @click="closeSearchPopup">Fermer</button>
         </div>
-  
-        <button class="close-btn" @click="closeSearchPopup">Fermer</button>
       </div>
-    </div>
-  </transition>
+    </transition>
   </template>
   
   <style scoped>

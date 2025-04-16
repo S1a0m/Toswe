@@ -4,6 +4,35 @@ definePageMeta({
 })
 
 const articles = ref([]);
+const activeCategory = ref('');
+
+const categories = [
+  { name: "Chez nous", value: "chez-nous" },
+  { name: "Accessoires", value: "accessoires" },
+  { name: "Bureautique", value: "bureautique" },
+  { name: "Mode", value: "mode" },
+  { name: "Sport", value: "sport" },
+  { name: "Art", value: "art" },
+];
+
+const fetchArticleByCategory = (category) => {
+  activeCategory.value = category;
+  // fetch logique...
+  articles.value = [
+    {
+      id: 1,
+      name: "Chargeur",
+      img: "/images/chargeur.jpg",
+      price: "2500",
+      status: "published"
+    },
+  ];
+};
+
+onMounted(() => {
+  fetchArticleByCategory('chez-nous')
+})
+
 </script>
 
 <template>
@@ -16,23 +45,21 @@ const articles = ref([]);
         </div>
         <nav>
           <ul>
-            <li class="active-categorie-page"><TwCategoriePageLink>Chez nous</TwCategoriePageLink></li>
-            <li><TwCategoriePageLink>Accessoires</TwCategoriePageLink></li>
-            <li><TwCategoriePageLink>Bureautique</TwCategoriePageLink></li>
-            <li><TwCategoriePageLink>Mode</TwCategoriePageLink></li>
-            <li><TwCategoriePageLink>Sport</TwCategoriePageLink></li>
-            <li><TwCategoriePageLink>Art</TwCategoriePageLink></li>
+            <li 
+              v-for="cat in categories" 
+              :key="cat.value" 
+              @click="fetchArticleByCategory(cat.value)"
+              :class="{ active: activeCategory === cat.value }"
+            >
+              {{ cat.name }}
+            </li>
           </ul>
         </nav>
       </header>
       <main>
-        <TwArticleAdmin v-for="article in articles" :key="article.id" :id="id" :img="img" :name="name" :price="price" :status="status"/>
+        <TwArticleAdmin v-for="article in articles" :key="article.id" :id="article.id" :img="article.img" :name="article.name" :price="article.price" :status="article.status"/>
       </main>
     </div>
-    <button type="button">
-      Nouveau
-      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#C0A080"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
-    </button>
 </template>
 
 <style lang="scss" scoped>
@@ -71,7 +98,7 @@ header {
     justify-content: center;
     backdrop-filter: blur(4px);
 
-    ul {
+    /*ul {
       list-style-type: none;
       display: flex;
       // gap: 10px;
@@ -81,6 +108,12 @@ header {
 
       li {
         cursor: pointer;
+        transition: all 0.3s ease;
+        font: {
+            // size: 20px;
+            // weight: 500;
+            family: "Lora";
+        }
 
         &:hover {
           color: #C0A080;
@@ -96,8 +129,37 @@ header {
         text-decoration-thickness: 2px;
         text-underline-offset: 8px;
       }
-    }
+    }*/
   }
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+nav ul li {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: "Lora";
+  padding: 8px 12px;
+  border-radius: 4px;
+  background-color: transparent;
+  color: #2D1B14;
+  border: 1px solid transparent;
+}
+
+nav ul li:hover {
+  background-color: #f5e6da;
+}
+
+nav ul li.active {
+  background-color: #C0A080;
+  color: white;
+  font-weight: bold;
 }
 
 main {
@@ -108,37 +170,4 @@ main {
   align-items: center;
   gap: 40px;
 }
-
-button {
-            background: rgba(245, 230, 218, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #C0A080;
-            // width: 50px;
-            height: 40px;
-            border: none;
-            border-radius: 20px;
-            border-style: solid;
-            border-width: 1px;
-            cursor: pointer;
-            padding: 8px;
-            position: fixed;
-            bottom: 50px;
-            right: 50px;
-
-            font: {
-                size: 16px;
-                weight: bold;
-                family: "Inter"
-            }
-            /*width: 50px;
-            height: 50px;
-            border-radius: 50%;*/
-
-            &:hover {
-                box-shadow: 0px 1px 4px black;
-                background: rgba(245, 230, 218, 0.1);
-            }
-        }
 </style>

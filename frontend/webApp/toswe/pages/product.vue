@@ -93,11 +93,12 @@ function handleAddClick() {
         <div class="bkgcolors">
           <div class="testimoner">
             <div class="other-versions">
-              <img src="/public/images/montre.jpg" alt="" class="version" />
-              <img src="/public/images/chargeur.jpg" alt="" class="version" />
-              <img src="/public/images/trepied.png" alt="" class="version" />
-              <img src="/public/images/table-royal.webp" alt="" class="version" />
-              <img src="/public/images/toswe-montre.png" alt="" class="version" />
+              <NuxtLink to="/product#nav-head" v-for="i in 5" :key="i">
+                <div class="image-wrapper">
+                  <img src="/public/images/montre.jpg" alt="" class="version" />
+                  <div class="see-more">Voir plus...</div>
+                </div>
+              </NuxtLink>
             </div>
           </div>
         </div>
@@ -257,6 +258,39 @@ button {
 
   &:hover {
     text-decoration: underline;
+  }
+}
+
+.image-wrapper {
+  position: relative;
+  width: 280px;
+  height: 280px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 10px;
+  }
+
+  .see-more {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 8px 16px;
+    border-radius: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  &:hover .see-more {
+    opacity: 1;
   }
 }
 

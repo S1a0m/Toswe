@@ -5,13 +5,12 @@
 <template>
     <div class="banner">
         <div class="header">
-            <div class="logo">
-                <img src="/public/logo-toswe.png" alt="" class="logo-toswe">
-                <h1>Tôswè.africa - Admin</h1>
-            </div>
-            <div class="sign">
-                <NuxtLink to="/"><span class="sign">Consulter sur le site</span></NuxtLink>
-            </div>
+            <NuxtLink to="/">
+                <div class="logo">
+                    <img src="/public/logo-toswe.png" alt="" class="logo-toswe">
+                    <h1>Tôswè.africa - Admin</h1>
+                </div>
+            </NuxtLink>
         </div>
     </div>
 </template>

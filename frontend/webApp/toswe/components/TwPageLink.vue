@@ -24,6 +24,7 @@ const props = defineProps([
 
     &:hover{
         color: #C0A080;
+        transition: all 0.3s 0s ease-in-out;
     }
 }
 </style>

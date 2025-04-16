@@ -1,12 +1,35 @@
 <script setup>
-const articles = ref([
-  {
-    id: 1,
-    name: "Chargeur",
-    img: "images/chargeur.jpg",
-    price: "2500"
-  },
-]);
+const articles = ref([]);
+const activeCategory = ref('');
+
+
+const categories = [
+  { name: "Sélectionné pour vous", value: "for-you" },
+  { name: "Chez nous", value: "chez-nous" },
+  { name: "Accessoires", value: "accessoires" },
+  { name: "Bureautique", value: "bureautique" },
+  { name: "Mode", value: "mode" },
+  { name: "Sport", value: "sport" },
+  { name: "Art", value: "art" },
+];
+
+const fetchArticleByCategory = (category) => {
+  activeCategory.value = category;
+  // fetch logique...
+  articles.value = [
+    {
+      id: 1,
+      name: "Chargeur",
+      img: "images/chargeur.jpg",
+      price: "2500"
+    },
+  ];
+};
+
+onMounted(() => {
+  fetchArticleByCategory('for-you')
+})
+
 </script>
 
 <template>
@@ -19,13 +42,14 @@ const articles = ref([
         </div>
         <nav>
           <ul>
-            <li class="active-categorie-page"><TwCategoriePageLink>Selectionner pour vous</TwCategoriePageLink></li>
-            <li><TwCategoriePageLink>Chez nous</TwCategoriePageLink></li>
-            <li><TwCategoriePageLink>Accessoires</TwCategoriePageLink></li>
-            <li><TwCategoriePageLink>Bureautique</TwCategoriePageLink></li>
-            <li><TwCategoriePageLink>Mode</TwCategoriePageLink></li>
-            <li><TwCategoriePageLink>Sport</TwCategoriePageLink></li>
-            <li><TwCategoriePageLink>Art</TwCategoriePageLink></li>
+            <li 
+              v-for="cat in categories" 
+              :key="cat.value" 
+              @click="fetchArticleByCategory(cat.value)"
+              :class="{ active: activeCategory === cat.value }"
+            >
+              {{ cat.name }}
+            </li>
           </ul>
         </nav>
       </header>
@@ -71,7 +95,7 @@ header {
     justify-content: center;
     backdrop-filter: blur(4px);
 
-    ul {
+    /*ul {
       list-style-type: none;
       display: flex;
       // gap: 10px;
@@ -82,6 +106,11 @@ header {
       li {
         cursor: pointer;
         transition: all 0.3s ease;
+        font: {
+            // size: 20px;
+            // weight: 500;
+            family: "Lora";
+        }
 
         &:hover {
           color: #C0A080;
@@ -97,9 +126,39 @@ header {
         text-decoration-thickness: 2px;
         text-underline-offset: 8px;
       }
-    }
+    }*/
   }
 }
+
+nav ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+nav ul li {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: "Lora";
+  padding: 8px 12px;
+  border-radius: 4px;
+  background-color: transparent;
+  color: #2D1B14;
+  border: 1px solid transparent;
+}
+
+nav ul li:hover {
+  background-color: #f5e6da;
+}
+
+nav ul li.active {
+  background-color: #C0A080;
+  color: white;
+  font-weight: bold;
+}
+
 
 main {
   padding: 40px 80px 80px 80px;

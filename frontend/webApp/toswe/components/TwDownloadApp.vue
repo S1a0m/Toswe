@@ -8,14 +8,18 @@
         
         <div class="download-buttons">
           <div class="download-option">
-            <a href="#" class="google-play" @click="redirectToStore">📲 Télécharger sur Google Play</a>ou<br>
-            <p>Scanner ce code QR si vous etes sur android</p>
+            <p class="google-play">
+              Scanner ce code QR si vous etes sur android
+              <img src="/icons/android.png" alt="" class="icons">
+            </p>
             <img src="/images/qr-code.webp" alt="QR Code Android" class="qr-code" />
           </div>
           <br><br>
           <div class="download-option">
-            <a href="#" class="app-store" @click="redirectToStore">🍏 Télécharger sur l'App Store</a>ou<br>
-            <p>Scanner ce code QR si vous etes sur iphone</p>
+            <p class="app-store">
+              Scanner ce code QR si vous etes sur iphone
+              <img src="/icons/pomme.png" alt="" class="icons">
+            </p>
             <img src="/images/qr-code.webp" alt="QR Code iOS" class="qr-code" />
           </div>
         </div>
@@ -84,13 +88,16 @@ p {
 
 .download-buttons {
   margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
 .download-option {
   margin-bottom: 15px;
 }
 
-.download-option a {
+.download-option p {
   display: block;
   padding: 12px;
   text-decoration: none;
@@ -112,6 +119,11 @@ p {
   margin-top: 10px;
   width: 100px;
   height: 100px;
+}
+
+.icons {
+  width: 20px;
+  height: 20px;
 }
 
 .close-btn {

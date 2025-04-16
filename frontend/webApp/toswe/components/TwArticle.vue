@@ -28,7 +28,7 @@ function handleAddClick() {
 
 <template>
     <article>
-        <NuxtLink to="/product#nav-head">
+        <NuxtLink :to="{name: 'product', hash: '#nav-head',  query: {id: props.id}}">
             <div class="image-wrapper">
                 <img :src="props.img" alt="" />
                 <div class="see-more">Voir plus...</div>

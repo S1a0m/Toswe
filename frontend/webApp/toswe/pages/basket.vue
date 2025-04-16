@@ -114,6 +114,7 @@ button {
   width: 200px;
   cursor: pointer;
   transition: all 0.5s 0s ease;
+  border-radius: 12px;
   font: {
     size: 18px;
     weight: 500;
