@@ -1,25 +1,41 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, watch } from "vue"
+
+const searchQuery = ref("")
+const results = ref([])
+const loading = ref(false)
+
+const fetchProducts = async () => {
+  if (searchQuery.value.trim() === "") {
+    results.value = []
+    return
+  }
+
+  loading.value = true
+
+  try {
+    const res = await fetch(`http://localhost:8000/api/products/search?query=${encodeURIComponent(searchQuery.value)}`)
+    if (!res.ok) throw new Error("Erreur lors de la recherche")
+
+    const data = await res.json()
+    results.value = data
+  } catch (error) {
+    console.error(error)
+  } finally {
+    loading.value = false
+  }
+}
+
+// Déclenche une requête dès que la recherche change (avec délai)
+let debounceTimeout
+watch(searchQuery, () => {
+  clearTimeout(debounceTimeout)
+  debounceTimeout = setTimeout(() => {
+    fetchProducts()
+  }, 300) // 300ms de délai
+})
 
 const showPopup = ref(true);
-const searchQuery = ref("");
-
-const results = ref([
-  "Téléphone Android",
-  "iPhone 13",
-  "Casque Bluetooth",
-  "Montre connectée",
-  "Ordinateur portable",
-  "Clavier mécanique",
-  "Souris gaming",
-]);
-
-const filteredResults = computed(() => {
-  if (!searchQuery.value) return [];
-  return results.value.filter(item => 
-    item.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
-});
 
 const emit = defineEmits(['close-searchpopup']);
 
@@ -32,7 +48,7 @@ const closeSearchPopup = () => {
     <transition name="slide-up">
       <div v-if="showPopup" class="popup-container">
         <div class="popup">
-          <h1>Rechercher</h1>
+          <!--<h1>Rechercher</h1>
           <input 
             type="text" 
             v-model="searchQuery" 
@@ -47,7 +63,20 @@ const closeSearchPopup = () => {
                 {{ result }}
               </li>
             </ul>
-          </div>
+          </div>-->
+            <h1>Rechercher</h1>
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Rechercher un produit..."
+              class="search-input"
+            />
+            <div v-if="loading">Chargement...</div>
+            <ul v-else>
+              <li v-for="product in results" :key="product.id">
+                {{ product.name }}
+              </li>
+            </ul>
     
           <button class="close-btn" @click="closeSearchPopup">Fermer</button>
         </div>

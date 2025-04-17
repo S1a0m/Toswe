@@ -1,6 +1,10 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 
+definePageMeta({
+  prerender: true
+})
+
 const slides = ref([
   {
     id: 1,

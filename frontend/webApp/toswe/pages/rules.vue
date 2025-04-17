@@ -1,3 +1,10 @@
+<script setup>
+definePageMeta({
+  prerender: true
+})
+</script>
+
+
 <template>
   <div class="about-content">
     <section>

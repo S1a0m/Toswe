@@ -1,6 +1,10 @@
 <script setup>
 import { useCartStore } from "@/stores/cart"
 
+definePageMeta({
+  prerender: true
+})
+
 const cart = useCartStore()
 </script>
 

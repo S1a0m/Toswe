@@ -57,6 +57,7 @@ article {
     img {
         width: 280px;
         height: 280px;
+        border-radius: 10px;
         cursor: pointer;
     }
 

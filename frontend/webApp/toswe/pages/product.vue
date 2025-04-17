@@ -1,15 +1,20 @@
 <script setup>
-// Liste des slides du carrousel produit
+import { useCartStore } from "@/stores/cart"
+
 const slideList = [
   { id: 1, src: '/images/montre.jpg' },
   { id: 2, src: '/images/chargeur.jpg' },
   { id: 3, src: '/images/img3.jpg' },
 ]
 
+const cart = useCartStore()
+const route = useRoute()
+
 const product = {
-  id: 123,
-  title: "Nom du produit",
-  price: 29.99
+    id: route.query.id,
+    img: slideList[0].src,
+    name: "Chargeur",
+    price: 4500
 }
 
 const router = useRouter()
@@ -22,6 +27,7 @@ function handleAddClick() {
     return
   }
 
+  cart.addToCart(product)
   isAdded.value = true
   isAnimating.value = true
 
@@ -45,8 +51,8 @@ function handleAddClick() {
         <!-- Détails et actions -->
         <div class="product-actions">
           <div class="price">
-            <h3 class="product-name">Chargeur</h3>
-            <span class="product-price">4 500 fcfa</span><br>
+            <h3 class="product-name">{{ product.name }}</h3>
+            <span class="product-price">{{ product.price }} fcfa</span><br>
             <span class="product-category"><strong>Produit électronique</strong></span><br>
             <span class="in-stock">En stock</span>
           </div>
@@ -79,7 +85,6 @@ function handleAddClick() {
     <!-- Section Description -->
     <section>
       <h2>· Description ·</h2>
-      <p>
         <ul>
           <li>Résistante à l’eau (IPX7) : Parfaite pour la plage, la piscine ou la douche.</li>
           <li>Mode Party Connect : Associez plusieurs enceintes pour une ambiance encore plus intense.</li>
@@ -87,7 +92,6 @@ function handleAddClick() {
           <li>Bluetooth 5.0 : Connexion ultra-stable jusqu’à 15 mètres de distance.</li>
           <li>Autonomie longue durée : Jusqu’à 12 heures de musique non-stop avec une seule charge.</li>
         </ul>
-      </p>
     </section>
 
     <br><br><br>
@@ -126,7 +130,7 @@ section {
     font-family: "Playfair Display";
   }
 
-  p {
+  ul {
     margin-top: 20px;
     padding: 50px;
     background: rgba(239, 232, 232, 0.5);
