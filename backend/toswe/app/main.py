@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from .routes.v1.admin import users, products, orders, notifications, announcements
 from .routes.v1.mobile import products as mob_products, orders as mob_orders, notifications as mob_notifs
@@ -21,6 +22,8 @@ app.add_middleware(
    allow_methods=["*"],
    allow_headers=["*"],
 )
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(users.router)
 app.include_router(products.router)
