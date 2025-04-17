@@ -4,8 +4,8 @@ from sqlalchemy import or_
 from typing import List
 
 from app.routes.deps.dependencies import get_db, require_admin
-from app.models.product import Product
-from app.schemas.product import ProductSchema
+from app.models.product import Product, ProductCategory
+from app.schemas.product import ProductAll, ProductSchema
 import app.crud.product as crud_product
 import app.schemas.product
 
@@ -19,12 +19,17 @@ def create_product(
 ):
     return crud_product.create_product(db, product)
 
-@router.get("/", response_model=List[app.schemas.product.ProductSchema])
-def get_all_products(
+@router.get("/", response_model=list[ProductAll])
+def list_products(
+    category: ProductCategory = Query(...),
     db: Session = Depends(get_db),
-    user: dict = Depends(require_admin)
+    _: dict = Depends(require_admin)  # Remis ici pour sécurité
 ):
-    return crud_product.get_products(db)
+    products = db.query(Product).filter(
+        Product.category == category,
+        Product.published == True
+    ).all()
+    return products
 
 @router.get("/{product_id}", response_model=app.schemas.product.ProductSchema)
 def get_product(

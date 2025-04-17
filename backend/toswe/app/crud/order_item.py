@@ -7,7 +7,7 @@ from app.models.order_item import OrderItem
 from app.schemas.order_item import OrderItemCreate, OrderItemUpdate
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from datetime import datetime
+# from datetime import datetime
 
 
 def create_order_item(db: Session, item: OrderItemCreate, user_id: int):

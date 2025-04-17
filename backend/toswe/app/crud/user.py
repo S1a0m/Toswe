@@ -45,6 +45,6 @@ def delete_all_users(db: Session):
 
 def authenticate_user(db: Session, mobile_number: str, password: str):
     user = db.query(User).filter(User.mobile_number == mobile_number).first()
-    if not user or not verify_password(password, user.hashed_password):
+    if not user or not verify_password(password, user.password):
         return None
     return user

@@ -50,3 +50,4 @@ def request_reset(data: dict, db: Session = Depends(get_db)):
 @router.post("/reset-password")
 def reset_password(data: dict, db: Session = Depends(get_db)):
     return reset_password(db, data["phone"], data["code"], data["new_password"])
+
