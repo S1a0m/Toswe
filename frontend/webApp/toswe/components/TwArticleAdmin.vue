@@ -6,16 +6,22 @@ const props = defineProps([
     "price",
     "status",
 ])
+
+const img = ref(`http://127.0.0.1:8000/${props.img}`)
+
+watch(() => props.img, () => {
+    img.value = `http://127.0.0.1:8000/${props.img}`
+})
 </script>
 
 
 <template>
     <article>
         <span :class="['status-dot', props.status]"></span>
-        <img :src="props.img" alt="">
+        <img :src="img" alt="">
         <div>
             <h3>{{ props.name }}</h3> ···
-            <p>{{ props.price }}</p>
+            <p>{{ props.price }} fcfa</p>
         </div>
         <div>
             <NuxtLink :to="{name: 'admin-product-read', query: {id: props.id}}">

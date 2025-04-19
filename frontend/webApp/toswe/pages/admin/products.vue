@@ -7,15 +7,16 @@ const articles = ref([]);
 const activeCategory = ref('');
 
 const categories = [
-  { name: "Chez nous", value: "chez-nous" },
-  { name: "Accessoires", value: "accessoires" },
-  { name: "Bureautique", value: "bureautique" },
-  { name: "Mode", value: "mode" },
+  { name: "Tout", value: "all" },
+  { name: "Chez nous", value: "local" },
+  { name: "Accessoires", value: "accessories" },
+  { name: "Bureautique", value: "computer" },
+  { name: "Mode", value: "fashion" },
   { name: "Sport", value: "sport" },
   { name: "Art", value: "art" },
 ];
 
-const fetchArticleByCategory = (category) => {
+/*const fetchArticleByCategory = (category) => {
   activeCategory.value = category;
   // fetch logique...
   articles.value = [
@@ -27,10 +28,36 @@ const fetchArticleByCategory = (category) => {
       status: "published"
     },
   ];
-};
+};*/
+
+async function fetchArticleByCategory(category) {
+  activeCategory.value = category;
+  const token = localStorage.getItem("access_token")
+
+  try {
+    const response = await fetch(`http://localhost:8000/admin/products/?category=${category}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error("Erreur lors de la réception.")
+    }
+
+    const data = await response.json();
+    articles.value = data;
+
+  } catch (error) {
+    console.error(error)
+    alert("Échec lors de la réception.")
+  }
+}
+
 
 onMounted(() => {
-  fetchArticleByCategory('chez-nous')
+  fetchArticleByCategory('all')
 })
 
 </script>
@@ -57,7 +84,7 @@ onMounted(() => {
         </nav>
       </header>
       <main>
-        <TwArticleAdmin v-for="article in articles" :key="article.id" :id="article.id" :img="article.img" :name="article.name" :price="article.price" :status="article.status"/>
+        <TwArticleAdmin v-for="article in articles" :key="article.id" :id="article.id_product" :img="article.image" :name="article.name" :price="article.price" :status="article.status"/>
       </main>
     </div>
 </template>
