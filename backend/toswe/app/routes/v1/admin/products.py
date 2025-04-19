@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, Form, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
-from typing import List
+from typing import List, Optional
 
 import shutil
 import os
@@ -91,11 +91,35 @@ def get_product(
 @router.put("/{product_id}", response_model=app.schemas.product.ProductSchema)
 def update_product(
     product_id: int,
-    product_data: app.schemas.product.ProductCreate,
+    name: str = Form(...),
+    category: str = Form(...),
+    description: str = Form(...),
+    status: str = Form(...),
+    price: str = Form(...),
+    images: Optional[List[UploadFile]] = File(None),  # facultatif si on ne change pas les images
     db: Session = Depends(get_db),
     user: dict = Depends(require_admin)
 ):
-    return crud_product.update_product(db, product_id, product_data)
+    image_paths = []
+
+    if images:
+        for img in images:
+            filename = f"{name}_{img.filename}"
+            file_path = os.path.join(UPLOAD_DIR, filename)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(img.file, buffer)
+            image_paths.append(file_path)
+
+    updated_data = {
+        "name": name,
+        "category": category,
+        "description": description,
+        "price": price,
+        "status": status,
+        "images": image_paths if images else None  # ou garder les anciennes si pas de nouvelles
+    }
+
+    return crud_product.update_product(db, product_id, updated_data)
 
 @router.delete("/{product_id}", response_model=app.schemas.product.ProductSchema)
 def delete_product(

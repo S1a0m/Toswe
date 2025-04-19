@@ -1,71 +1,48 @@
-<template>
-  <br><br><br>
-  <div class="product-details-container">
-    <header>
-      <h2>Détails du produit</h2>
-    </header>
-
-    <div class="product-content">
-      <div class="product-images">
-        <div
-          v-for="(image, index) in product.images"
-          :key="index"
-          class="image-wrapper"
-        >
-          <img :src="image" alt="Image du produit" />
-        </div>
-      </div>
-
-      <div class="info">
-        <div class="info-group">
-          <span class="label">Nom :</span>
-          <span class="value">{{ product.name }}</span>
-        </div>
-
-        <div class="info-group">
-          <span class="label">Catégorie :</span>
-          <span class="value">{{ product.category }}</span>
-        </div>
-
-        <div class="info-group">
-          <span class="label">Descriptions :</span>
-          <ul class="description-list">
-            <li v-for="(desc, i) in product.descriptions" :key="i">
-              {{ desc }}
-            </li>
-          </ul>
-        </div>
-
-        <div class="info-group">
-          <span class="label">État :</span>
-          <span class="value status" :class="product.status">{{ statusLabel(product.status) }}</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="action-buttons">
-      <button class="edit" @click="onEdit">Modifier</button>
-      <button class="delete" @click="onDelete">Supprimer</button>
-    </div>
-  </div>
-</template>
-
 <script setup>
-const product = {
-  name: "Montre connectée élégante",
-  category: "Accessoires",
-  descriptions: [
-    "Écran AMOLED",
-    "Autonomie 7 jours",
-    "Étanche 5 ATM",
-    "Bracelet en cuir véritable"
-  ],
-  images: [
-    "https://via.placeholder.com/150",
-    "https://via.placeholder.com/150/eeeeee",
-    "https://via.placeholder.com/150/cccccc"
-  ],
-  status: "published" // 'draft', 'published', 'unpublished'
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+
+const article = ref({})
+const images = ref([])
+const router = useRouter()
+
+const categories = [
+  { name: "Tout", value: "all" },
+  { name: "Chez nous", value: "local" },
+  { name: "Accessoires", value: "accessories" },
+  { name: "Bureautique", value: "computer" },
+  { name: "Mode", value: "fashion" },
+  { name: "Sport", value: "sport" },
+  { name: "Art", value: "art" },
+]
+
+const route = useRoute()
+const productId = route.query.id
+
+async function fetchArticle() {
+  const token = localStorage.getItem("access_token")
+
+  try {
+    const response = await fetch(`http://localhost:8000/admin/products/${productId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error("Erreur lors de la réception.")
+    }
+
+    const data = await response.json()
+    article.value = data
+
+    images.value = (data.images || []).map(image => `http://localhost:8000/${image}`)
+
+  } catch (error) {
+    console.error(error)
+    alert("Échec lors de la réception.")
+  }
 }
 
 const statusLabel = (status) => {
@@ -78,21 +55,91 @@ const statusLabel = (status) => {
 }
 
 const onEdit = () => {
-  // à remplacer par de la logique réelle
   alert("Édition du produit")
 }
 
-const onDelete = () => {
-  const confirmed = confirm("Voulez-vous vraiment supprimer ce produit ?")
-  if (confirmed) {
-    alert("Produit supprimé")
+async function onDelete() {
+  const token = localStorage.getItem("access_token")
+
+  try {
+    const response = await fetch(`http://localhost:8000/admin/products/${productId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    router.push('/admin/products')
+
+    if (!response.ok) {
+      throw new Error("Erreur lors de la réception.")
+    }
+
+  } catch (error) {
+    console.error(error)
+    alert("Échec lors de la réception.")
   }
 }
+
+onMounted(() => {
+  fetchArticle()
+})
 
 definePageMeta({
   layout: 'admin'
 })
 </script>
+
+
+<template>
+  <br><br><br>
+  <div class="product-details-container">
+    <header>
+      <h2>Détails du produit</h2>
+    </header>
+
+    <div class="product-content">
+      <div class="product-images">
+        <div v-for="(image, index) in images" :key="index" class="image-wrapper">
+          <img :src="image" alt="Image du produit" />
+        </div>
+      </div>
+
+      <div class="info">
+        <div class="info-group">
+          <span class="label">Nom :</span>
+          <span class="value">{{ article.name }}</span>
+        </div>
+
+        <div class="info-group">
+          <span class="label">Catégorie :</span>
+          <span class="value">{{ article.category }}</span>
+        </div>
+
+        <div class="info-group">
+          <span class="label">Descriptions :</span>
+          <ul class="description-list">
+            <span class="value">{{ article.description }}</span>
+            <!--<li v-for="(desc, i) in article.descriptions" :key="i">
+              {{ desc }}
+            </li>-->
+          </ul>
+        </div>
+
+        <div class="info-group">
+          <span class="label">État :</span>
+          <span class="value status" :class="article.status">{{ statusLabel(article.status) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <NuxtLink :to="{name: 'admin-product-edit', query: {id: article.id_product}}">
+        <button class="edit" @click="onEdit">Modifier</button>
+      </NuxtLink>
+      <button class="delete" @click="onDelete">Supprimer</button>
+    </div>
+  </div>
+</template>
 
 <style scoped lang="scss">
 .product-details-container {

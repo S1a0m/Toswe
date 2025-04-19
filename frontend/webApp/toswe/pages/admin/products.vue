@@ -16,20 +16,6 @@ const categories = [
   { name: "Art", value: "art" },
 ];
 
-/*const fetchArticleByCategory = (category) => {
-  activeCategory.value = category;
-  // fetch logique...
-  articles.value = [
-    {
-      id: 1,
-      name: "Chargeur",
-      img: "/images/chargeur.jpg",
-      price: "2500",
-      status: "published"
-    },
-  ];
-};*/
-
 async function fetchArticleByCategory(category) {
   activeCategory.value = category;
   const token = localStorage.getItem("access_token")
@@ -55,6 +41,9 @@ async function fetchArticleByCategory(category) {
   }
 }
 
+function removeProduct(id) {
+  articles.value = articles.value.filter(article => article.id !== id)
+}
 
 onMounted(() => {
   fetchArticleByCategory('all')
@@ -84,7 +73,7 @@ onMounted(() => {
         </nav>
       </header>
       <main>
-        <TwArticleAdmin v-for="article in articles" :key="article.id" :id="article.id_product" :img="article.image" :name="article.name" :price="article.price" :status="article.status"/>
+        <TwArticleAdmin v-for="article in articles" v-bind="article" :key="article.id" :id="article.id_product" :img="article.image" :name="article.name" :price="article.price" :status="article.status" @deleted="removeProduct"/>
       </main>
     </div>
 </template>

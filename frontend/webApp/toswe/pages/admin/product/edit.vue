@@ -3,7 +3,7 @@ definePageMeta({
   layout: 'admin'
 })
 
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 const previews = ref([])
@@ -15,18 +15,10 @@ const productDescription = ref('')
 const productStatus = ref('')
 
 const route = useRoute()
+const productId = route.query.id
+const isEditing = !!productId
 
-function handleFiles(event) {
-  previews.value = []
-  productImg.value = []
-  const files = event.target.files
-  for (const file of files) {
-    const url = URL.createObjectURL(file)
-    previews.value.push(url)
-    productImg.value.push(file)
-  }
-}
-
+// Liste des catégories et états
 const categories = ref([
   { name: "Chez nous", value: "local" },
   { name: "Accessoires", value: "accessories" },
@@ -42,8 +34,58 @@ const statuses = ref([
   { name: "Non publié", value: "unpublished" },
 ])
 
+// Fonction de prévisualisation des fichiers
+function handleFiles(event) {
+  previews.value = []
+  productImg.value = []
+  const files = event.target.files
+  for (const file of files) {
+    const url = URL.createObjectURL(file)
+    previews.value.push(url)
+    productImg.value.push(file)
+  }
+}
+
+// Récupération des données si on édite un produit
+async function fetchProductForEdit() {
+  const token = localStorage.getItem("access_token")
+
+  try {
+    const response = await fetch(`http://localhost:8000/admin/products/${productId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    if (!response.ok) throw new Error("Erreur lors de la réception.")
+
+    const data = await response.json()
+
+    productName.value = data.name || ''
+    productPrice.value = data.price || ''
+    productCategory.value = data.category || ''
+    productDescription.value = data.description || ''
+    productStatus.value = data.status || ''
+    previews.value = (data.images || []).map(img => `http://localhost:8000/${img}`)
+
+  } catch (error) {
+    console.error(error)
+    alert("Échec lors de la réception.")
+  }
+}
+
+// Appel automatique au montage
+onMounted(() => {
+  if (isEditing) {
+    fetchProductForEdit()
+  }
+})
+
+// Soumission du formulaire
 async function submitForm(event) {
   event.preventDefault()
+  const token = localStorage.getItem("access_token")
 
   const formData = new FormData()
   formData.append("name", productName.value)
@@ -53,60 +95,55 @@ async function submitForm(event) {
   formData.append("category", selectedCategory ? selectedCategory.value : '')
 
   formData.append("description", productDescription.value)
-  formData.append("price", productPrice.value)
   formData.append("status", productStatus.value)
 
   for (let i = 0; i < productImg.value.length; i++) {
     formData.append("images", productImg.value[i])
   }
 
-  console.log("Nom:", productName.value)
-  console.log("Prix:", productPrice.value)
-  console.log("Catégorie:", productCategory.value)
-  console.log("Description:", productDescription.value)
-  console.log("État:", productStatus.value)
-  console.log("Images:", productImg.value)
-
-
-  const token = localStorage.getItem("access_token")
-
   try {
-    const response = await fetch("http://127.0.0.1:8000/admin/products", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
-      body: formData
-    })
+    const response = await fetch(
+      isEditing 
+        ? `http://127.0.0.1:8000/admin/products/${productId}` 
+        : "http://127.0.0.1:8000/admin/products",
+      {
+        method: isEditing ? "PUT" : "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      }
+    )
 
-    if (!response.ok) {
-      throw new Error("Erreur lors de l'envoi.")
-    }
+    if (!response.ok) throw new Error("Erreur lors de l'envoi.")
 
     const result = await response.json()
-    console.log("Produit ajouté:", result)
-    alert("Produit ajouté avec succès!")
-
-    productName.value = ''
-    productPrice.value = ''
-    productCategory.value = ''
-    productDescription.value = ''
-    productStatus.value = ''
-    productImg.value = []
-    previews.value = []
+    alert(`Produit ${isEditing ? "modifié" : "ajouté"} avec succès!`)
+    
+    // Reset si ajout
+    if (!isEditing) {
+      productName.value = ''
+      productPrice.value = ''
+      productCategory.value = ''
+      productDescription.value = ''
+      productStatus.value = ''
+      productImg.value = []
+      previews.value = []
+    }
 
   } catch (error) {
     console.error(error)
-    alert("Échec de l'ajout du produit.")
+    alert(`Échec de ${isEditing ? "la modification" : "l'ajout"} du produit.`)
   }
 }
 </script>
+
 
 <template>
   <br><br><br>
   <div class="add-product-container">
     <header>
-      <h2>Ajouter un produit</h2>
+      <h2>{{ isEditing ? "Modifier le produit" : "Ajouter un produit" }}</h2>
     </header>
 
     <form class="product-form" @submit="submitForm">
