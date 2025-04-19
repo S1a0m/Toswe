@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, UploadFile, File, Form, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import List
+
+import shutil
+import os
 
 from app.routes.deps.dependencies import get_db, require_admin
 from app.models.product import Product, ProductCategory
@@ -11,25 +14,71 @@ import app.schemas.product
 
 router = APIRouter(prefix="/admin/products", tags=["admin - products"])
 
+UPLOAD_DIR = "static/uploads/products"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 @router.post("/", response_model=app.schemas.product.ProductSchema)
 def create_product(
-    product: app.schemas.product.ProductCreate,
+    name: str = Form(...),
+    category: str = Form(...),
+    description: str = Form(...),
+    status: str = Form(...),
+    price: str = Form(...),
+    images: List[UploadFile] = File(...),
     db: Session = Depends(get_db),
     user: dict = Depends(require_admin)
 ):
-    return crud_product.create_product(db, product)
+    image_paths = []
 
-@router.get("/", response_model=list[ProductAll])
+    for img in images:
+        filename = f"{name}_{img.filename}"
+        file_path = os.path.join(UPLOAD_DIR, filename)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(img.file, buffer)
+        image_paths.append(file_path)
+
+    db_product = Product(
+        name=name,
+        category=category,
+        description=description,
+        price=price,
+        status=status,
+        images=image_paths  
+    )
+
+    db.add(db_product)
+    db.commit()
+    db.refresh(db_product)
+    return db_product
+
+@router.get("/", response_model=List[ProductAll])
 def list_products(
     category: ProductCategory = Query(...),
     db: Session = Depends(get_db),
-    _: dict = Depends(require_admin)  # Remis ici pour sécurité
+    _: dict = Depends(require_admin)
 ):
-    products = db.query(Product).filter(
+    if category != 'all':
+        products = db.query(Product).filter(
         Product.category == category,
-        Product.published == True
-    ).all()
-    return products
+            # Product.published == True
+        ).all()
+    else:
+        products = db.query(Product)
+
+    # On transforme les produits pour ne garder que la première image
+    result = [
+        ProductAll(
+            id_product=product.id_product,
+            name=product.name,
+            status=product.status,
+            price=product.price,
+            image=product.images[0] if product.images else None,
+            in_stock=product.in_stock
+        )
+        for product in products
+    ]
+
+    return result
 
 @router.get("/{product_id}", response_model=app.schemas.product.ProductSchema)
 def get_product(

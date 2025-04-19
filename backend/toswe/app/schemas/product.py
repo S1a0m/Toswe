@@ -7,9 +7,9 @@ class ProductBase(BaseModel):
     category: Optional[str] = None
     price: float
     description: Optional[str] = None
-    images_list: Optional[List[str]] = []
+    images: Optional[List[str]] = []
     in_stock: Optional[bool] = True
-    published: Optional[bool] = False
+    status: Optional[str] = None
 
 class ProductCreate(ProductBase):
     pass
@@ -19,9 +19,9 @@ class ProductUpdate(BaseModel):
     category: Optional[str] = None
     price: Optional[float] = None
     description: Optional[str] = None
-    images_list: Optional[List[str]] = []
+    images: Optional[List[str]] = []
     in_stock: Optional[bool] = True
-    published: Optional[bool] = False
+    status: Optional[str] = None
 
 class ProductSchema(ProductBase):
     id_product: int
@@ -33,8 +33,9 @@ class ProductAll(BaseModel):
     id_product: int
     name: str
     price: float
-    images_list: List[str]
+    image: str
     in_stock: bool
+    status: str
 
     class Config:
         orm_mode = True
