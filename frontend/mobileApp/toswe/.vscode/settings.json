@@ -1,3 +1,4 @@
 {
-    "java.compile.nullAnalysis.mode": "automatic"
+    "java.compile.nullAnalysis.mode": "automatic",
+    "cmake.sourceDirectory": "/home/sam/PROJECTS/toswe/Toswe/frontend/mobileApp/toswe/linux"
 }
