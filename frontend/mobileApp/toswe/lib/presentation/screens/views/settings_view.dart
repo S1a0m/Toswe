@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:toswe/presentation/screens/preferences_screen.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -11,7 +12,7 @@ class SettingsView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "Paramètres de l'application",
+            "Paramètres",
             style: TextStyle(
               color: Colors.brown,
               fontSize: 24,
@@ -19,7 +20,6 @@ class SettingsView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-
           _buildSettingsItem(
             icon: Icons.person,
             label: "Modifier le profil",
@@ -28,7 +28,6 @@ class SettingsView extends StatelessWidget {
             },
           ),
           const Divider(),
-
           _buildSettingsItem(
             icon: Icons.lock,
             label: "Changer le mot de passe",
@@ -37,7 +36,6 @@ class SettingsView extends StatelessWidget {
             },
           ),
           const Divider(),
-
           _buildSettingsItem(
             icon: Icons.notifications,
             label: "Notifications",
@@ -46,7 +44,16 @@ class SettingsView extends StatelessWidget {
             },
           ),
           const Divider(),
-
+          _buildSettingsItem(
+            icon: Icons.favorite,
+            label: "Préférences produits",
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return PreferencesScreen();
+              }));
+            },
+          ),
+          const Divider(),
           _buildSettingsItem(
             icon: Icons.language,
             label: "Langue",
@@ -55,7 +62,6 @@ class SettingsView extends StatelessWidget {
             },
           ),
           const Divider(),
-
           _buildSettingsItem(
             icon: Icons.logout,
             label: "Déconnexion",
@@ -76,7 +82,8 @@ class SettingsView extends StatelessWidget {
     return ListTile(
       leading: Icon(icon, color: Colors.brown),
       title: Text(label, style: const TextStyle(fontSize: 16)),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+      trailing:
+          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
       onTap: onTap,
     );
   }

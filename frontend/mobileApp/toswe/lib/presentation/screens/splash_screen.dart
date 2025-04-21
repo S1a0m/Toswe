@@ -15,7 +15,7 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<double> _logoAnimation;
 
   String _displayedText = '';
-  final String _fullText = "Nous vendons pour vous";
+  final String _fullText = "Nous vendons pour vous.";
   int _textIndex = 0;
 
   @override
@@ -71,10 +71,11 @@ class _SplashScreenState extends State<SplashScreen>
             Text(
               _displayedText,
               style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontStyle: FontStyle.italic,
+                color: Color.fromRGBO(245, 230, 218, 0.5),
+                fontSize: 30,
+                // fontStyle: FontStyle.italic,
                 fontFamily: 'Playfair Display',
+                fontWeight: FontWeight.w100,
               ),
             ),
             const SizedBox(height: 30),
@@ -84,17 +85,17 @@ class _SplashScreenState extends State<SplashScreen>
                 children: [
                   Image.asset(
                     'assets/logo-toswe.png',
-                    width: 100,
-                    height: 100,
+                    width: 200,
+                    height: 200,
                   ),
                   const SizedBox(height: 8),
                   const Text(
                     "Tôswè",
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 35,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Playfair Display',
-                      color: Color(0xFFF5E6DA),
+                      color: Color(0xFF7D260F),
                     ),
                   )
                 ],

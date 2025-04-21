@@ -44,7 +44,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: const Color.fromRGBO(245, 230, 218, 0.5),
-          title: const Text("Notifications", style: TextStyle(color: Color(0xFF7D260F))),
+          title: const Text("Notifications",
+              style: TextStyle(color: Color(0xFF7D260F))),
           actions: [
             IconButton(
               onPressed: clearAll,
@@ -70,7 +71,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
               child: Card(
                 margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 child: ListTile(
-                  title: Text(notif['title']!, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text(notif['title']!,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(
                     '${notif['content']!.length > 60 ? notif['content']!.substring(0, 60) + '...' : notif['content']!}\n${notif['date']}',
                     style: const TextStyle(color: Colors.grey),

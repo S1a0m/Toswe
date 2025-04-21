@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:toswe/presentation/screens/product_detail_screen.dart';
 
 class ProductCart extends StatelessWidget {
-  const ProductCart({super.key});
+  final String imagePath;
+  final String productName;
+  final String price;
+
+  const ProductCart({
+    super.key,
+    required this.imagePath,
+    required this.productName,
+    required this.price,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,17 +34,22 @@ class ProductCart extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Center(
-              child: Icon(
-                Icons.shopping_bag,
-                size: 48,
-                color: Color(0xFF7D260F),
+            // ✅ Image du produit
+            Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  imagePath,
+                  width: 150,
+                  height: 150,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              "Produit Exquis",
-              style: TextStyle(
+            Text(
+              productName,
+              style: const TextStyle(
                 fontFamily: 'Playfair Display',
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
@@ -42,9 +57,9 @@ class ProductCart extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              "2500 fcfa",
-              style: TextStyle(
+            Text(
+              price,
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF7D260F),
@@ -55,7 +70,9 @@ class ProductCart extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: ElevatedButton(
                 onPressed: () {
-                  // Ajouter au panier
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return ProductDetailScreen();
+              }));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF7D260F),

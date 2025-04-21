@@ -56,7 +56,7 @@ class _StoreScreenState extends State<StoreScreen> {
           ),
           floatingActionButton: _selectedIndex == 0
               ? FloatingActionButton(
-                  backgroundColor: const Color.fromRGBO(245, 230, 218, 0.6),
+                  backgroundColor: const Color.fromRGBO(245, 230, 218, 0.9),
                   child: const Icon(Icons.shopping_basket,
                       color: Color(0xFF2D1B14)),
                   onPressed: () {
