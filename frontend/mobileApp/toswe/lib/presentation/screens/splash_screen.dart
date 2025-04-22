@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:toswe/presentation/screens/store_screen.dart';
 
@@ -62,48 +63,135 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF2D1B14),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              _displayedText,
-              style: const TextStyle(
-                color: Color.fromRGBO(245, 230, 218, 0.5),
-                fontSize: 30,
-                // fontStyle: FontStyle.italic,
-                fontFamily: 'Playfair Display',
-                fontWeight: FontWeight.w100,
-              ),
-            ),
-            const SizedBox(height: 30),
-            ScaleTransition(
-              scale: _logoAnimation,
-              child: Column(
-                children: [
-                  Image.asset(
-                    'assets/logo-toswe.png',
-                    width: 200,
-                    height: 200,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "Tôswè",
-                    style: TextStyle(
-                      fontSize: 35,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Playfair Display',
-                      color: Color(0xFF7D260F),
-                    ),
-                  )
-                ],
-              ),
-            ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment.center,
+          radius: 0.85,
+          colors: [
+            Color(0xFF7D260F),
+            Color(0xFF2D1B14),
           ],
+          stops: [0.08, 1.0],
         ),
+      ),
+      child: Stack(
+        children: [
+          // 🎨 Image de fond
+          Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/toswe-africa-art.png"),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+
+          // 💎 Flou général
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+            child: Container(
+              color: Colors.black.withOpacity(0),
+            ),
+          ),
+
+          // 📋 Contenu
+          SafeArea(
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _displayedText,
+                      style: const TextStyle(
+                        color: Color.fromRGBO(245, 230, 218, 0.5),
+                        fontSize: 30,
+                        // fontStyle: FontStyle.italic,
+                        fontFamily: 'Playfair Display',
+                        fontWeight: FontWeight.w100,
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    ScaleTransition(
+                      scale: _logoAnimation,
+                      child: Column(
+                        children: [
+                          /*Image.asset(
+                        'assets/icon/Tw5_1.png',
+                        width: 200,
+                        height: 200,
+                      ),*/
+                          Image.asset('assets/icon/Tw7_2.png',
+                              width: 200, height: 80),
+                          const SizedBox(height: 8),
+                          /*const Text(
+                        "Tôswè",
+                        style: TextStyle(
+                          fontSize: 35,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Playfair Display',
+                          color: Color(0xFFBE7C6A),
+                        ),
+                      )*/
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
+
+/**
+ * Scaffold(
+        backgroundColor: const Color.fromARGB(100, 125, 38, 15),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                _displayedText,
+                style: const TextStyle(
+                  color: Color.fromRGBO(245, 230, 218, 0.5),
+                  fontSize: 30,
+                  // fontStyle: FontStyle.italic,
+                  fontFamily: 'Playfair Display',
+                  fontWeight: FontWeight.w100,
+                ),
+              ),
+              const SizedBox(height: 30),
+              ScaleTransition(
+                scale: _logoAnimation,
+                child: Column(
+                  children: [
+                    /*Image.asset(
+                      'assets/icon/Tw5_1.png',
+                      width: 200,
+                      height: 200,
+                    ),*/
+                    Image.asset('assets/icon/Tw7_2.png', width: 200, height: 80),
+                    const SizedBox(height: 8),
+                    /*const Text(
+                      "Tôswè",
+                      style: TextStyle(
+                        fontSize: 35,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Playfair Display',
+                        color: Color(0xFFBE7C6A),
+                      ),
+                    )*/
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+ */

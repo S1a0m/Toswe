@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:toswe/presentation/screens/basket_screen.dart';
-import 'package:toswe/presentation/screens/notification.dart';
-import 'package:toswe/presentation/screens/search.dart';
+import 'package:toswe/presentation/screens/cart_screen.dart';
+import 'package:toswe/presentation/screens/notification_screen.dart';
+import 'package:toswe/presentation/screens/search_screen.dart';
 import './views/store_view.dart';
 import './views/profile_view.dart';
 import './views/settings_view.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:ui';
 
 class StoreScreen extends StatefulWidget {
   const StoreScreen({super.key});
@@ -56,13 +57,13 @@ class _StoreScreenState extends State<StoreScreen> {
           ),
           floatingActionButton: _selectedIndex == 0
               ? FloatingActionButton(
-                  backgroundColor: const Color.fromRGBO(245, 230, 218, 0.9),
-                  child: const Icon(Icons.shopping_basket,
-                      color: Color(0xFF2D1B14)),
+                  backgroundColor: const Color(0xFF2D1B14),
+                  child:
+                      const Icon(Icons.shopping_cart, color: Color(0xFFC0A080)),
                   onPressed: () {
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) {
-                      return BasketScreen();
+                      return CartScreen();
                     }));
                   },
                 )
@@ -85,90 +86,102 @@ class _StoreScreenState extends State<StoreScreen> {
         return const StoreView(key: ValueKey('default'));
     }
   }
+// À mettre en haut du fichier
 
   AppBar _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: const Color.fromRGBO(245, 230, 218, 0.5),
-      elevation: 18.0,
+      automaticallyImplyLeading: false,
+      flexibleSpace: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+          child: Container(
+            color: const Color.fromRGBO(245, 230, 218, 0.4),
+          ),
+        ),
+      ),
+      elevation: 0,
+      backgroundColor: Colors.transparent,
       leadingWidth: 150,
       leading: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Row(
           children: [
-            Image.asset('assets/logo-toswe.png', width: 32, height: 32),
-            const SizedBox(width: 8),
-            const Text(
-              "Tôswè",
-              style: TextStyle(
-                fontFamily: 'Playfair Display',
-                fontWeight: FontWeight.w600,
-                fontSize: 20,
-                color: Color(0xFF7D260F),
-              ),
-            ),
+            Image.asset('assets/icon/Tw7_2.png', width: 100, height: 50),
           ],
         ),
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_none, color: Color(0xFF2D1B14)),
-          onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return NotificationScreen();
-            }));
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.search, color: Color(0xFF2D1B14)),
-          onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return SearchScreen();
-            }));
-          },
-        ),
-        PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert, color: Color(0xFF2D1B14)),
-          color: const Color.fromRGBO(245, 230, 218, 0.9),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.25),
+            borderRadius: BorderRadius.circular(16),
           ),
-          onSelected: (value) {
-            switch (value) {
-              case 'logout':
-                Navigator.pushReplacementNamed(context, '/login');
-                break;
-              case 'about':
-                _launchURL('https://example.com/a-propos');
-                break;
-              case 'terms':
-                _launchURL('https://example.com/conditions');
-                break;
-            }
-          },
-          itemBuilder: (BuildContext context) => [
-            const PopupMenuItem(
-              value: 'logout',
-              child: ListTile(
-                leading: Icon(Icons.logout, color: Color(0xFF7D260F)),
-                title: Text('Déconnexion'),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_none,
+                    color: Color(0xFF2D1B14)),
+                onPressed: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => NotificationScreen()));
+                },
               ),
-            ),
-            const PopupMenuItem(
-              value: 'about',
-              child: ListTile(
-                leading: Icon(Icons.info_outline, color: Color(0xFF7D260F)),
-                title: Text('À propos'),
+              IconButton(
+                icon: const Icon(Icons.search, color: Color(0xFF2D1B14)),
+                onPressed: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => SearchScreen()));
+                },
               ),
-            ),
-            const PopupMenuItem(
-              value: 'terms',
-              child: ListTile(
-                leading: Icon(Icons.rule, color: Color(0xFF7D260F)),
-                title: Text('Conditions générales'),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, color: Color(0xFF2D1B14)),
+                color: const Color.fromRGBO(245, 230, 218, 0.9),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                onSelected: (value) {
+                  switch (value) {
+                    case 'logout':
+                      Navigator.pushReplacementNamed(context, '/login');
+                      break;
+                    case 'about':
+                      _launchURL('https://example.com/a-propos');
+                      break;
+                    case 'terms':
+                      _launchURL('https://example.com/conditions');
+                      break;
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'logout',
+                    child: ListTile(
+                      leading: Icon(Icons.logout, color: Color(0xFF7D260F)),
+                      title: Text('Déconnexion'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'about',
+                    child: ListTile(
+                      leading:
+                          Icon(Icons.info_outline, color: Color(0xFF7D260F)),
+                      title: Text('À propos'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'terms',
+                    child: ListTile(
+                      leading: Icon(Icons.rule, color: Color(0xFF7D260F)),
+                      title: Text('Conditions générales'),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        )
       ],
     );
   }
@@ -203,17 +216,20 @@ class _StoreScreenState extends State<StoreScreen> {
           topLeft: Radius.circular(25),
           topRight: Radius.circular(25),
         ),
-        child: BottomNavigationBar(
-          backgroundColor: const Color.fromRGBO(245, 230, 218, 0.5),
-          selectedItemColor: activeColor,
-          unselectedItemColor: primaryColor,
-          currentIndex: _selectedIndex,
-          onTap: (int index) => setState(() => _selectedIndex = index),
-          items: [
-            _navItem(Icons.store, "Store", 0),
-            _navItem(Icons.person, "Profil", 1),
-            _navItem(Icons.settings, "Paramètres", 2),
-          ],
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+          child: BottomNavigationBar(
+            backgroundColor: const Color.fromRGBO(245, 230, 218, 0.4),
+            selectedItemColor: activeColor,
+            unselectedItemColor: primaryColor,
+            currentIndex: _selectedIndex,
+            onTap: (int index) => setState(() => _selectedIndex = index),
+            items: [
+              _navItem(Icons.store, "Store", 0),
+              _navItem(Icons.person, "Profil", 1),
+              _navItem(Icons.settings, "Paramètres", 2),
+            ],
+          ),
         ),
       ),
     );

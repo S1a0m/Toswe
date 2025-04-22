@@ -62,25 +62,28 @@ class ProfilScreen extends StatelessWidget {
 
   // Widget helper pour chaque ligne d'info
   Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.brown),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                )),
-            Text(value,
-                style: const TextStyle(
-                  fontSize: 16,
-                )),
-          ],
-        )
-      ],
+    return Container(
+      color: Color.fromRGBO(245, 230, 218, 0.5),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.brown),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  )),
+              Text(value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                  )),
+            ],
+          )
+        ],
+      ),
     );
   }
 }

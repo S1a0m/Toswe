@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 
 class ProductDetailScreen extends StatefulWidget {
   const ProductDetailScreen({super.key});
@@ -10,7 +11,6 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _currentImage = 0;
 
-  // Valeurs directement codées
   final Map<String, dynamic> product = {
     'name': 'Collier perlé ivoire',
     'category': 'Bijoux faits main',
@@ -79,210 +79,281 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         appBar: AppBar(
           title: const Text("Détails du produit",
               style: TextStyle(color: Color(0xFF7D260F))),
-          backgroundColor: const Color.fromRGBO(245, 230, 218, 0.5),
-          foregroundColor: Colors.white,
+          backgroundColor: const Color.fromRGBO(245, 230, 218, 0.4),
+          elevation: 0,
+          centerTitle: true,
         ),
-        body: ListView(
+        body: Stack(
           children: [
-            // Carousel
-            SizedBox(
-              height: 250,
-              child: PageView.builder(
-                itemCount: images.length,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentImage = index;
-                  });
-                },
-                itemBuilder: (context, index) {
-                  return Image.asset(
-                    images[index],
-                    fit: BoxFit.cover,
-                  );
-                },
+            Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage("assets/toswe-africa-art.png"),
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-            // Dots
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(images.length, (index) {
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                  width: _currentImage == index ? 12 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: _currentImage == index
-                        ? const Color(0xFF7D260F)
-                        : Colors.grey,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                );
-              }),
+            BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: Container(
+                color: Colors.black.withOpacity(0),
+              ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product['name'],
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Playfair Display',
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    product['category'],
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "${product['price']} fcfa",
-                    style: const TextStyle(
-                      fontSize: 18,
-                      color: Color(0xFF7D260F),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      // Ajouter au panier
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF7D260F),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: ListView(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: SizedBox(
+                        height: 250,
+                        child: PageView.builder(
+                          itemCount: images.length,
+                          onPageChanged: (index) {
+                            setState(() {
+                              _currentImage = index;
+                            });
+                          },
+                          itemBuilder: (context, index) {
+                            return Image.asset(
+                              images[index],
+                              fit: BoxFit.cover,
+                            );
+                          },
+                        ),
                       ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
                     ),
-                    icon: const Icon(Icons.add_shopping_cart,
-                        color: Color(0xFFF5E6DA)),
-                    label: const Text(
-                      "Ajouter au panier",
-                      style: TextStyle(color: Color(0xFFF5E6DA)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(images.length, (index) {
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 8),
+                          width: _currentImage == index ? 12 : 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: _currentImage == index
+                                ? const Color(0xFF7D260F)
+                                : Colors.grey,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        );
+                      }),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "Description",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 18,
-                      fontFamily: 'Playfair Display',
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ...List.generate(product['description'].length, (i) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Row(
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text("• ", style: TextStyle(fontSize: 16)),
-                          Expanded(
-                            child: Text(
-                              product['description'][i],
-                              style: const TextStyle(fontSize: 16),
+                          Text(
+                            product['name'],
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFC0A080),
+                              fontFamily: 'Playfair Display',
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            product['category'],
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            "${product['price']} fcfa",
+                            style: const TextStyle(
+                              fontSize: 20,
+                              color: Color(0xFF7D260F),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () {},
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF7D260F),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                              shadowColor: Colors.black38,
+                              elevation: 4,
+                            ),
+                            icon: const Icon(Icons.add_shopping_cart,
+                                color: Color(0xFFF5E6DA)),
+                            label: const Text(
+                              "Ajouter au panier",
+                              style: TextStyle(color: Color(0xFFF5E6DA)),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          const Text(
+                            "• Description •",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                              fontFamily: 'Playfair Display',
+                              color: Color(0xFFC0A080),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          ...List.generate(product['description'].length, (i) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: _glassInfoCard([
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text("• ",
+                                        style: TextStyle(fontSize: 16)),
+                                    Expanded(
+                                      child: Text(
+                                        product['description'][i],
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ]),
+                            );
+                          }),
+                          const SizedBox(height: 24),
+                          const Text(
+                            "• Produits similaires •",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                              fontFamily: 'Playfair Display',
+                              color: Color(0xFFC0A080),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            height: 180,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: relatedProducts.length,
+                              itemBuilder: (context, index) {
+                                final related = relatedProducts[index];
+                                return Container(
+                                  width: 140,
+                                  margin: const EdgeInsets.only(right: 12),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFFF5E6DA),
+                                        Color(0xFFF5E6DA),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Colors.black26,
+                                        blurRadius: 6,
+                                        offset: Offset(2, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Expanded(
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              const BorderRadius.vertical(
+                                                  top: Radius.circular(16)),
+                                          child: Image.asset(
+                                            related['image'],
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8),
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              related['name'],
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.w600),
+                                            ),
+                                            Text(
+                                              "${related['price']} fcfa",
+                                              style: const TextStyle(
+                                                  color: Color(0xFF7D260F)),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (_) =>
+                                                        ProductDetailScreen(),
+                                                  ),
+                                                );
+                                              },
+                                              child: const Text("Voir"),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ],
                       ),
-                    );
-                  }),
-                  const SizedBox(height: 24),
-                  const Text(
-                    "Produits similaires",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 18,
-                      fontFamily: 'Playfair Display',
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 180,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: relatedProducts.length,
-                      itemBuilder: (context, index) {
-                        final related = relatedProducts[index];
-                        return Container(
-                          width: 140,
-                          margin: const EdgeInsets.only(right: 12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF5E6DA),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 4,
-                                offset: Offset(2, 2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              Expanded(
-                                child: ClipRRect(
-                                  borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(16)),
-                                  child: Image.asset(
-                                    related['image'],
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      related['name'],
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w600),
-                                    ),
-                                    Text(
-                                      "${related['price']} fcfa",
-                                      style: const TextStyle(
-                                          color: Color(0xFF7D260F)),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                ProductDetailScreen(),
-                                          ),
-                                        );
-                                      },
-                                      child: const Text("Voir"),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _glassInfoCard(List<Widget> children) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.symmetric(horizontal: 0),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.18),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children:
+                children.expand((e) => [e, const SizedBox(height: 12)]).toList()
+                  ..removeLast(),
+          ),
         ),
       ),
     );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:toswe/presentation/screens/notification.dart';
+import 'package:toswe/presentation/screens/notification_screen.dart';
 // import 'package:toswe/presentation/screens/profil.dart';
-import 'package:toswe/presentation/screens/search.dart';
+import 'package:toswe/presentation/screens/search_screen.dart';
 import 'package:toswe/presentation/screens/splash_screen.dart';
 // import 'package:toswe/presentation/screens/settings.dart';
 import '../screens/store_screen.dart';

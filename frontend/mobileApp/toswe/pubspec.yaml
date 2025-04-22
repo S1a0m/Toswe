@@ -24,11 +24,13 @@ flutter:
 
   uses-material-design: true
   assets:
-    - assets/logo-toswe.png
+    - assets/icon/Tw5_1.png
     - assets/toswe-africa-art.png
     - assets/images/bijou.jpeg
+    - assets/icon/Tw7_2.png
+    - assets/pani.png
 
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icon/toswe_mobile1.png"
+  image_path: "assets/icon/Tw4.png"

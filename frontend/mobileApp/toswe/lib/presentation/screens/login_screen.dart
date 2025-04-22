@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:toswe/presentation/screens/register_screen.dart';
 
@@ -9,71 +10,122 @@ class LoginScreen extends StatelessWidget {
     final phoneController = TextEditingController();
     final passwordController = TextEditingController();
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment.center,
-          radius: 0.85,
-          colors: [
-            Color(0xFF7D260F),
-            Color(0xFF2D1B14),
-          ],
-          stops: [0.08, 1.0],
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: const Color.fromRGBO(245, 230, 218, 0.5),
-          elevation: 18.0,
-          leadingWidth: 300,
-          leading: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Image.asset('assets/logo-toswe.png', width: 32, height: 32),
-                const SizedBox(width: 8),
-                const Text(
-                  "Tôswè - Connexion",
-                  style: TextStyle(
-                    fontFamily: 'Playfair Display',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 20,
-                    color: Color(0xFF7D260F),
-                  ),
-                ),
-              ],
+    return Stack(
+      children: [
+        // 🌄 Fond artistique
+        Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage("assets/toswe-africa-art.png"),
+              fit: BoxFit.cover,
             ),
           ),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              TextField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                decoration:
-                    const InputDecoration(labelText: "Numéro de téléphone"),
+
+        // 💎 Flou artistique
+        BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            color: Colors.black.withOpacity(0),
+          ),
+        ),
+
+        // 🧩 Formulaire centré
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: const Text("Connexion",
+                style: TextStyle(color: Color(0xFF7D260F))),
+            backgroundColor: const Color.fromRGBO(245, 230, 218, 0.4),
+            elevation: 0,
+            centerTitle: true,
+          ),
+          body: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildTextField(
+                    controller: phoneController,
+                    icon: Icons.phone,
+                    label: "Numéro de téléphone",
+                    keyboardType: TextInputType.phone,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildTextField(
+                    controller: passwordController,
+                    icon: Icons.lock,
+                    label: "Mot de passe",
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 30),
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 50, vertical: 14),
+                      backgroundColor: const Color(0xFFC0A080),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text(
+                      "Se connecter",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const RegisterScreen()),
+                      );
+                    },
+                    child: const Text(
+                      "Pas encore inscrit ? S'inscrire",
+                      style: TextStyle(color: Color(0xFFC0A080)),
+                    ),
+                  ),
+                ],
               ),
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: "Mot de passe"),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                  onPressed: () {}, child: const Text("Se connecter")),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                  );
-                },
-                child: const Text("Pas encore inscrit ? S'inscrire"),
-              )
-            ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required IconData icon,
+    required String label,
+    TextInputType keyboardType = TextInputType.text,
+    bool obscureText = false,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: const Color.fromRGBO(255, 255, 255, 0.3),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+          ),
+          child: TextField(
+            controller: controller,
+            keyboardType: keyboardType,
+            obscureText: obscureText,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              icon: Icon(icon, color: Color(0xFFC0A080)),
+              labelText: label,
+              labelStyle: const TextStyle(color: Colors.white),
+              border: InputBorder.none,
+            ),
           ),
         ),
       ),
