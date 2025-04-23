@@ -29,83 +29,110 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // 🌄 Fond artistique
-        Container(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage("assets/toswe-africa-art.png"),
-              fit: BoxFit.cover,
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment.center,
+          radius: 0.85,
+          colors: [Color(0xFF7D260F), Color(0xFF2D1B14)],
+          stops: [0.08, 1.0],
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title:
+              Text('Notification', style: TextStyle(color: Color(0xFF7D260F))),
+          centerTitle: true,
+          //automaticallyImplyLeading: false,
+          flexibleSpace: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+              child: Container(
+                color: const Color.fromRGBO(245, 230, 218, 0.4),
+              ),
             ),
           ),
-        ),
-
-        // 💎 Flou artistique
-        BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Container(
-            color: Colors.black.withOpacity(0),
-          ),
-        ),
-
-        // 🧾 Contenu
-        Scaffold(
+          elevation: 0,
           backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            title: const Text(
-              "Notifications",
-              style: TextStyle(color: Color(0xFF7D260F)),
+          // leadingWidth: 150,
+          /*leading: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Image.asset('assets/icon/Tw7_2.png', width: 100, height: 50),
+              ],
             ),
-            backgroundColor: const Color.fromRGBO(245, 230, 218, 0.4),
-            elevation: 0,
-            centerTitle: true,
-          ),
-          body: notifications.isEmpty
-              ? const Center(
-                  child: Text(
-                    "Aucune notification",
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: notifications.length,
-                  itemBuilder: (context, index) {
-                    final notif = notifications[index];
-                    return Dismissible(
-                      key: Key(notif["title"]! + index.toString()),
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        padding: const EdgeInsets.only(right: 20),
-                        alignment: Alignment.centerRight,
-                        color: Colors.redAccent.withOpacity(0.5),
-                        child: const Icon(Icons.delete, color: Colors.white),
-                      ),
-                      onDismissed: (direction) {
-                        setState(() {
-                          notifications.removeAt(index);
-                        });
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text("${notif['title']} supprimée"),
-                          ),
-                        );
-                      },
-                      child: GestureDetector(
-                        onTap: () => _showDetailsDialog(notif),
-                        child: _buildNotificationCard(
-                          title: notif["title"]!,
-                          subtitle: notif["subtitle"]!,
-                          icon: _getIconFromName(notif["icon"]!),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+          ),*/
         ),
-      ],
+        body: Stack(
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage("assets/toswe-africa-art.png"),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: Container(
+                color: Colors.black.withOpacity(0),
+              ),
+            ),
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: notifications.isEmpty
+                    ? const Center(
+                        child: Text(
+                          "notification",
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: notifications.length,
+                        itemBuilder: (context, index) {
+                          final notif = notifications[index];
+                          return Dismissible(
+                            key: Key(notif["title"]! + index.toString()),
+                            direction: DismissDirection.endToStart,
+                            background: Container(
+                              padding: const EdgeInsets.only(right: 20),
+                              alignment: Alignment.centerRight,
+                              color: Colors.redAccent.withOpacity(0.5),
+                              child:
+                                  const Icon(Icons.delete, color: Colors.white),
+                            ),
+                            onDismissed: (direction) {
+                              setState(() {
+                                notifications.removeAt(index);
+                              });
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text("${notif['title']} supprimée"),
+                                ),
+                              );
+                            },
+                            child: GestureDetector(
+                              onTap: () => _showDetailsDialog(notif),
+                              child: _buildNotificationCard(
+                                title: notif["title"]!,
+                                subtitle: notif["subtitle"]!,
+                                icon: _getIconFromName(notif["icon"]!),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

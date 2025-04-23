@@ -79,9 +79,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         appBar: AppBar(
           title: const Text("Détails du produit",
               style: TextStyle(color: Color(0xFF7D260F))),
-          backgroundColor: const Color.fromRGBO(245, 230, 218, 0.4),
+          backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
+          flexibleSpace: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+              child: Container(
+                color: const Color.fromRGBO(245, 230, 218, 0.4),
+              ),
+            ),
+          ),
         ),
         body: Stack(
           children: [

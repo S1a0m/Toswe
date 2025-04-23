@@ -11,33 +11,61 @@ class SearchScreen extends StatelessWidget {
         gradient: RadialGradient(
           center: Alignment.center,
           radius: 0.85,
-          colors: [
-            Color(0xFF7D260F),
-            Color(0xFF2D1B14),
-          ],
+          colors: [Color(0xFF7D260F), Color(0xFF2D1B14)],
           stops: [0.08, 1.0],
         ),
       ),
-      child: Container(
-        decoration: const BoxDecoration(
-            /*image: DecorationImage(
-            image: AssetImage("assets/toswe-africa-art.png"),
-            fit: BoxFit.cover,
-          ),*/
-        ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            backgroundColor: const Color.fromRGBO(245, 230, 218, 0.4),
-            elevation: 10.0,
-            title: _SearchBar(),
-          ),
-          body: const Center(
-            child: Text(
-              'Recherche en cours...',
-              style: TextStyle(color: Colors.white, fontSize: 18),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: _SearchBar(),
+          centerTitle: true,
+          //automaticallyImplyLeading: false,
+          flexibleSpace: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+              child: Container(
+                color: const Color.fromRGBO(245, 230, 218, 0.4),
+              ),
             ),
           ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          // leadingWidth: 150,
+          /*leading: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Image.asset('assets/icon/Tw7_2.png', width: 100, height: 50),
+              ],
+            ),
+          ),*/
+        ),
+        body: Stack(
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage("assets/toswe-africa-art.png"),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: Container(
+                color: Colors.black.withOpacity(0),
+              ),
+            ),
+            SafeArea(
+              child: const Center(
+                child: Text(
+                  'Recherche en cours...',
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

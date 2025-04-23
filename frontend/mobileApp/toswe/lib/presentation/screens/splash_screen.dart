@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:toswe/presentation/screens/login_screen.dart';
 import 'package:toswe/presentation/screens/store_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -50,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen>
     Future.delayed(const Duration(seconds: 4), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const StoreScreen()),
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
     });
   }

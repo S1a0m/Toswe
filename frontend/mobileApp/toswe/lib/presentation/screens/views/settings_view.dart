@@ -1,6 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:toswe/presentation/screens/preferences_screen.dart';
+import 'package:toswe/presentation/components/pop_ups/langage_popup.dart';
+import 'package:toswe/presentation/components/pop_ups/preferences_popup.dart';
+import 'package:toswe/presentation/components/pop_ups/edit_profil_popup.dart';
+import 'package:toswe/presentation/components/pop_ups/change_password_popup.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -56,13 +59,13 @@ class SettingsView extends StatelessWidget {
                       _buildSettingsItem(
                         icon: Icons.person,
                         label: "Modifier le profil",
-                        onTap: () {},
+                        onTap: () => showEditProfilePopup(context),
                       ),
                       const SizedBox(height: 10),
                       _buildSettingsItem(
                         icon: Icons.lock,
                         label: "Changer le mot de passe",
-                        onTap: () {},
+                        onTap: () => showChangePasswordPopup(context),
                       ),
                       const SizedBox(height: 10),
                       _buildSettingsItem(
@@ -74,19 +77,13 @@ class SettingsView extends StatelessWidget {
                       _buildSettingsItem(
                         icon: Icons.favorite,
                         label: "Préférences produits",
-                        onTap: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => PreferencesScreen(),
-                              ));
-                        },
+                        onTap: () => showPreferencesPopup(context),
                       ),
                       const SizedBox(height: 10),
                       _buildSettingsItem(
                         icon: Icons.language,
                         label: "Langue",
-                        onTap: () {},
+                        onTap: () => showLanguagePopup(context),
                       ),
                       const SizedBox(height: 10),
                       _buildSettingsItem(

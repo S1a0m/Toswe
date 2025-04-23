@@ -91,6 +91,7 @@ class _StoreScreenState extends State<StoreScreen> {
   AppBar _buildAppBar(BuildContext context) {
     return AppBar(
       automaticallyImplyLeading: false,
+      title: Text("Tôswè", style: TextStyle(color: Color(0xFF7D260F))),
       flexibleSpace: ClipRect(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
@@ -101,15 +102,15 @@ class _StoreScreenState extends State<StoreScreen> {
       ),
       elevation: 0,
       backgroundColor: Colors.transparent,
-      leadingWidth: 150,
-      leading: Padding(
+      // leadingWidth: 68,
+      /*leading: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Row(
           children: [
-            Image.asset('assets/icon/Tw7_2.png', width: 100, height: 50),
+            Image.asset('assets/icon/Tw5_1.png', width: 50, height: 50),
           ],
         ),
-      ),
+      ),*/
       actions: [
         Container(
           margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),

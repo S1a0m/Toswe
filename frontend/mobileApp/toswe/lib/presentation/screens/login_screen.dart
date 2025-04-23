@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:toswe/presentation/screens/register_screen.dart';
+import 'package:toswe/presentation/screens/store_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -10,90 +11,123 @@ class LoginScreen extends StatelessWidget {
     final phoneController = TextEditingController();
     final passwordController = TextEditingController();
 
-    return Stack(
-      children: [
-        // 🌄 Fond artistique
-        Container(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage("assets/toswe-africa-art.png"),
-              fit: BoxFit.cover,
-            ),
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment.center,
+          radius: 0.85,
+          colors: [Color(0xFF7D260F), Color(0xFF2D1B14)],
+          stops: [0.08, 1.0],
         ),
-
-        // 💎 Flou artistique
-        BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Container(
-            color: Colors.black.withOpacity(0),
-          ),
-        ),
-
-        // 🧩 Formulaire centré
-        Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            title: const Text("Connexion",
-                style: TextStyle(color: Color(0xFF7D260F))),
-            backgroundColor: const Color.fromRGBO(245, 230, 218, 0.4),
-            elevation: 0,
-            centerTitle: true,
-          ),
-          body: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildTextField(
-                    controller: phoneController,
-                    icon: Icons.phone,
-                    label: "Numéro de téléphone",
-                    keyboardType: TextInputType.phone,
-                  ),
-                  const SizedBox(height: 20),
-                  _buildTextField(
-                    controller: passwordController,
-                    icon: Icons.lock,
-                    label: "Mot de passe",
-                    obscureText: true,
-                  ),
-                  const SizedBox(height: 30),
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 50, vertical: 14),
-                      backgroundColor: const Color(0xFFC0A080),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text(
-                      "Se connecter",
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const RegisterScreen()),
-                      );
-                    },
-                    child: const Text(
-                      "Pas encore inscrit ? S'inscrire",
-                      style: TextStyle(color: Color(0xFFC0A080)),
-                    ),
-                  ),
-                ],
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: Text('Tôswè • Connexion',
+              style: TextStyle(color: Color(0xFF7D260F))),
+          automaticallyImplyLeading: false,
+          flexibleSpace: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+              child: Container(
+                color: const Color.fromRGBO(245, 230, 218, 0.4),
               ),
             ),
           ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          leadingWidth: 150,
+          /*leading: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Image.asset('assets/icon/Tw7_2.png', width: 100, height: 50),
+              ],
+            ),
+          ),*/
         ),
-      ],
+        body: Stack(
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage("assets/toswe-africa-art.png"),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: Container(
+                color: Colors.black.withOpacity(0),
+              ),
+            ),
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildTextField(
+                          controller: phoneController,
+                          icon: Icons.phone,
+                          label: "Numéro de téléphone",
+                          keyboardType: TextInputType.phone,
+                        ),
+                        const SizedBox(height: 20),
+                        _buildTextField(
+                          controller: passwordController,
+                          icon: Icons.lock,
+                          label: "Mot de passe",
+                          obscureText: true,
+                        ),
+                        const SizedBox(height: 30),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (context) {
+                              return StoreScreen();
+                            }));
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 50, vertical: 14),
+                            backgroundColor: const Color(0xFFC0A080),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text(
+                            "Se connecter",
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const RegisterScreen()),
+                            );
+                          },
+                          child: const Text(
+                            "Pas encore inscrit ? S'inscrire",
+                            style: TextStyle(color: Color(0xFFC0A080)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
