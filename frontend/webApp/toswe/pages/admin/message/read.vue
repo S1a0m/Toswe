@@ -1,3 +1,82 @@
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+// Exemple de message récupéré (à remplacer par des données dynamiques)
+const message = ref({})
+
+const router = useRouter()
+const route = useRoute()
+const productId = route.query.id
+
+async function fetchMessage() {
+  const token = localStorage.getItem("access_token")
+
+  try {
+    const response = await fetch(`http://localhost:8000/admin/messages/${productId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error("Erreur lors de la réception.")
+    }
+
+    const data = await response.json()
+    message.value = data
+
+
+  } catch (error) {
+    console.error(error)
+    alert("Échec lors de la réception.")
+  }
+}
+
+/*function formatDate(iso) {
+  const date = new Date(iso)
+  return date.toLocaleString('fr-FR', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}*/
+
+async function deleteMessage() {
+  const token = localStorage.getItem("access_token")
+
+  try {
+    const response = await fetch(`http://localhost:8000/admin/messages/${productId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    router.push('/admin/messages')
+
+    if (!response.ok) {
+      throw new Error("Erreur lors de la réception.")
+    }
+
+  } catch (error) {
+    console.error(error)
+    alert("Échec lors de la réception.")
+  }
+}
+
+onMounted(() => {
+  fetchMessage()
+})
+
+definePageMeta({
+  layout: 'admin'
+})
+</script>
+
 <template>
   <br><br><br>
   <br><br><br>
@@ -5,10 +84,8 @@
     <h1>Message reçu</h1>
 
     <div class="contact-info">
-      <p><strong>Nom :</strong> {{ message.senderName }}</p>
-      <p><strong>Email :</strong> {{ message.senderEmail }}</p>
-      <p><strong>Téléphone :</strong> {{ message.senderPhone }}</p>
-      <p><strong>Envoyé le :</strong> {{ formatDate(message.sentAt) }}</p>
+      <p><strong>Contact :</strong> {{ message.mail_or_number }}</p>
+      <p><strong>Envoyé le :</strong> {{ message.time_sent }}</p>
     </div>
 
     <div class="content">
@@ -26,47 +103,6 @@
   <br><br><br>
   <br><br><br>
 </template>
-
-<script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-
-// Exemple de message récupéré (à remplacer par des données dynamiques)
-const message = ref({
-  id: 1,
-  senderName: 'Jean Dupont',
-  senderEmail: 'jean.dupont@example.com',
-  senderPhone: '+33 6 12 34 56 78',
-  content: 'Bonjour, j’aimerais avoir plus d’informations sur votre service.',
-  sentAt: '2025-04-13T14:30:00Z',
-})
-
-const router = useRouter()
-
-function formatDate(iso) {
-  const date = new Date(iso)
-  return date.toLocaleString('fr-FR', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function deleteMessage() {
-  if (confirm('Voulez-vous vraiment supprimer ce message ?')) {
-    console.log('Message supprimé :', message.value.id)
-    // Appel à l’API ou mutation ici
-    router.push('/messages')
-  }
-}
-
-definePageMeta({
-  layout: 'admin'
-})
-</script>
 
 <style scoped lang="scss">
 .message-read {

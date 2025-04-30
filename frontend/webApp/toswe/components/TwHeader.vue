@@ -78,8 +78,8 @@ const redirectToStore = () => {
         <div class="header">
             <NuxtLink to="/">
                 <div class="logo">
-                    <img src="/public/logo-toswe.png" alt="" class="logo-toswe">
-                    <h1>Tôswè.africa</h1>
+                    <img src="/public/Tw7_2.png" alt="" class="logo-toswe">
+                    <h1><!--Tôswè-->.africa</h1>
                 </div>
             </NuxtLink>
             <div class="sign">
@@ -141,8 +141,8 @@ const redirectToStore = () => {
         align-items: center;
 
         .logo-toswe {
-            width: 70px;
-            height: 70px;
+            width: 150px;
+            height: 50px;
         }
 
         h1 {

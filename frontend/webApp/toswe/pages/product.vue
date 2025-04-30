@@ -122,6 +122,8 @@ function handleAddClick() {
 <style lang="scss" scoped>
 .about-content {
   padding: 40px 80px 80px;
+  backdrop-filter: blur(10px);
+  min-height: 100vh;
 }
 
 section {
@@ -248,12 +250,14 @@ button {
   cursor: pointer;
   color: #2D1B14;
   border: 1px solid #2D1B14;
-  background: rgba(192, 160, 128, 0.1);
+  // background: rgba(192, 160, 128, 0.1);
+  background: #7D260F;
+  border-radius: 15px;
   font-size: 30px;
   transition: background 0.5s ease;
 
   &:hover {
-    background: rgba(192, 160, 128, 1);
+    background: #7D260F;
   }
 }
 

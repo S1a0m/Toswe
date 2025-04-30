@@ -50,6 +50,8 @@ const cart = useCartStore()
 <style lang="scss" scoped>
 .about-content {
   padding: 40px 80px 80px 80px;
+  backdrop-filter: blur(10px);
+  min-height: 100vh;
 }
 
 section {

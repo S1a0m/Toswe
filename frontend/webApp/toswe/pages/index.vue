@@ -79,6 +79,10 @@ onMounted(() => {
   
 <style lang="scss" scoped>
 
+.home {
+  backdrop-filter: blur(10px);
+  min-height: 100vh;
+}
 
 header {
   display: flex;

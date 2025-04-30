@@ -43,6 +43,13 @@ const toggleSearchPopup = () => {
 }
 
 const showPopup = ref(false);
+const router = useRouter()
+
+const logout = () => {
+  localStorage.removeItem("access_token") // ou localStorage.setItem("access_token", "")
+  router.push("/admin/login")
+}
+
 
 // S'affiche automatiquement au chargement de la page
 onMounted(() => {
@@ -60,8 +67,8 @@ watch(() => route.name, () => {
         <div class="header">
             <NuxtLink to="/">
                 <div class="logo">
-                    <img src="/public/logo-toswe.png" alt="" class="logo-toswe">
-                    <h1>Tôswè.africa - Admin</h1>
+                    <img src="/public/Tw7_2.png" alt="" class="logo-toswe">
+                    <h1><!--Tôswè.africa--> - Admin</h1>
                 </div>
             </NuxtLink>
             <div class="sign">
@@ -69,7 +76,7 @@ watch(() => route.name, () => {
                     <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#2D1B14"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></svg>
                 </div>
                 <TwSearch v-if="showSearchPopup" @close-searchpopup="toggleSearchPopup"/>
-                <TwLogoutBtn @click="redirectToStore"/>
+                <TwLogoutBtn @click="logout"/>
             </div>
         </div>
         <div class="menu" id="nav-head">
@@ -104,8 +111,8 @@ watch(() => route.name, () => {
         align-items: center;
 
         .logo-toswe {
-            width: 70px;
-            height: 70px;
+            width: 150px;
+            height: 50px;
         }
 
         h1 {

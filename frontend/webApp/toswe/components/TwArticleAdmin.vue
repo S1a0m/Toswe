@@ -88,7 +88,7 @@ article {
         width: 280px;
         height: 280px;
         border-radius: 10px;
-        cursor: pointer;
+        // cursor: pointer;
     }
 
     div {

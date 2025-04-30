@@ -4,6 +4,31 @@ definePageMeta({
 })
 
 const users = ref([])
+
+async function fetchUsers() {
+  // activeCategory.value = category;
+  const token = localStorage.getItem("access_token")
+
+  try {
+    const response = await fetch(`http://localhost:8000/admin/users`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error("Erreur lors de la réception.")
+    }
+
+    const data = await response.json();
+    users.value = data;
+
+  } catch (error) {
+    console.error(error)
+    alert("Échec lors de la réception.")
+  }
+}
 </script>
 
 <template>
@@ -11,7 +36,7 @@ const users = ref([])
       <header>
       </header>
       <main>
-        <TwUserAdmin v-for="user in users" :id="user.id" :status="user.status" :name="user.name" :address="user.address" :contact="user.contact"/>
+        <TwUserAdmin v-for="user in users" :id="user.id_user" :status="user.status" :name="user.name" :address="user.address" :contact="user.mobile_number"/>
       </main>
     </div>
 </template>

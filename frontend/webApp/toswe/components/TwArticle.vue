@@ -47,7 +47,7 @@ function handleAddClick() {
             </div>
         </NuxtLink>
         <div>
-            <h3>{{ props.name }}</h3> ···
+            <h3>{{ props.name }} ···</h3> 
             <p>{{ props.price }} fcfa</p>
         </div>
         <div>
@@ -95,6 +95,7 @@ article {
         color: #7D260F;
         margin: 15px 0px 0px 0px ;
         h3 {
+            color: rgb(45, 27, 20);
             font: {
                 size: 25px;
                 family: "Lora";
@@ -112,7 +113,7 @@ article {
 
     div {
         button {
-            background: rgba(245, 230, 218, 0.4);
+            background: #7D260F;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -120,7 +121,7 @@ article {
             width: 100px;
             height: 40px;
             border: none;
-            border-radius: 20px;
+            border-radius: 15px;
             border-style: solid;
             border-width: 1px;
             cursor: pointer;
@@ -133,6 +134,7 @@ article {
 
             &:hover {
                 box-shadow: 0px 1px 4px black;
+                border: none;
             }
         }
     }

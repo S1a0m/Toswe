@@ -4,6 +4,31 @@ definePageMeta({
 })
 
 const notifications = ref([]);
+
+async function fetchNotification() {
+  // activeCategory.value = category;
+  const token = localStorage.getItem("access_token")
+
+  try {
+    const response = await fetch(`http://localhost:8000/admin/notifications`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error("Erreur lors de la réception.")
+    }
+
+    const data = await response.json();
+    articles.value = data;
+
+  } catch (error) {
+    console.error(error)
+    alert("Échec lors de la réception.")
+  }
+}
 </script>
 
 <template>

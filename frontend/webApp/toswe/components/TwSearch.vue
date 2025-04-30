@@ -13,8 +13,15 @@ const fetchProducts = async () => {
 
   loading.value = true
 
+  const token = localStorage.getItem("access_token")
+
   try {
-    const res = await fetch(`http://localhost:8000/api/products/search?query=${encodeURIComponent(searchQuery.value)}`)
+    const res = await fetch(`http://localhost:8000/admin/products/search?keyword=${encodeURIComponent(searchQuery.value)}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
     if (!res.ok) throw new Error("Erreur lors de la recherche")
 
     const data = await res.json()

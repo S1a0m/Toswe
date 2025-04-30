@@ -13,11 +13,11 @@ const props = defineProps([
       <div class="info">
         <h3>Message reçu</h3>
         <p class="message-preview">« {{ props.messagePreview }} »</p>
-        <p class="timestamp">🕒 Envoyé le : {{ props.timestamp }}</p>
-        <p class="sender">📧 De : {{ props.sender }}</p>
+        <p class="timestamp">🕒 {{ props.timestamp }}</p>
+        <p class="sender">📧 {{ props.sender }}</p>
       </div>
       <div class="actions">
-        <NuxtLink to="/admin/message/read">
+        <NuxtLink :to="{name: 'admin-message-read', query: {id: props.id}}">
           <button type="button">
             <!-- Icône voir -->
             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#C0A080">
