@@ -75,7 +75,7 @@ const redirectToStore = () => {
 
 <template>
     <div class="banner">
-        <div class="header">
+        <div class="header" id="nav-head">
             <NuxtLink to="/">
                 <div class="logo">
                     <img src="/public/Tw7_2.png" alt="" class="logo-toswe">
@@ -92,7 +92,7 @@ const redirectToStore = () => {
                 <TwSignUpBtn @click="redirectToStore"/>
             </div>
         </div>
-        <div class="subheader">
+        <!--<div class="subheader">
             <div>
                 <div>
                     <h1>Nous vendons pour vous.</h1>
@@ -104,9 +104,9 @@ const redirectToStore = () => {
                 </div>
                 <img src="/public/images/toswe-montre.png" alt="">
             </div>
-        </div>
+        </div>-->
         <div class="main-menu">
-            <div class="menu" id="nav-head">
+            <div class="menu">
                 <span @click="toggleMenu" class="icon">
                     <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#C0A080"><path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/></svg>
                 </span>
@@ -160,7 +160,7 @@ const redirectToStore = () => {
     }
 }
 
-.subheader {
+/*.subheader {
     // height: 533px;
     // background: radial-gradient(circle, #7D260F 8%, #2D1B14 100%);
     display: flex;
@@ -199,7 +199,7 @@ const redirectToStore = () => {
                 }  
             }
 
-            .open-popup-btn {
+            button {
                 // color: #2D1B14;
                 color: #F5E6DA;
                 display: flex;
@@ -207,7 +207,6 @@ const redirectToStore = () => {
                 align-items: center;
                 border-radius: 20px;
                 border-width: 1px;
-                border-color: #F5E6DA;
                 background-color: rgba(192, 160, 128, 0);
                 // border: none;
                 width: 549px;
@@ -236,7 +235,7 @@ const redirectToStore = () => {
     img {
         height: 610px;
     }
-}
+}*/
 
 nav {
     // background: rgba(245, 230, 218, 0.9);

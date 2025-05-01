@@ -6,7 +6,9 @@
   
       <main>
         <div class="content">
-          <slot></slot>
+          <div class="blur-inside">
+            <slot></slot>
+          </div>
         </div>
       </main>
   
@@ -17,6 +19,11 @@
   </template>
   
   <style lang="scss" scoped>
+.blur-inside {
+  backdrop-filter: blur(10px);
+  min-height: 100vh;
+}
+
   .content {
   background-image: url("/public/images/toswe-africa-art.png");
   background-repeat: no-repeat;

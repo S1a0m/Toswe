@@ -47,7 +47,7 @@ function handleAddClick() {
             </div>
         </NuxtLink>
         <div>
-            <h3>{{ props.name }} ···</h3> 
+            <h3>{{ props.name }}</h3> ···
             <p>{{ props.price }} fcfa</p>
         </div>
         <div>

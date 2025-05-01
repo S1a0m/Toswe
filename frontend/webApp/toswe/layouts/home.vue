@@ -12,7 +12,7 @@ onMounted(() => {
 <template>
     <div class="template">
       <header>
-        <TwHeaderDefault />
+        <TwHeader />
       </header>
   
       <main>
