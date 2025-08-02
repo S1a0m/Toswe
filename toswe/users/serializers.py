@@ -1,8 +1,6 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from users.models import *
 
-from toswe.users.models import CartItem
-
 
 class UserConnexionSerializer(ModelSerializer):
     class Meta:
