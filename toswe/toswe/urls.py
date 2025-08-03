@@ -10,6 +10,6 @@ router.register('user', UserViewSet, basename='user')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('tw-api/', include('rest_framework.urls')),
     path('api/', include(router.urls)),
 ]
-## path('tw-api/', include('rest_framework.urls')),
