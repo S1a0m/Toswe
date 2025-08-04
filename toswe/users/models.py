@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
-from toswe.products.models import Product
+from products.models import Product
 
 
 class User(models.Model):

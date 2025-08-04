@@ -9,11 +9,12 @@ from django.conf import settings
 import jwt
 from rest_framework.views import APIView
 
-from users.models import User, Product, Cart, Feedback, Notification, Order, Delivery, Payment
-from .serializers import *
-from ..toswe.payments import PaymentGateway
-from ..toswe.permissions import IsUserAuthenticated
-from ..toswe.utils import verify_token
+from users.models import User, Feedback, Notification
+from products.models import Product, Cart, Order, Delivery, Payment
+from users.serializers import *
+from toswe.payments import PaymentGateway
+from toswe.permissions import IsUserAuthenticated
+from toswe.utils import verify_token
 
 RACINE_API_URL = "https://racine.example.com/api"
 RACINE_TOKEN = "your_racine_api_token"
@@ -153,23 +154,6 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = SellerStatisticsSerializer(user)
         return Response(serializer.data)
 
-class RefreshTokenView(APIView):
-    def post(self, request):
-        user_authenticated = verify_token(request.data.get("token"))
-        if user_authenticated["authenticated"]:
-
-            # Génère un nouveau token
-            payload = {
-                "racine_id": user_authenticated["racine_id"],
-                "session_mdp": user_authenticated["session_mdp"],
-                "exp": datetime.utcnow() + timedelta(minutes=15),
-            }
-            new_token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-
-            return Response({"token": new_token}, status=200)
-        return Response({"detail": "Token invalide."}, status=401)
-
-
 class FeedbackViewSet(viewsets.ModelViewSet):
     queryset = Feedback.objects.all()
     serializer_class = UserFeedbackSerializer
@@ -194,3 +178,18 @@ class NotificationViewSet(viewsets.ModelViewSet):
         notification.save()
         return Response({"detail": "Notification supprimée (virtuellement)."})
 
+class RefreshTokenView(APIView):
+    def post(self, request):
+        user = verify_token(request.data.get("token"))
+        if user and user.get("authenticated"):
+            # Génère un nouveau token
+            payload = {
+                "racine_id": user["racine_id"],
+                "session_mdp": user["session_mdp"],
+                "exp": datetime.utcnow() + timedelta(minutes=15),
+            }
+            new_token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+
+            return Response({"token": new_token}, status=status.HTTP_200_OK)
+
+        return Response({"detail": "Token invalide."}, status=status.HTTP_401_UNAUTHORIZED)

@@ -1,7 +1,7 @@
 import jwt
 
-from toswe.toswe import settings
-from toswe.users.models import User
+from toswe import settings
+from users.models import User, UserInteractionEvent
 
 
 def verify_token(token):
@@ -23,6 +23,15 @@ def verify_token(token):
 
     except jwt.InvalidTokenError:
         return {"authenticated": False, "detail": "Token invalide"}
+
+def track_user_interaction(user, product=None, action='view', details=None):
+    if user and user.is_authenticated:
+        UserInteractionEvent.objects.create(
+            user=user,
+            product=product,
+            action=action,
+            details=details or {}
+        )
 
 
 def is_eligible_to_be_seller(user):

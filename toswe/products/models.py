@@ -1,7 +1,5 @@
 from django.db import models
 
-from users.models import User
-
 
 class Category(models.Model):
     name = models.CharField(max_length=255)
@@ -19,14 +17,14 @@ class Product(models.Model):
     videos_url = models.JSONField(default=list, blank=True)
     is_sponsored = models.BooleanField(default=False)
 
-    seller = models.ForeignKey(User, on_delete=models.CASCADE)
+    seller = models.ForeignKey('users.User', on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return self.name
 
 class Cart(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
 class CartItem(models.Model):
@@ -43,7 +41,7 @@ class Order(models.Model):
         ('cancelled', 'Cancelled')
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
 
