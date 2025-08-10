@@ -1,5 +1,5 @@
 <template>
-  <div id="app" class="bg-[#fdf8f5] h-screen w-screen">
+  <div id="app" class="bg-[#fdf8f5] h-full w-full">
   <NuxtLoadingIndicator />
     <NuxtLayout>
       <transition name="page">
