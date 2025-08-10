@@ -1,42 +1,79 @@
 <template>
   <div
-    class="bg-white border border-[#7D260F33] rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col"
+    class="bg-gradient-to-br from-white/90 to-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 w-64"
   >
-    <!-- Image Produit -->
-    <img
-      :src="image"
-      :alt="name"
-      class="w-full h-48 object-cover"
-    />
+    <!-- Image -->
+    <div class="relative w-full h-48 overflow-hidden group">
+      <img
+        src="/assets/images/img2.jpg"
+        :alt="productName"
+        class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+      />
+      <span
+        v-if="badge"
+        class="absolute top-3 left-3 bg-gradient-to-r from-[#7D260F] to-[#A13B20] text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md"
+      >
+        {{ badge }}
+      </span>
+    </div>
 
-    <!-- Détails -->
-    <div class="p-4 flex flex-col flex-1">
-      <h3 class="font-[Kumbh_Sans] text-lg font-semibold mb-2">{{ name }}</h3>
-      <p class="text-[#7D260F] font-bold mb-4">{{ price.toLocaleString() }} FCFA</p>
+    <!-- Contenu -->
+    <div class="p-5 flex flex-col gap-3">
+      <!-- Nom -->
+      <h3 class="font-bold text-lg text-gray-900 line-clamp-1">{{ productName }}</h3>
+      <!-- Description -->
+      <p class="text-sm text-gray-600 line-clamp-2">{{ description }}</p>
 
-      <!-- Bouton ajout + compteur -->
-      <div class="mt-auto flex items-center justify-between">
+      <!-- Étoiles -->
+      <div class="flex items-center gap-1">
+        <Icon
+          v-for="n in 5"
+          :key="n"
+          name="uil:star"
+          size="18"
+          :class="n <= Math.floor(rating) ? 'text-yellow-500' : (n - rating < 1 ? 'text-yellow-400/60' : 'text-gray-300')"
+        />
+        <span class="text-xs text-gray-500">({{ rating.toFixed(1) }})</span>
+      </div>
+
+      <!-- Prix -->
+      <div class="flex items-center justify-between mt-2">
+        <span class="text-xl font-bold text-[#7D260F]">{{ price }} fcfa</span>
         <button
-          @click="addToCart"
-          class="bg-[#7D260F] text-white px-4 py-2 rounded-lg hover:bg-[#5E1D0B] transition-colors"
+          class="px-4 py-2 bg-gradient-to-r from-[#7D260F] to-[#A13B20] text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg hover:from-[#A13B20] hover:to-[#7D260F] transition-all duration-300"
         >
           Ajouter
         </button>
-        <span class="text-gray-600 font-medium">{{ quantity }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-defineProps({
-  image: String,
-  name: String,
-  price: Number,
-  quantity: Number
+const props = defineProps({
+  imageSrc: {
+    type: String,
+    default: '/assets/images/img2.jpg'
+  },
+  productName: {
+    type: String,
+    default: 'Nom du produit'
+  },
+  description: {
+    type: String,
+    default: 'Courte description du produit.'
+  },
+  price: {
+    type: Number,
+    default: 3000
+  },
+  rating: {
+    type: Number,
+    default: 4.5
+  },
+  badge: {
+    type: String,
+    default: 'Nouveau'
+  }
 })
-
-const addToCart = () => {
-  // Action d'ajout au panier
-}
 </script>

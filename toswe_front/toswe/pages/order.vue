@@ -3,6 +3,5 @@
     </div>
     <div class="pt-0.5">
     </div>
-    <TwCartDetails />
-    <TwMenuSide />
+    <TwOrder />
 </template>

@@ -1,4 +1,5 @@
 <template>
-    <div>Par defaut</div>
+  <TwHeader></TwHeader>
     <slot></slot>
+  <TwFooter></TwFooter>
 </template>
