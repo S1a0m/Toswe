@@ -8,7 +8,7 @@
 
     <!-- Compte -->
     <div class="mb-8">
-      <h2 class="text-lg font-semibold text-gray-600 mb-3">Compte</h2>
+      <h2 class="text-lg font-semibold text-gray-600 mb-3">Compte userracine#R</h2>
       <TwSettingsItem icon="uil:user" label="Profil" />
       <TwSettingsItem icon="uil:signout" label="Se déconnecter" />
       <TwSettingsItem icon="uil:trash" label="Supprimer le compte" danger />

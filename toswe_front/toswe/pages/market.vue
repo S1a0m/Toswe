@@ -18,4 +18,13 @@
     </h2>
         <TwBrands />
     </div>
+    <!-- imageSrc="https://via.placeholder.com/300x200" -->
+    <TwPopupAd
+      
+      title="Publicité Exemple"
+      description="Découvrez nos nouveaux produits en promotion !"
+      ctaText="Voir les offres"
+      ctaLink="#"
+      :delay="60000" 
+    /><!-- 1 minute -->
 </template>

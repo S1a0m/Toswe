@@ -53,5 +53,10 @@
           Bluetooth 5.0 : Connexion ultra-stable jusqu’à 15 mètres de distance.
           Autonomie longue durée : Jusqu’à 12 heures de musique non-stop avec une seule charge.
     </p>
+    <button
+      class="w-full md:w-auto bg-[#7D260F] text-white font-semibold py-3 px-6 rounded-lg hover:bg-[#5c1c07] transition-colors duration-300 my-8"
+    >
+      Voir la publicité
+    </button>
   </section>
 </template>
