@@ -1,5 +1,5 @@
 <template>
-  <section class="min-h-screen flex justify-center items-center bg-[#F6F3F0] p-4">
+  <section class="min-h-screen flex justify-center items-center p-4">
     <div class="bg-white shadow-xl rounded-xl w-full max-w-md p-6">
       <h1 class="text-xl font-bold text-center text-[#7D260F] mb-6">
         Connexion à Toswe via Racine

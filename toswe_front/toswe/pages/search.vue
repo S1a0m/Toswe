@@ -3,7 +3,7 @@
     </div>
     <div class="pt-0.5">
     </div>
-  <section class="min-h-screen bg-gray-50 py-6 px-4">
+  <section class="min-h-screen py-6 px-4">
     <!-- Barre de recherche + boutons -->
     <div class="max-w-3xl mx-auto flex flex-col sm:flex-row items-center gap-3 mb-8">
       <!-- Recherche texte -->
@@ -111,6 +111,8 @@
       </div>
     </div>
   </section>
+  <TwMenuSide />
+  <TwCart />
 </template>
 
 <script setup>

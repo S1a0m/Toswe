@@ -3,50 +3,66 @@
     </div>
     <div class="pt-0.5">
     </div>
-  <section class="min-h-screen flex flex-col bg-[#7D260F] text-white">
+  <section class="min-h-screen flex flex-col bg-white text-black">
     <!-- Titre -->
     <header class="p-6 text-center">
-      <h1 class="text-2xl font-bold">Scanner un produit</h1>
-      <p class="opacity-80 text-sm">Importez une image ou scannez en direct avec votre caméra.</p>
+      <h1 class="text-3xl font-bold text-[#7D260F]">Scanner un produit</h1>
+      <p class="text-gray-600 mt-1">Importez une image ou scannez en direct avec votre caméra</p>
     </header>
 
     <!-- Zone de prévisualisation -->
-    <div class="flex-1 flex flex-col items-center justify-center gap-4 px-4">
+    <div class="flex-1 flex flex-col items-center justify-center gap-6 px-4">
       <!-- Vidéo live -->
-      <video v-if="cameraActive" ref="videoEl" autoplay playsinline class="rounded-lg shadow-lg w-full max-w-md border border-white/30"></video>
+      <video
+        v-if="cameraActive"
+        ref="videoEl"
+        autoplay
+        playsinline
+        class="rounded-xl shadow-lg w-full max-w-md border border-gray-200"
+      ></video>
 
       <!-- Aperçu image -->
-      <img v-if="previewImage && !cameraActive" :src="previewImage" alt="Aperçu" class="rounded-lg shadow-lg w-full max-w-md" />
+      <img
+        v-if="previewImage && !cameraActive"
+        :src="previewImage"
+        alt="Aperçu"
+        class="rounded-xl shadow-lg w-full max-w-md border border-gray-200"
+      />
 
-      <!-- Upload -->
+      <!-- Upload invisible -->
       <input
         type="file"
         accept="image/*"
-        class="hidden"
         ref="fileInput"
+        class="hidden"
         @change="handleImageUpload"
       />
     </div>
 
-    <!-- Boutons fixes -->
-    <footer class="sticky bottom-0 w-full bg-[#5c1b0b] p-4 flex gap-3">
+    <!-- Boutons d’action -->
+    <footer class="sticky bottom-0 w-full bg-white border-t border-gray-200 p-4 flex gap-3">
       <button
         @click="toggleCamera"
-        class="flex-1 py-3 rounded-lg font-semibold bg-green-600 hover:bg-green-700 transition"
+        class="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 transition"
       >
+        <Icon name="uil:camera" class="w-5 h-5" />
         {{ cameraActive ? 'Arrêter' : 'Caméra' }}
       </button>
+
       <button
-        @click="() => fileInput.click()"
-        class="flex-1 py-3 rounded-lg font-semibold bg-blue-600 hover:bg-blue-700 transition"
+        @click="fileInput.click()"
+        class="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold bg-blue-600 text-white hover:bg-blue-700 transition"
       >
+        <Icon name="uil:image-upload" class="w-5 h-5" />
         Importer
       </button>
+
       <button
         v-if="cameraActive"
         @click="capturePhoto"
-        class="flex-1 py-3 rounded-lg font-semibold bg-yellow-500 hover:bg-yellow-600 transition"
+        class="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold bg-yellow-500 text-black hover:bg-yellow-600 transition"
       >
+        <Icon name="uil:camera-plus" class="w-5 h-5" />
         Prendre
       </button>
     </footer>
@@ -63,7 +79,6 @@ const cameraActive = ref(false)
 let stream = null
 let scanInterval = null
 
-// Import d'image
 function handleImageUpload(event) {
   const file = event.target.files[0]
   if (file) {
@@ -72,7 +87,6 @@ function handleImageUpload(event) {
   }
 }
 
-// Démarre ou arrête la caméra
 async function toggleCamera() {
   if (cameraActive.value) {
     stopCamera()
@@ -87,7 +101,6 @@ async function startCamera() {
     videoEl.value.srcObject = stream
     cameraActive.value = true
 
-    // Scan en continu (exemple toutes les 2 secondes)
     scanInterval = setInterval(() => {
       captureAndScan()
     }, 2000)
@@ -104,7 +117,6 @@ function stopCamera() {
   cameraActive.value = false
 }
 
-// Capture d'image
 function capturePhoto() {
   captureAndScan()
   stopCamera()
@@ -117,9 +129,6 @@ function captureAndScan() {
   const ctx = canvas.getContext('2d')
   ctx.drawImage(videoEl.value, 0, 0, canvas.width, canvas.height)
   previewImage.value = canvas.toDataURL('image/png')
-
-  // Ici, tu peux envoyer l'image à ton backend
-  // uploadScan(previewImage.value)
 }
 
 onBeforeUnmount(() => {

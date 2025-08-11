@@ -26,6 +26,12 @@
             class="flex items-center gap-2 p-2 rounded-full hover:bg-white/10 transition"
             aria-label="Basculer en mode sombre"
           >
+            <Icon name="mdi:image-search" size="20" />
+          </button>
+          <button
+            class="flex items-center gap-2 p-2 rounded-full hover:bg-white/10 transition"
+            aria-label="Basculer en mode sombre"
+          >
             <Icon name="uil:moon" size="20" />
           </button>
         </nav>
@@ -52,6 +58,12 @@
         >
           <span>Connexion / Inscription</span>
           <Icon name="uil:user" size="20" />
+        </button>
+        <button
+          class="flex items-center gap-2 w-full px-3 py-2 rounded-md hover:bg-white/10 transition"
+        >
+          <span>Rechercher/Scanner un produit</span>
+          <Icon name="mdi:image-search" size="20" />
         </button>
         <button
           class="flex items-center gap-2 w-full px-3 py-2 rounded-md hover:bg-white/10 transition"

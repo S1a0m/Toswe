@@ -11,7 +11,8 @@ export default defineNuxtConfig({
     ],  
   },
   modules: [
-    '@nuxt/icon'
+    '@nuxt/icon',
+    '@vueuse/motion/nuxt'
   ],
   ssr: true,
   app: {

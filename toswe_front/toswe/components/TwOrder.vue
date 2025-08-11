@@ -1,49 +1,40 @@
 <template>
-  <section class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-    <h2 class="text-2xl font-bold mb-6 text-gray-900">Votre commande</h2>
-
-    <!-- Détails de la commande -->
-    <div v-if="orderItems.length > 0">
-      <TwCartItem
-        v-for="(item, index) in orderItems"
-        :key="index"
-        :imageSrc="item.imageSrc"
-        :productName="item.productName"
-        :price="item.price"
-        :quantity="item.quantity"
-      />
-
-      <!-- Total -->
-      <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-200">
-        <span class="text-lg font-semibold">Total :</span>
-        <span class="text-xl font-bold text-[#7D260F]">
-          {{ totalPrice.toLocaleString() }} FCFA
-        </span>
-      </div>
-
-      <!-- Statut de la commande -->
-      <div class="mt-6">
-        <span class="text-sm text-gray-500">Statut de la commande :</span>
-        <span class="font-semibold text-gray-900">En cours de traitement</span>
-      </div>
+  <div
+    @click="$emit('click')"
+    class="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer"
+  >
+    <!-- Infos commande -->
+    <div>
+      <p class="text-sm text-gray-500">Commande #{{ order.id }}</p>
+      <p class="text-sm text-gray-400">{{ order.date }}</p>
+      <p
+        class="text-xs font-medium mt-1 px-2 py-1 rounded-full inline-block"
+        :class="statusClasses[order.status] || statusClasses.default"
+      >
+        {{ order.status }}
+      </p>
     </div>
 
-    <!-- Aucune commande -->
-    <div v-else class="text-center text-gray-500 py-10">
-      Aucune commande trouvée.
+    <!-- Montant -->
+    <div class="text-right">
+      <p class="text-base font-bold text-gray-900">{{ order.total }} FCFA</p>
+      <Icon name="uil:angle-right" class="text-gray-400 text-lg" />
     </div>
-  </section>
+  </div>
 </template>
 
 <script setup>
-import TwCartItem from './TwCartItem.vue'
+defineProps({
+  order: {
+    type: Object,
+    required: true
+  }
+})
 
-const orderItems = ref([
-  { imageSrc: '/assets/images/img1.png', productName: 'Produit 1', price: 2500, quantity: 2 },
-  { imageSrc: '/assets/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 }
-])
-
-const totalPrice = computed(() =>
-  orderItems.value.reduce((total, item) => total + item.price * item.quantity, 0)
-)
+const statusClasses = {
+  "En attente": "bg-yellow-100 text-yellow-700",
+  "Livrée": "bg-green-100 text-green-700",
+  "Annulée": "bg-red-100 text-red-700",
+  default: "bg-gray-100 text-gray-500"
+}
 </script>
