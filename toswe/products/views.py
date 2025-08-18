@@ -1,3 +1,4 @@
+from django.core import signing
 from rest_framework import viewsets, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -12,6 +13,9 @@ from products.serializers import *
 from toswe.permissions import IsUserAuthenticated
 
 from toswe.utils import track_user_interaction
+
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from .spbi_model import predict_top_k
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -62,6 +66,39 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['get'])# , url_path='qr-code')
+    def get_qr_code(self, request, pk=None):
+        """Retourne uniquement l'URL du QR code du produit"""
+        try:
+            product = self.get_object()
+            if product.qr_code:
+                return Response({
+                    "product_id": product.id,
+                    "qr_code_url": request.build_absolute_uri(product.qr_code.url)
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response(
+                    {"detail": "Aucun QR code disponible pour ce produit."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        except Product.DoesNotExist:
+            return Response(
+                {"detail": "Produit introuvable."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=False, methods=['get']) # , url_path='scan/(?P<signed_id>[^/.]+)', permission_classes=[AllowAny])
+    def scan_product(self, request, signed_id=None):
+        try:
+            product_id = signing.loads(signed_id)
+            product = Product.objects.get(id=product_id)
+            serializer = self.get_serializer(product)
+            return Response(serializer.data)
+        except signing.BadSignature:
+            return Response({"error": "QR code invalide"}, status=400)
+        except Product.DoesNotExist:
+            return Response({"error": "Produit introuvable"}, status=404)
+
     @action(detail=True, methods=['get'])
     def view(self, request, pk=None):
         product = self.get_object()
@@ -76,13 +113,18 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(product)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['get'])
+    def qr_code(self, request, pk=None):
+        product = self.get_object()
+        pass
+
     @action(detail=False, methods=['get'])
     def announcements(self, request):
         products = Product.objects.filter(announcement_text__isnull=False)
         serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'], url_path='sponsor')
+    @action(detail=True, methods=['post']) # , url_path='sponsor')
     def sponsor_product(self, request, pk=None):
         product = self.get_object()
         user = request.user
@@ -126,6 +168,41 @@ class ProductViewSet(viewsets.ModelViewSet):
             {"message": "Produit sponsorisé avec succès."},
             status=status.HTTP_200_OK
         )
+
+    @action(detail=False, methods=['post'], url_path='identify')
+    def identify_product(self, request):
+        """
+        Receives an image and returns the matching product info.
+        """
+        uploaded_image = request.FILES.get('image')
+
+        if not uploaded_image:
+            return Response({"error": "No image uploaded."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not isinstance(uploaded_image, InMemoryUploadedFile):
+            return Response({"error": "Invalid image file."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Predict product ID using your AI model
+            predicted_id = predict_top_k(uploaded_image)
+
+            # Retrieve product info from DB
+            product = Product.objects.filter(id=predicted_id).first()
+            if not product:
+                return Response({"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+
+            # Prepare response data
+            data = {
+                "id": product.id,
+                "name": product.name,
+                "main_image": request.build_absolute_uri(product.main_image.url) if product.main_image else None,
+                "price": str(product.price),
+                "short_description": product.short_description or ""
+            }
+            return Response(data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class CartViewSet(viewsets.ModelViewSet):

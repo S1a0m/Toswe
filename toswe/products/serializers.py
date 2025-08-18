@@ -1,10 +1,25 @@
 from rest_framework import serializers
-from products.models import Product, Cart, Order, OrderItem, Delivery, Payment
+from products.models import Product, Cart, Order, OrderItem, Delivery, Payment, ProductImage
+
+class ProductImageSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'image_url']
+
+    def get_image_url(self, obj):
+        if obj.image:
+            return obj.image.url
+        return None
 
 
 # === PRODUITS ===
 
 class ProductDetailsSerializer(serializers.ModelSerializer):
+    images = ProductImageSerializer(many=True, read_only=True)
+    qr_code_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
         fields = '__all__'

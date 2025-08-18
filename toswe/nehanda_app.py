@@ -99,7 +99,7 @@ def get_current_user(authorization: Optional[str] = Header(None)) -> User:
     return user
 
 # ============ “Cerveau” minimal de Nehanda (stub) ============
-def nehada_brain_reply(user: User, message: str) -> str:
+def nehanda_brain_reply(user: User, message: str) -> str:
     # TODO: remplace par ton vrai moteur (règles, RAG, TF, etc.)
     return f"Je t’ai bien lu, {getattr(user, 'username', user.pk)} : “{message}”. Que souhaites-tu acheter ?"
 
@@ -126,7 +126,7 @@ def chat_with_nehanda(payload: ChatIn, db: Session = Depends(get_db), user: User
     db.add(Message(conversation_id=conv.id, sender="user", text=payload.message))
 
     # 3) Générer la réponse de Nehanda
-    reply = nehada_brain_reply(user, payload.message)
+    reply = nehanda_brain_reply(user, payload.message)
 
     # 4) Sauvegarder la réponse
     db.add(Message(conversation_id=conv.id, sender="nehanda", text=reply))

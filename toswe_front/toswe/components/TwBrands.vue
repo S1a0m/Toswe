@@ -1,17 +1,18 @@
 <template>
-
+  <!-- 
+    navigation --> <!-- vitesse du défilement (plus = plus lent) -->
   <Swiper
-    :slides-per-view="1"
-    :space-between="20"
-    :autoplay="{ delay: 2000, disableOnInteraction: false }"
+    :modules="[Autoplay]"
     :loop="true"
-    :breakpoints="{
-      640: { slidesPerView: 2 },
-      1024: { slidesPerView: 3 }
+    :autoplay="{
+      delay: 0,        // pas de pause entre les slides
+      disableOnInteraction: false
     }"
-    navigation
-    pagination
-    class="pb-8"
+    :speed="4000"       
+    :slides-per-view="3"
+    :space-between="20"
+    grabCursor
+    
   >
     <SwiperSlide
       v-for="(brand, index) in brands"
@@ -29,6 +30,7 @@
 
 <script setup>
 import { Swiper, SwiperSlide } from 'swiper/vue'
+import { Autoplay } from 'swiper/modules'
 
 // Styles Swiper
 import 'swiper/css'

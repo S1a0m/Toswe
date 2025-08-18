@@ -26,10 +26,10 @@
 
         <!-- Carte Scanner -->
         <div
-          class="bg-white/20 backdrop-blur-lg text-white rounded-2xl p-6 flex flex-col items-center text-center shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300 border border-white/30"
+          class="bg-white/10 backdrop-blur-lg text-white rounded-2xl p-6 flex flex-col items-center text-center shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300 border border-white/30"
         >
           <img src="/assets/images/insta.jpeg" alt="Scanner" class="w-full h-36 object-cover rounded-lg mb-4" />
-          <Icon name="uil:qrcode-scan" size="56" class="text-white" />
+          <Icon name="uil:qrcode-scan" size="52" class="text-white" />
           <b class="text-lg mt-3">Scannez ou recherchez un produit</b>
           <span class="text-sm mt-2 text-white/80">Rapide. Simple. Intelligent.</span>
         </div>

@@ -13,15 +13,22 @@ class Product(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity_stock = models.PositiveIntegerField()
-    images_url = models.JSONField(default=list, blank=True)
     videos_url = models.JSONField(default=list, blank=True)
     is_sponsored = models.BooleanField(default=False)
+    qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
 
     seller = models.ForeignKey('users.User', on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return self.name
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='products/')
+
+    def __str__(self):
+        return f"Image de {self.product.name}"
 
 class Cart(models.Model):
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
@@ -63,3 +70,7 @@ class Delivery(models.Model):
     contact_phone = models.CharField(max_length=20)
     delivered = models.BooleanField(default=False)
     delivery_date = models.DateTimeField(null=True, blank=True)
+
+class Ad(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    pass
