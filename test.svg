@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="820" viewBox="0 0 1200 820" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .box{fill:#fff;stroke:#1f2937;stroke-width:2;rx:12;ry:12}
+      .title{font-family:Inter,Arial,sans-serif;font-size:16px;font-weight:700;fill:#111827}
+      .text{font-family:Inter,Arial,sans-serif;font-size:13px;fill:#374151}
+      .actor{fill:#f3f4f6;stroke:#1f2937;stroke-width:2;rx:50;ry:50}
+      .core{fill:#e0f2fe;stroke:#0369a1;stroke-width:2;rx:18;ry:18}
+      .svc{fill:#fef3c7;stroke:#92400e;stroke-width:2;rx:12;ry:12}
+      .db{fill:#ecfccb;stroke:#3f6212;stroke-width:2;rx:12;ry:12}
+      .ext{fill:#fae8ff;stroke:#7e22ce;stroke-width:2;rx:12;ry:12}
+      .note{fill:#f5f5f5;stroke:#9ca3af;stroke-width:1;rx:8;ry:8}
+      .small{font-family:Inter,Arial,sans-serif;font-size:12px;fill:#4b5563}
+      .mono{font-family:Menlo,Consolas,monospace;font-size:12px;fill:#111827}
+      .line{stroke:#111827;stroke-width:1.8;fill:none;marker-end:url(#arrow)}
+      .dash{stroke-dasharray:6 6}
+    </style>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#111827"/>
+    </marker>
+  </defs>
+
+  <!-- Center: Toswè System -->
+  <rect x="350" y="120" width="500" height="560" class="core"/>
+  <text x="600" y="155" text-anchor="middle" class="title">Tôswè — Système central</text>
+  <text x="600" y="176" text-anchor="middle" class="small">Frontend + Orchestration</text>
+
+  <!-- Actors -->
+  <rect x="40" y="120" width="210" height="90" class="actor"/>
+  <text x="145" y="155" text-anchor="middle" class="title">Utilisateur</text>
+  <text x="145" y="177" text-anchor="middle" class="text">Web / Mobile</text>
+
+  <rect x="40" y="240" width="210" height="90" class="actor"/>
+  <text x="145" y="275" text-anchor="middle" class="title">Admin Tôswè</text>
+  <text x="145" y="297" text-anchor="middle" class="text">Back-office</text>
+
+  <!-- Inside Toswè -->
+  <!-- Nehanda -->
+  <rect x="380" y="210" width="210" height="120" class="svc"/>
+  <text x="485" y="240" text-anchor="middle" class="title">Nehanda (FastAPI)</text>
+  <text x="485" y="262" text-anchor="middle" class="small">Assistant d'achat (GPT-3.5)</text>
+  <text x="485" y="284" text-anchor="middle" class="small">Routes: /chat, /conversations</text>
+
+  <!-- Django API -->
+  <rect x="610" y="210" width="210" height="120" class="svc"/>
+  <text x="715" y="240" text-anchor="middle" class="title">API Django (DRF)</text>
+  <text x="715" y="262" text-anchor="middle" class="small">Produits, Users, Commandes</text>
+  <text x="715" y="284" text-anchor="middle" class="small">Actions: scan, identify</text>
+
+  <!-- DBs -->
+  <rect x="380" y="360" width="210" height="110" class="db"/>
+  <text x="485" y="392" text-anchor="middle" class="title">Conversations DB</text>
+  <text x="485" y="414" text-anchor="middle" class="small">SQLAlchemy (FastAPI)</text>
+  <text x="485" y="436" text-anchor="middle" class="mono">conversations, messages</text>
+
+  <rect x="610" y="360" width="210" height="110" class="db"/>
+  <text x="715" y="392" text-anchor="middle" class="title">Django DB</text>
+  <text x="715" y="414" text-anchor="middle" class="small">Produits, Utilisateurs,</text>
+  <text x="715" y="436" text-anchor="middle" class="small">Commandes, Paiements…</text>
+
+  <!-- SPBI block -->
+  <rect x="380" y="490" width="210" height="80" class="svc"/>
+  <text x="485" y="520" text-anchor="middle" class="title">SPBI (TensorFlow)</text>
+  <text x="485" y="542" text-anchor="middle" class="small">Image → liste d'IDs produits</text>
+
+  <!-- QR Scan / Identify -->
+  <rect x="610" y="490" width="210" height="80" class="svc"/>
+  <text x="715" y="520" text-anchor="middle" class="title">@action scan/identify</text>
+  <text x="715" y="542" text-anchor="middle" class="small">Retourne nom, image, prix…</text>
+
+  <!-- External services -->
+  <rect x="955" y="160" width="190" height="90" class="ext"/>
+  <text x="1050" y="190" text-anchor="middle" class="title">OpenAI GPT-3.5</text>
+  <text x="1050" y="212" text-anchor="middle" class="small">LLM pour Nehanda</text>
+
+  <rect x="955" y="270" width="190" height="90" class="ext"/>
+  <text x="1050" y="300" text-anchor="middle" class="title">API Paiement</text>
+  <text x="1050" y="322" text-anchor="middle" class="small">Moov / MTN / …</text>
+
+  <rect x="955" y="380" width="190" height="90" class="ext"/>
+  <text x="1050" y="410" text-anchor="middle" class="title">RACINE</text>
+  <text x="1050" y="432" text-anchor="middle" class="small">Identité / Vérification</text>
+
+  <!-- Notes -->
+  <rect x="870" y="520" width="275" height="140" class="note"/>
+  <text x="882" y="544" class="title">Légende & Flux</text>
+  <text x="882" y="566" class="small">— L’utilisateur discute avec Nehanda.</text>
+  <text x="882" y="586" class="small">— Nehanda appelle GPT-3.5 (raisonnement).</text>
+  <text x="882" y="606" class="small">— Nehanda lit/écrit Conversations DB.</text>
+  <text x="882" y="626" class="small">— DRF gère produits, scan QR, SPBI.</text>
+
+  <!-- Lines: Actors to Toswè -->
+  <path d="M250 165 L350 165" class="line"/>
+  <text x="300" y="155" class="small">Chat / Scan / Browse</text>
+
+  <path d="M250 285 L350 285" class="line"/>
+  <text x="300" y="275" class="small">Gestion / Monitoring</text>
+
+  <!-- Lines: inside Toswè -->
+  <!-- User to Nehanda and DRF -->
+  <path d="M350 165 C 400 165, 430 210, 485 210" class="line"/>
+  <path d="M350 165 C 580 165, 610 210, 715 210" class="line dash"/>
+  <text x="560" y="158" class="small">Accès direct API (REST)</text>
+
+  <!-- Nehanda <-> GPT -->
+  <path d="M590 250 C 700 250, 940 205, 955 205" class="line"/>
+  <text x="825" y="235" class="small">Prompt / Réponse</text>
+
+  <!-- Nehanda <-> Conversations DB -->
+  <path d="M485 330 L485 360" class="line"/>
+  <text x="500" y="350" class="small">Log messages</text>
+
+  <!-- DRF <-> Django DB -->
+  <path d="M715 330 L715 360" class="line"/>
+  <text x="730" y="350" class="small">ORM</text>
+
+  <!-- DRF <-> Payment -->
+  <path d="M820 260 C 900 260, 955 305, 955 305" class="line"/>
+  <text x="895" y="288" class="small">Paiement</text>
+
+  <!-- DRF <-> RACINE -->
+  <path d="M820 300 C 900 340, 955 425, 955 425" class="line"/>
+  <text x="895" y="380" class="small">Vérif. identité</text>
+
+  <!-- DRF <-> SPBI -->
+  <path d="M715 490 L715 470 C715 460, 630 460, 630 470 L630 490" class="line"/>
+  <path d="M590 530 L610 530" class="line"/>
+  <text x="600" y="520" class="small">inférence</text>
+
+  <!-- Nehanda <-> DRF -->
+  <path d="M590 270 L610 270" class="line"/>
+  <text x="600" y="262" class="small">Produits / Commandes</text>
+
+  <!-- User -> Identify action (QR) -->
+  <path d="M250 165 C 400 200, 610 520, 610 520" class="line"/>
+  <text x="390" y="350" class="small">Scan QR → identify</text>
+
+  <!-- Footer -->
+  <text x="600" y="790" text-anchor="middle" class="small">
+    Diagramme de contexte Tôswè • Nehanda (FastAPI) • API Django (DRF) • DB Conversations • DB Django • GPT-3.5 • Paiement • RACINE • SPBI
+  </text>
+</svg>
+
