@@ -4,6 +4,7 @@
 
 <script>
 definePageMeta({
-  layout: false
+  layout: false,
+  middleware: 'auth',
 })
 </script>

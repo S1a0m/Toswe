@@ -1,12 +1,8 @@
 <template>
-    <div class="mt-18">
-    </div>
-    <div class="pt-0.5">
-    </div>
   <section class="min-h-screen p-6">
     <!-- Titre -->
     <header class="mb-8 text-center" v-motion-slide-top>
-      <h1 class="text-3xl font-bold text-[#7D260F]">Statistiques de Ventes</h1>
+      <h2 class="text-2xl font-bold text-[#7D260F] mb-6 font-[Kenia]">Statistiques de Ventes</h2>
       <p class="text-gray-600">Aperçu de vos performances et activité récente</p>
     </header>
 
@@ -90,6 +86,9 @@
 </template>
 
 <script setup>
+definePageMeta({
+  middleware: 'auth', // Appliquer le middleware d'authentification
+})
 import { ref, computed } from 'vue'
 import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, ArcElement, CategoryScale, LinearScale } from 'chart.js'
 import { Bar, Pie } from 'vue-chartjs'

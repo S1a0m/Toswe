@@ -70,6 +70,10 @@
 </template>
 
 <script setup>
+definePageMeta({
+  middleware: 'auth', // Appliquer le middleware d'authentification
+})
+
 import { ref, onBeforeUnmount } from 'vue'
 
 const previewImage = ref(null)

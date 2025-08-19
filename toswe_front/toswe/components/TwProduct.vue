@@ -1,13 +1,14 @@
 <template>
   <div
-    class="bg-gradient-to-br from-white/90 to-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 w-64"
+    class="bg-gradient-to-br from-white/90 to-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 w-full"
   >
     <!-- Image -->
     <div class="relative w-full h-48 overflow-hidden group">
       <img
         src="/assets/images/img2.jpg"
         :alt="productName"
-        class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+        @click="goToProduct"
+        class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 hover:cursor-pointer"
       />
       <span
         v-if="badge"
@@ -20,7 +21,11 @@
     <!-- Contenu -->
     <div class="p-5 flex flex-col gap-3">
       <!-- Nom -->
-      <h3 class="font-bold text-lg text-gray-900 line-clamp-1">{{ productName }}</h3>
+      <h3 class="font-bold text-lg text-gray-900 line-clamp-1 hover:cursor-pointer"
+      @click="goToProduct"
+      >
+        {{ productName }}
+      </h3>
       <!-- Description -->
       <p class="text-sm text-gray-600 line-clamp-2">{{ description }}</p>
 
@@ -49,7 +54,10 @@
   </div>
 </template>
 
+
+
 <script setup>
+import { goToProduct } from '@/utils/navigations';
 const props = defineProps({
   imageSrc: {
     type: String,

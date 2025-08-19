@@ -10,6 +10,9 @@
 </template>
 
 <script setup>
+definePageMeta({
+  middleware: 'auth', // Appliquer le middleware d'authentification
+})
 
 const order = {
   id: 101,

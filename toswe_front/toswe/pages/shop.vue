@@ -8,11 +8,17 @@
       />
     </div>
 
-    <!-- Produits du vendeur -->
+    <!-- Produits en vente -->
     <div class="border-t border-gray-200 pt-8">
-      <TwProducts title="Produits du vendeur" />
+      <TwProducts title="Produits en vente" />
     </div>
   </section>
     <TwMenuSide />
     <TwCart />
 </template>
+
+<script setup>
+definePageMeta({
+  middleware: 'auth', // Appliquer le middleware d'authentification
+})
+</script>

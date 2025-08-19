@@ -1,8 +1,4 @@
 <template>
-    <div class="mt-18">
-    </div>
-    <div class="pt-0.5">
-    </div>
   <section class="min-h-screen py-6 px-4">
     <!-- Barre de recherche + boutons -->
     <div class="max-w-3xl mx-auto flex flex-col sm:flex-row items-center gap-3 mb-8">

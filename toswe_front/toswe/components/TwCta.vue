@@ -14,13 +14,13 @@
       <!-- Boutons d'action -->
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <NuxtLink
-          to="/inscription"
+          to="/auth"
           class="bg-white text-[#7D260F] font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-xl transition-all duration-300"
         >
           S’inscrire
         </NuxtLink>
         <NuxtLink
-          to="/boutique"
+          to="/market"
           class="bg-transparent border border-white font-semibold py-3 px-8 rounded-lg hover:bg-white hover:text-[#7D260F] transition-all duration-300"
         >
           Commencer mes achats

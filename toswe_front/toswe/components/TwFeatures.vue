@@ -1,6 +1,6 @@
 <template>
   <section
-    class="py-16 px-6 md:px-12 relative bg-[#7D260F] overflow-hidden"
+    class="py-16 px-6 md:px-12 relative bg-[#7D260F] overflow-hidden" id="features-section"
   >
     <!-- Effet flou décoratif -->
     <div class="absolute inset-0"></div> <!--bg-white/10 backdrop-blur-sm-->

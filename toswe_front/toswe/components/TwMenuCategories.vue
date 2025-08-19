@@ -34,11 +34,15 @@ import { ref } from 'vue'
 
 const categories = [
   'Tout',
-  'Artisanat',
+  'Accessoires',
   'Agroalimentaire',
+  'Artisanat',
   'Céréales',
+  'Cosmétiques',
+  'Cuisines',
   'Fruits',
-  'Marques'
+  'Marques',
+  'Vêtements',
 ]
 
 const activeCategory = ref('Tout')

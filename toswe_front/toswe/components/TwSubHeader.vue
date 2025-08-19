@@ -17,7 +17,8 @@
         
         <!-- Carte Nehanda -->
         <div
-          class="bg-white/10 backdrop-blur-lg text-white rounded-2xl p-6 flex flex-col items-center text-center shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 border border-white/20"
+          class="bg-white/10 backdrop-blur-lg text-white rounded-2xl p-6 flex flex-col items-center text-center shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 border border-white/20 hover:cursor-pointer"
+          @click="goToNehanda"
         >
           <img src="/assets/images/Nehanda.png" alt="Nehanda" class="w-full h-36 object-cover rounded-lg mb-4" />
           <Icon name="uil:robot" size="52" class="text-white" />
@@ -26,17 +27,19 @@
 
         <!-- Carte Scanner -->
         <div
-          class="bg-white/10 backdrop-blur-lg text-white rounded-2xl p-6 flex flex-col items-center text-center shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300 border border-white/30"
+          class="bg-white/10 backdrop-blur-lg text-white rounded-2xl p-6 flex flex-col items-center text-center shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 border border-white/20 hover:cursor-pointer"
+          @click="goToScanner"
         >
           <img src="/assets/images/insta.jpeg" alt="Scanner" class="w-full h-36 object-cover rounded-lg mb-4" />
           <Icon name="uil:qrcode-scan" size="52" class="text-white" />
-          <b class="text-lg mt-3">Scannez ou recherchez un produit</b>
+          <b class="text-lg mt-3">Scannez un produit de chez Tôswè</b>
           <span class="text-sm mt-2 text-white/80">Rapide. Simple. Intelligent.</span>
         </div>
 
         <!-- Carte Acheter -->
         <div
-          class="bg-white/10 backdrop-blur-lg text-white rounded-2xl p-6 flex flex-col items-center text-center shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 border border-white/20"
+          class="bg-white/10 backdrop-blur-lg text-white rounded-2xl p-6 flex flex-col items-center text-center shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 border border-white/20 hover:cursor-pointer"
+          @click="goToMarket"
         >
           <img src="/assets/images/img2.jpg" alt="Acheter" class="w-full h-36 object-cover rounded-lg mb-4" />
           <Icon name="uil:shopping-cart" size="52" class="text-white" />
@@ -51,3 +54,28 @@
     </div>
   </section>
 </template>
+
+<script setup>
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
+
+
+const goToMarket = () => navigateTo({ path: "/market" });
+
+const goToNehanda = () => {
+  if (auth.isAuthenticated) {
+    navigateTo({ path: "/nehanda" });
+  } else {
+    navigateTo({ path: "/auth" });
+  }
+}
+
+const goToScanner = () => {
+  if (auth.isAuthenticated) {
+    navigateTo({ path: "/scanner" });
+  } else {
+    navigateTo({ path: "/auth" });
+  }
+}
+</script>

@@ -21,11 +21,9 @@
       :key="index"
       class="flex justify-center"
     >
-      <TwBrand
+      <TwSellerMix
         :image-src="brand.image"
         :brand-name="brand.name"
-        :slogan="brand.slogan"
-        :rating="brand.rating"
       />
     </SwiperSlide>
   </Swiper>

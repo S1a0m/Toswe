@@ -1,5 +1,5 @@
 <template>
-  <section class="px-4 md:px-8 py-12 max-w-3xl mx-auto mt-18">
+  <section class="px-4 md:px-8 py-12 max-w-3xl mx-auto">
     <h2 class="text-2xl font-bold text-[#7D260F] mb-6 font-[Kenia]">
       Notifications
     </h2>
@@ -17,6 +17,9 @@
 </template>
 
 <script setup>
+definePageMeta({
+  middleware: 'auth', // Appliquer le middleware d'authentification
+})
 
 const notifications = [
   {

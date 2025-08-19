@@ -4,17 +4,17 @@
     </div>
     <TwMenuSide />
     <TwCart />
-    <TwProducts title="Mes produits"/>
+    <TwProducts title="Choisis pour vous"/>
     <div class="max-w-6xl mx-auto my-20">
     <h2 class="text-3xl font-bold text-center text-[#7D260F] mb-10 font-[Kenia]">
       Visitez la boutique de nos vendeurs
     </h2>
-        <TwBrands />
+        <TwSellersMix />
     </div>
     <TwProducts title="D'autres clients ont aussi acheté ça"/>
     <div class="max-w-6xl mx-auto my-20">
     <h2 class="text-3xl font-bold text-center text-[#7D260F] mb-10 font-[Kenia]">
-      Visitez la boutique de nos vendeurs
+      Les produits de ces marques pourraient vous intéresser
     </h2>
         <TwBrands />
     </div>

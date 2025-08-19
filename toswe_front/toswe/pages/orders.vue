@@ -1,18 +1,14 @@
 <template>
-    <div class="mt-18">
-    </div>
-    <div class="pt-0.5">
-    </div>
-  <div class="p-6">
+  <div>
     <TwOrders :orders="orders" @select="selectedOrder = $event" />
-
-    <div v-if="selectedOrder" class="mt-6">
-      <TwOrderDetail :order="selectedOrder" />
-    </div>
   </div>
 </template>
 
 <script setup>
+
+definePageMeta({
+  middleware: 'auth', // Appliquer le middleware d'authentification
+})
 
 const orders = [
   {

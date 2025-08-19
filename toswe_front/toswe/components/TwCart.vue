@@ -1,6 +1,7 @@
 <template>
   <button
-    class="fixed bottom-6 right-6 bg-[#7D260F] text-white p-4 rounded-full shadow-lg hover:bg-[#5E1D0B] transition-colors z-50"
+    class="cursor-pointer fixed bottom-6 right-6 bg-[#7D260F] text-white p-4 rounded-full shadow-lg hover:bg-[#5E1D0B] transition-colors z-100"
+    @click="goToCart"
   >
     <Icon name="ion:basket" size="28" />
     
@@ -16,6 +17,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { goToCart } from '@/utils/navigations'
 
 const cartCount = ref(3) // Exemple : nombre d'articles
 </script>

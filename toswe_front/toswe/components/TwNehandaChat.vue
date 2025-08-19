@@ -5,7 +5,7 @@
       <div class="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
         <img src="/assets/images/Nehanda.png" alt="Nehanda" class="w-12 h-12 rounded-full object-cover shadow-md" />
         <div>
-          <h1 class="text-lg font-semibold text-gray-900">Nehanda — Assistant d'achat</h1>
+          <h1 class="text-lg font-semibold text-gray-900">Nehanda</h1>
           <p class="text-sm text-gray-600">Posez une question, demandez une recommandation ou programmez une commande.</p>
         </div>
         <div class="ml-auto text-sm text-gray-500">Connecté</div>
