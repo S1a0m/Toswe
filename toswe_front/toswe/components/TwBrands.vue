@@ -8,7 +8,7 @@
     }"
     :speed="4000"
     :space-between="20"
-    grabCursor
+    grab-cursor
     :breakpoints="{
       320: { slidesPerView: 1 },   // Mobile : 1 carte
       640: { slidesPerView: 2 },   // Tablette : 2 cartes
@@ -17,20 +17,19 @@
     }"
   >
     <SwiperSlide
-      v-for="(brand, index) in brands"
-      :key="index"
+      v-for="brand in brands?.results"
+      :key="brand.id"
       class="flex justify-center"
     >
       <TwBrand
-        :image-src="brand.image"
-        :brand-name="brand.name"
+        :image-src="imageUrl"
+        :brand-name="brand.racine_id"
         :slogan="brand.slogan"
         :rating="brand.rating"
       />
     </SwiperSlide>
   </Swiper>
 </template>
-
 
 <script setup>
 import { Swiper, SwiperSlide } from 'swiper/vue'
@@ -44,13 +43,11 @@ import 'swiper/css/autoplay'
 
 import TwBrand from '~/components/TwBrand.vue'
 
+// Image temporaire
 const imageUrl = new URL('@/assets/images/img1.png', import.meta.url).href
 
-const brands = [
-  { image: imageUrl, name: 'Marque 1', slogan: 'Toujours avec vous' },
-  { image: imageUrl, name: 'Marque 2', slogan: 'L’excellence au quotidien' },
-  { image: imageUrl, name: 'Marque 3', slogan: 'Votre confort, une priorité' },
-  { image: imageUrl, name: 'Marque 4', slogan: 'Naturellement meilleur' },
-  { image: imageUrl, name: 'Marque 5', slogan: 'Innovation et tradition' }
-]
+// Récupération des marques
+const { data: brands, pending, error } = await useAsyncData('brands', () =>
+  $fetch('http://127.0.0.1:8000/api/brands/')
+)
 </script>

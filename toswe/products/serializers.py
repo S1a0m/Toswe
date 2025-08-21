@@ -13,6 +13,19 @@ class ProductImageSerializer(serializers.ModelSerializer):
             return obj.image.url
         return None
 
+class ProductSearchSerializer(serializers.ModelSerializer):
+    main_image = serializers.SerializerMethodField()
+    racine_id = serializers.CharField(source="seller.user.racine_id")
+
+    class Meta:
+        model = Product
+        fields = ["id", "name", "price", "main_image", "racine_id"]
+
+    def get_main_image(self, obj):
+        main_img = obj.images.filter(is_main_image=True).first()
+        if main_img:
+            return main_img.image.url
+        return None
 
 # === PRODUITS ===
 

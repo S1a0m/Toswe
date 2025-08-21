@@ -1,24 +1,34 @@
 from django.db import models
 from django.utils import timezone
-
 from products.models import Product
-
 
 class User(models.Model):
     racine_id = models.CharField(max_length=255, unique=True)
-    session_mdp = models.CharField(max_length=255, default='mdp')
-    mdp_timeout = models.DateTimeField(null=True, blank=True)
     is_authenticated = models.BooleanField(default=False)
     is_online = models.BooleanField(default=True)
     is_seller = models.BooleanField(default=False)
     is_premium = models.BooleanField(default=False)
     is_brand = models.BooleanField(default=False)
 
+    slogan = models.CharField(max_length=255, default="")
+    about = models.TextField(blank=True)
+
     last_authenticated = models.DateTimeField(null=True, blank=True)
 
-class UserLog(models.Model): # pour donner certains avantages aux clients les plus actifs
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    def __str__(self):
+        return self.racine_id
 
+
+class SellerProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="seller_profile")
+    loyal_customers = models.ManyToManyField(User, related_name="loyal_customers")
+
+    def __str__(self):
+        return self.user.racine_id
+
+
+class UserLog(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="log")
     total_views = models.PositiveIntegerField(default=0)
     total_clicks = models.PositiveIntegerField(default=0)
     total_searches = models.PositiveIntegerField(default=0)
@@ -32,11 +42,11 @@ class UserLog(models.Model): # pour donner certains avantages aux clients les pl
     def __str__(self):
         return f"Log for {self.user.racine_id}"
 
-class SellerStatistics(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
 
+class SellerStatistics(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="stats")
     total_products = models.PositiveIntegerField(default=0)
-    total_orders = models.PositiveIntegerField(default=0) # ne pas oublier pour evolution de vente
+    total_orders = models.PositiveIntegerField(default=0)
     total_income = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     average_order_value = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
 
@@ -47,6 +57,7 @@ class SellerStatistics(models.Model):
     def __str__(self):
         return f"Stats for Seller {self.user.racine_id}"
 
+
 class UserInteractionEvent(models.Model):
     ACTION_CHOICES = [
         ('view', 'View'),
@@ -55,15 +66,12 @@ class UserInteractionEvent(models.Model):
         ('cart', 'AddToCart'),
         ('buy', 'Buy')
     ]
-
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
     action = models.CharField(max_length=50, choices=ACTION_CHOICES)
     timestamp = models.DateTimeField(default=timezone.now)
     details = models.JSONField(null=True, blank=True)
 
-    def __str__(self):
-        return f"{self.user.racine_id} - {self.action} - {self.timestamp}"
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -75,10 +83,14 @@ class Notification(models.Model):
     is_deleted = models.BooleanField(default=False)
     sent_date = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.title
+
 
 class Feedback(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     rating = models.PositiveIntegerField(default=5)
     comment = models.TextField(blank=True)
+    is_verified_purchase = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

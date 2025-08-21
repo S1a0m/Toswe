@@ -17,7 +17,7 @@ class Product(models.Model):
     is_sponsored = models.BooleanField(default=False)
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
 
-    seller = models.ForeignKey('users.User', on_delete=models.CASCADE)
+    seller = models.ForeignKey('users.SellerProfile', on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
@@ -26,6 +26,7 @@ class Product(models.Model):
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='products/')
+    is_main_image = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Image de {self.product.name}"

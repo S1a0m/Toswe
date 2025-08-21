@@ -9,7 +9,7 @@
       <div class="flex justify-between items-center">
         
         <!-- Logo -->
-        <div class="flex items-center space-x-3 hover:cursor-pointer" @click="goToIndex">
+        <div class="flex items-center space-x-3 hover:cursor-pointer" @click="goToMarket">
           <img src="/assets/images/logo.png" alt="Tôswè" class="h-8 w-auto" />
           <span class="font-bold text-xl font-[Kumbh_Sans] tracking-wide">Tôswè</span>
         </div>

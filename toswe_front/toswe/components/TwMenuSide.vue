@@ -12,13 +12,13 @@
 
     <!-- Icônes -->
     <Icon name="uil:qrcode-scan" size="30" class="text-[#7D260F] hover:text-[#5E1D0B] transition-colors mb-4 hover:cursor-pointer" @click="goToScanner"/>
-    <Icon name="uil:plus" size="30" class="text-[#7D260F] hover:text-[#5E1D0B] transition-colors hover:cursor-pointer" v-if="auth.isSeller"/>
+    <Icon name="uil:plus" size="30" class="text-[#7D260F] hover:text-[#5E1D0B] transition-colors hover:cursor-pointer" v-if="auth.isSeller" @click="goToAddProduct"/>
   </aside>
 </template>
 
 <script setup>
 import { useAuthStore } from '@/stores/auth'
-import { goToNehanda, goToScanner } from "@/utils/navigations";
+import { goToNehanda, goToScanner, goToAddProduct } from "@/utils/navigations";
 
 const auth = useAuthStore()
 </script>

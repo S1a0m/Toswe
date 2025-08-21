@@ -8,6 +8,10 @@ class UserConnexionSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'racine_id', 'is_authenticated', 'is_seller', 'is_premium']
 
+class BrandSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'racine_id', 'slogan']
 
 class UserFeedbackSerializer(serializers.ModelSerializer):
     class Meta:
@@ -18,7 +22,7 @@ class UserFeedbackSerializer(serializers.ModelSerializer):
 class UserNotificationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
-        fields = ['id', 'title', 'message', 'is_read', 'created_at']
+        fields = ['id', 'title', 'message', 'is_read', 'sent_date']
 
 
 class SellerStatisticsSerializer(serializers.ModelSerializer):

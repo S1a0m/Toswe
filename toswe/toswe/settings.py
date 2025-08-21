@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'corsheaders',
     'channels',
     'products',
     'users',
@@ -56,6 +57,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'toswe.urls'
@@ -154,5 +156,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # URL publique pour y accéder
 MEDIA_URL = '/media/'
 
-FERNET_KEY = os.environ.get("FERNET_KEY", Fernet.generate_key())
+FERNET_KEY = os.environ.get("FERNET_KEY", Fernet.generate_key()) # Probleme ici
 fernet = Fernet(FERNET_KEY)
+
+
+# Autoriser le front Nuxt
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Adresse du front Nuxt en dev
+]
+
+FRONTEND_URL = "http://localhost:3000"

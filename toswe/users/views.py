@@ -16,6 +16,7 @@ from toswe.payments import PaymentGateway
 from toswe.permissions import IsUserAuthenticated
 from toswe.utils import verify_token
 
+
 RACINE_API_URL = "https://racine.example.com/api"
 RACINE_TOKEN = "your_racine_api_token"
 
@@ -23,10 +24,10 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserConnexionSerializer
 
-    def get_permissions(self):
-        if self.action in ['become_seller', 'become_premium', 'seller_stats']:
-            return [IsUserAuthenticated]
-        return [AllowAny]
+    # def get_permissions(self):
+    #     if self.action in ['become_seller', 'become_premium', 'seller_stats']:
+    #         return [IsUserAuthenticated]
+    #     return [AllowAny]
 
     @action(detail=False, methods=["post"])
     def init_connexion(self, request):
@@ -154,22 +155,31 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = SellerStatisticsSerializer(user)
         return Response(serializer.data)
 
+class BrandViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.filter(is_seller=True, is_brand=True)
+    serializer_class = BrandSerializer
+
 class FeedbackViewSet(viewsets.ModelViewSet):
     queryset = Feedback.objects.all()
     serializer_class = UserFeedbackSerializer
 
-    def get_permissions(self):
-        if self.action == 'create':
-            return [IsUserAuthenticated()]
-        return [AllowAny()]
+    pass
+
+    # def get_permissions(self):
+    #     if self.action == 'create':
+    #         return [IsUserAuthenticated()]
+    #     return [AllowAny()]
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = UserNotificationsSerializer
-    permission_classes = [IsUserAuthenticated]
+    # permission_classes = [IsUserAuthenticated]
 
     def get_queryset(self):
-        return Notification.objects.filter(is_deleted=False, user=self.request.user)
+        user = self.request.user
+        if user.is_authenticated:
+            return Notification.objects.filter(is_deleted=False, user=user)
+        return Notification.objects.none()
 
     def destroy(self, request, *args, **kwargs):
         """Ne supprime pas réellement la notification, mais la marque comme supprimée"""

@@ -1,7 +1,7 @@
 export function goToSearch()  {return navigateTo({ path: "/search" })}
 export function goToAuth()  {return navigateTo({ path: "/auth" })}
-export function goToIndex()  {
-    return navigateTo({ path: "/" })
+export function goToMarket()  {
+    return navigateTo({ path: "/market" })
 }
 export function goToOrders()  {
     return navigateTo({ path: "/orders" })
@@ -32,4 +32,16 @@ export function goToCart() {
 
 export function goToStats() {
     return navigateTo({ path: "/stats" })
+}
+
+export function goToAddProduct() {
+    return navigateTo({ path: "/add" })
+}
+
+export function goToAdCreate() {
+    return navigateTo({ path: "/ad" })
+}
+
+export function goToAdOrder() {
+    return navigateTo({ path: "/order" })
 }

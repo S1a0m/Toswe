@@ -3,6 +3,7 @@
     <h2 class="text-2xl font-bold text-[#7D260F] mb-6 font-[Kenia]">
       Commandes
     </h2>
+    <TwMenuOrders /> 
     <div class="flex flex-col gap-4">
       <TwOrder
         v-for="order in orders"
@@ -15,8 +16,6 @@
 </template>
 
 <script setup>
-import TwOrder from './TwOrder.vue'
-
 defineProps({
   orders: {
     type: Array,

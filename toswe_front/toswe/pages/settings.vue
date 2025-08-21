@@ -8,7 +8,7 @@
     <div class="mb-8">
       <h2 class="text-lg font-semibold text-gray-600 mb-3">Compte userracine#R</h2>
       <TwSettingsItem icon="uil:user" label="Profil" />
-      <TwSettingsItem icon="uil:signout" label="Se déconnecter" />
+      <TwSettingsItem icon="uil:signout" label="Se déconnecter" @click="auth.logout"/>
       <TwSettingsItem icon="uil:trash" label="Supprimer le compte" danger />
     </div>
 
@@ -20,11 +20,22 @@
       <TwSettingsItem icon="uil:chart" label="Voir mes statistiques vendeur" v-if="auth.isPremiumSeller" @click="goToStats"/>
     </div>
 
+    <!-- Publicité -->
+    <div class="mb-8" v-if="auth.isPremiumSeller">
+      <h2 class="text-lg font-semibold text-gray-600 mb-3">Publicité</h2>
+      <TwSettingsItem icon="uil:megaphone" label="Créer une campagne publicitaire" @click="goToAdCreate"/>
+      <TwSettingsItem icon="uil:chart" label="Voir mes performances publicitaires" />
+    </div>
+
     <!-- Préférences -->
     <div>
       <h2 class="text-lg font-semibold text-gray-600 mb-3">Préférences</h2>
       <TwSettingsItem icon="uil:shopping-cart" label="Préférences produits" />
-      <TwSettingsItem icon="uil:lock" label="Toujours payer avant livraison" v-if="auth.isPremiumSeller"/>
+      <TwSettingsToggle
+        icon="uil:lock"
+        label="Toujours payer avant livraison"
+        v-model="auth.mustPayBeforeDelivery"
+      />
       <TwSettingsItem icon="uil:share-alt" label="Voir les infos partagées par Racine à Toswe" />
     </div>
   </section>
@@ -34,7 +45,7 @@
 definePageMeta({
   middleware: 'auth', // Appliquer le middleware d'authentification
 })
-import { goToStats } from '@/utils/navigations'
+import { goToStats, goToAdCreate } from '@/utils/navigations'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()

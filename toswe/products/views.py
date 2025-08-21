@@ -1,4 +1,5 @@
 from django.core import signing
+from django.db.models import Q
 from rest_framework import viewsets, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -22,10 +23,10 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductDetailsSerializer
 
-    def get_permissions(self):
-        if self.action in ['create', 'destroy', 'update']:
-            return [IsUserAuthenticated()]
-        return None
+    # def get_permissions(self):
+    #     if self.action in ['create', 'destroy', 'update']:
+    #         return [IsUserAuthenticated()]
+    #     return None
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -203,6 +204,24 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['get'])
+    def search_products(self, request):
+        query = request.query_params.get("q", "").strip()
+        if not query:
+            return Response(
+                {"error": "Veuillez fournir un nom de produit (paramètre ?q=)."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        products = Product.objects.filter(
+            name__icontains=query
+        ).select_related("seller__user").prefetch_related("images")
+
+        serializer = ProductSearchSerializer(
+            products, many=True, context={"request": request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CartViewSet(viewsets.ModelViewSet):

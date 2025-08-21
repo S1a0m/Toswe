@@ -1,7 +1,5 @@
 <template>
-    <div class="mt-18">
-        <TwMenuCategories />
-    </div>
+    <TwMenuCategories />
     <TwMenuSide />
     <TwCart />
     <TwProducts title="Choisis pour vous"/>
@@ -28,3 +26,10 @@
       :delay="60000" 
     /><!-- 1 minute -->
 </template>
+
+<script setup>
+const config = useRuntimeConfig();
+const { data } = await useFetch('/users', {
+  baseURL: config.public.apiBase
+});
+</script>

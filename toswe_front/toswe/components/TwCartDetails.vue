@@ -1,6 +1,7 @@
 <template>
-  <section class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-    <h2 class="text-2xl font-bold mb-6 text-gray-900">Votre panier</h2>
+  <section class="px-4 md:px-8 py-12 max-w-3xl mx-auto">
+  <h2 class="text-2xl font-bold text-[#7D260F] mb-6 font-[Kenia]">Votre panier</h2>
+  <div class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
 
     <!-- Liste des articles -->
     <div v-if="cartItems.length > 0">
@@ -38,6 +39,7 @@
     <div v-else class="text-center text-gray-500 py-10">
       Votre panier est vide.
     </div>
+  </div>
   </section>
 </template>
 

@@ -20,7 +20,7 @@ export default defineNuxtConfig({
   pwa: {
     registerType: 'autoUpdate', // met à jour automatiquement le service worker
     manifest: {
-      name: 'Mon Application',
+      name: 'To',
       short_name: 'MonApp',
       description: 'Une application Nuxt transformée en PWA',
       theme_color: '#ffffff',
@@ -70,4 +70,9 @@ export default defineNuxtConfig({
       ],
     },
   },
+  runtimeConfig: {
+    public: {
+      apiBase: process.env.API_BASE || 'http://localhost:8000/api',
+    }
+  }
 })

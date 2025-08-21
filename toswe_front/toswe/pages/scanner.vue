@@ -1,8 +1,4 @@
 <template>
-    <div class="mt-18">
-    </div>
-    <div class="pt-0.5">
-    </div>
   <section class="min-h-screen flex flex-col bg-white text-black">
     <!-- Titre -->
     <header class="p-6 text-center">
