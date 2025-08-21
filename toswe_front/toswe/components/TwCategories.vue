@@ -40,5 +40,5 @@
 
 
 <script setup>
-const imageUrl = new URL('@/assets/images/img2.jpg', import.meta.url).href
+const imageUrl = new URL('@/public/images/img1.png', import.meta.url).href
 </script>

@@ -18,7 +18,7 @@
     <h3 class="font-bold text-base sm:text-lg text-gray-900 mb-1">{{ brandName }}</h3>
 
     <!-- Slogan -->
-    <p class="text-xs sm:text-sm text-gray-600 italic mb-3">{{ slogan }}</p>
+    <p class="text-xs sm:text-sm text-gray-600 line-clamp-2 italic mb-3">{{ slogan }}</p>
 
     <!-- Étoiles -->
     <div class="flex items-center gap-1 mb-2">

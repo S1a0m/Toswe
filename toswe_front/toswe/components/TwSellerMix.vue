@@ -19,7 +19,7 @@
 
     <!-- Nombre de clients fidèles -->
     <p class="text-sm text-gray-700 mb-4">
-      <span class="font-semibold text-[#7D260F]">{{ loyalClients }}</span> clients fidèles
+      <span class="font-semibold text-[#7D260F]">{{ loyalClients }}</span> loycs
     </p>
 
     <!-- Boutons -->

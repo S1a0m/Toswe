@@ -66,22 +66,9 @@
         v-else
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
       >
-        <div
+          <TwProductMixSeller 
           v-for="(item, index) in results"
-          :key="index"
-          class="bg-white rounded-lg shadow hover:shadow-lg transition overflow-hidden"
-        >
-          <img
-            :src="item.image"
-            :alt="item.name"
-            class="w-full h-40 object-cover"
-          />
-          <div class="p-4">
-            <h3 class="font-bold text-lg mb-1">{{ item.name }}</h3>
-            <p class="text-sm text-gray-500 mb-2">{{ item.brand }}</p>
-            <p class="text-red-600 font-bold">{{ item.price }} €</p>
-          </div>
-        </div>
+          :key="index" :item="item" />
       </div>
     </div>
 
@@ -132,20 +119,39 @@ const allProducts = [
   { name: 'Veste Hiver', brand: 'Adidas', price: 129, image: '/products/jacket.jpg' }
 ]
 
-const handleSearch = () => {
+const handleSearch = async () => {
+  if (query.value.trim().length === 0) {
+    results.value = []
+    return
+  }
+
   loading.value = true
-  setTimeout(() => {
-    if (query.value.trim().length > 0) {
-      results.value = allProducts.filter(
-        p =>
-          p.name.toLowerCase().includes(query.value.toLowerCase()) ||
-          p.brand.toLowerCase().includes(query.value.toLowerCase())
-      )
-    } else {
+
+  try {
+    const { data, error } = await useFetch('http://127.0.0.1:8000/api/product/search_products/', {
+      query: { q: query.value }
+    })
+
+    if (error.value) {
+      console.error("Erreur API:", error.value)
       results.value = []
+    } else {
+      results.value = data.value || []
     }
+
+
+    if (error.value) {
+      console.error("Erreur API:", error.value)
+      results.value = []
+    } else {
+      results.value = data.value || []
+    }
+  } catch (err) {
+    console.error(err)
+    results.value = []
+  } finally {
     loading.value = false
-  }, 800)
+  }
 }
 
 const handleImageUpload = (e) => {
