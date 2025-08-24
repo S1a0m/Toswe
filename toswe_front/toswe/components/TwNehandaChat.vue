@@ -111,6 +111,8 @@ const sending = ref(false)
 const isTyping = ref(false)
 const scrollRoot = ref(null)
 
+const { $apiFetch } = useNuxtApp()
+
 const quickPrompts = [
   'Je veux meubler ma chambre',
   "Quel est le meilleur matelas pour cette saison ?",
@@ -181,42 +183,48 @@ async function send() {
   messages.value.push(userMsg)
   input.value = ''
   sending.value = true
-
-  // simulate typing
   isTyping.value = true
-  await new Promise(r => setTimeout(r, 800))
 
   try {
-    // Try calling real API if available
-    const payload = { message: text, history: messages.value.map(m => ({ role: m.role, content: m.content })) }
-    let assistantReply = null
-    try {
-      const res = await fetch('/api/nehanda', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-      if (res.ok) {
-        const json = await res.json()
-        assistantReply = json.reply
-      }
-    } catch (e) {
-      // network error => ignore and fallback
-    }
+    const lastConv = messages.value.find(m => m.conversation_id)
+    const convId = lastConv?.conversation_id
 
-    if (!assistantReply) {
-      // fallback canned reply
-      assistantReply = cannedReply(text)
-    }
+    const payload = { message: text, conversation_id: convId || null }
 
-    // simulate streaming
-    await simulateStreamReply(assistantReply)
+    const res = await $apiFetch('http://127.0.0.1:8080/nehanda/chat', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    })
 
+    if (!res.ok) throw new Error('API error')
+    const json = await res.json()
+
+    // Réponse backend
+    const assistantReply = json.response
+
+    // Ajoute le message assistant
+    messages.value.push({
+      id: uuidv4(),
+      role: 'assistant',
+      content: assistantReply,
+      time: new Date().toISOString(),
+      conversation_id: json.conversation_id
+    })
+  } catch (e) {
+    console.error('Chat error:', e)
+    // fallback
+    messages.value.push({
+      id: uuidv4(),
+      role: 'assistant',
+      content: "Désolé, je n’ai pas pu contacter le serveur.",
+      time: new Date().toISOString()
+    })
   } finally {
     sending.value = false
     isTyping.value = false
   }
 }
+
 
 function cannedReply(userText) {
   if (/matelas|lit|chambre/i.test(userText)) {

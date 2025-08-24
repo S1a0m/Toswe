@@ -42,13 +42,13 @@ import 'swiper/css/autoplay'
 
 import TwBrand from '~/components/TwBrand.vue'
 
-const imageUrl = new URL('@/assets/images/img1.png', import.meta.url).href
+// const imageUrl = new URL('@/assets/images/img1.png', import.meta.url).href
 
 const brands = [
-  { image: imageUrl, name: 'Marque 1', slogan: 'Toujours avec vous' },
-  { image: imageUrl, name: 'Marque 2', slogan: 'L’excellence au quotidien' },
-  { image: imageUrl, name: 'Marque 3', slogan: 'Votre confort, une priorité' },
-  { image: imageUrl, name: 'Marque 4', slogan: 'Naturellement meilleur' },
-  { image: imageUrl, name: 'Marque 5', slogan: 'Innovation et tradition' }
+  { image: "/images/img1.png", name: 'Marque 1', slogan: 'Toujours avec vous' },
+  { image: "/images/img1.png", name: 'Marque 2', slogan: 'L’excellence au quotidien' },
+  { image: "/images/img1.png", name: 'Marque 3', slogan: 'Votre confort, une priorité' },
+  { image: "/images/img1.png", name: 'Marque 4', slogan: 'Naturellement meilleur' },
+  { image: "/images/img1.png", name: 'Marque 5', slogan: 'Innovation et tradition' }
 ]
 </script>

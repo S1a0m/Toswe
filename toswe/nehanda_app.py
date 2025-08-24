@@ -1,23 +1,25 @@
 # nehanda_app.py
 import os
 import jwt
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, List
 
 # --- FastAPI / Pydantic ---
 from fastapi import FastAPI, Depends, HTTPException, status, Header
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Cookie
 
 # --- SQLAlchemy (db des conversations, distincte de Django) ---
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship, Session
 
-# --- Django ORM (pour User & settings) ---
+# --- Django ORM (pour CustomUser & settings) ---
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", os.getenv("DJANGO_SETTINGS_MODULE", "toswe.settings"))
 import django  # type: ignore
 django.setup()
 from django.conf import settings
-from users.models import User  # ton modèle User existant côté Django
+from users.models import CustomUser  # ton modèle CustomUser existant côté Django
 
 # ============ SQLAlchemy setup (DB conversations) ============
 CONV_DB_URL = os.getenv("CONVERSATIONS_DB_URL", "sqlite:///./conversations.db")
@@ -73,14 +75,19 @@ def get_db() -> Session:
     finally:
         db.close()
 
-def get_current_user(authorization: Optional[str] = Header(None)) -> User:
-    """
-    Attend un header: Authorization: Bearer <token>
-    Le token est le JWT que tu émets côté Django (HS256, SECRET_KEY).
-    """
-    if not authorization or not authorization.lower().startswith("bearer "):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing Bearer token")
-    token = authorization.split(" ", 1)[1].strip()
+
+def get_current_user(
+    authorization: Optional[str] = Header(None),
+    access_token: Optional[str] = Cookie(None)
+) -> CustomUser:
+    token = None
+    if authorization and authorization.lower().startswith("bearer "):
+        token = authorization.split(" ", 1)[1].strip()
+    elif access_token:
+        token = access_token
+    if not token:
+        raise HTTPException(status_code=401, detail="Missing token")
+
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
@@ -88,26 +95,71 @@ def get_current_user(authorization: Optional[str] = Header(None)) -> User:
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    racine_id = payload.get("racine_id")
-    if not racine_id:
+    phone = payload.get("phone")
+    if not phone:
         raise HTTPException(status_code=401, detail="Invalid payload")
 
     try:
-        user = User.objects.get(racine_id=racine_id)
-    except User.DoesNotExist:
-        raise HTTPException(status_code=401, detail="User not found")
+        user = CustomUser.objects.get(phone=phone)
+    except CustomUser.DoesNotExist:
+        raise HTTPException(status_code=401, detail="CustomUser not found")
     return user
 
 # ============ “Cerveau” minimal de Nehanda (stub) ============
-def nehanda_brain_reply(user: User, message: str) -> str:
+def nehanda_brain_reply(user: CustomUser, message: str) -> str:
     # TODO: remplace par ton vrai moteur (règles, RAG, TF, etc.)
     return f"Je t’ai bien lu, {getattr(user, 'username', user.pk)} : “{message}”. Que souhaites-tu acheter ?"
 
 # ============ FastAPI app ============
 app = FastAPI(title="Nehanda", version="0.1.0")
 
-@app.post("/chat", response_model=ChatOut)
-def chat_with_nehanda(payload: ChatIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # ton frontend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+from fastapi import Response
+
+@app.post("/refresh_token")
+def refresh_token(
+    refresh_token: Optional[str] = Cookie(None),
+):
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Missing refresh token")
+
+    try:
+        payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Refresh expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid refresh")
+
+    phone = payload.get("phone")
+    if not phone:
+        raise HTTPException(status_code=401, detail="Invalid payload")
+
+    # Vérifier user
+    try:
+        user = CustomUser.objects.get(phone=phone)
+    except CustomUser.DoesNotExist:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    # Générer nouveau access_token
+    new_access = jwt.encode(
+        {"phone": user.phone, "exp": datetime.utcnow() + timedelta(minutes=5)},
+        settings.SECRET_KEY,
+        algorithm="HS256"
+    )
+
+    return {"access": new_access}
+
+
+
+@app.post("/nehanda/chat", response_model=ChatOut)
+def chat_with_nehanda(payload: ChatIn, db: Session = Depends(get_db), user: CustomUser = Depends(get_current_user)):
     # 1) Récupération/Création de la conversation
     conv: Optional[Conversation] = None
     if payload.conversation_id:
@@ -135,7 +187,7 @@ def chat_with_nehanda(payload: ChatIn, db: Session = Depends(get_db), user: User
     return ChatOut(conversation_id=conv.id, response=reply)
 
 @app.get("/conversations/{conversation_id}", response_model=ConversationOut)
-def get_conversation(conversation_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def get_conversation(conversation_id: int, db: Session = Depends(get_db), user: CustomUser = Depends(get_current_user)):
     conv = db.get(Conversation, conversation_id)
     if not conv or conv.user_id != user.id:
         raise HTTPException(status_code=404, detail="Conversation not found")
@@ -154,3 +206,5 @@ def get_conversation(conversation_id: int, db: Session = Depends(get_db), user: 
         created_at=conv.created_at,
         messages=[MessageOut(id=m.id, sender=m.sender, text=m.text, created_at=m.created_at) for m in msgs],
     )
+
+

@@ -6,10 +6,6 @@
 
 <script setup>
 
-definePageMeta({
-  middleware: 'auth', // Appliquer le middleware d'authentification
-})
-
 const orders = [
   {
     id: 123,
@@ -17,8 +13,8 @@ const orders = [
     status: 'En attente',
     total: 15000,
     products: [
-      { name: 'Produit A', price: 5000, quantity: 1, image: '/assets/images/img1.png' },
-      { name: 'Produit B', price: 2500, quantity: 4, image: '/assets/images/img2.jpg' }
+      { name: 'Produit A', price: 5000, quantity: 1, image: '/images/img1.png' },
+      { name: 'Produit B', price: 2500, quantity: 4, image: '/images/img2.jpg' }
     ]
   },
   {
@@ -27,7 +23,7 @@ const orders = [
     status: 'Livrée',
     total: 20000,
     products: [
-      { name: 'Produit C', price: 10000, quantity: 2, image: '/assets/images/img2.jpg' }
+      { name: 'Produit C', price: 10000, quantity: 2, image: '/images/img2.jpg' }
     ]
   },
   {
@@ -36,7 +32,7 @@ const orders = [
     status: 'Livrée',
     total: 20000,
     products: [
-      { name: 'Produit C', price: 10000, quantity: 2, image: '/assets/images/img2.jpg' }
+      { name: 'Produit C', price: 10000, quantity: 2, image: '/images/img2.jpg' }
     ]
   },
   {
@@ -45,7 +41,7 @@ const orders = [
     status: 'Livrée',
     total: 20000,
     products: [
-      { name: 'Produit C', price: 10000, quantity: 2, image: '/assets/images/img2.jpg' }
+      { name: 'Produit C', price: 10000, quantity: 2, image: '/images/img2.jpg' }
     ]
   },
   {
@@ -54,7 +50,7 @@ const orders = [
     status: 'Livrée',
     total: 20000,
     products: [
-      { name: 'Produit C', price: 10000, quantity: 2, image: '/assets/images/img2.jpg' }
+      { name: 'Produit C', price: 10000, quantity: 2, image: '/images/img2.jpg' }
     ]
   },
   {
@@ -63,7 +59,7 @@ const orders = [
     status: 'Livrée',
     total: 20000,
     products: [
-      { name: 'Produit C', price: 10000, quantity: 2, image: '/assets/images/img2.jpg' }
+      { name: 'Produit C', price: 10000, quantity: 2, image: '/images/img2.jpg' }
     ]
   },
   {
@@ -72,7 +68,7 @@ const orders = [
     status: 'Livrée',
     total: 20000,
     products: [
-      { name: 'Produit C', price: 10000, quantity: 2, image: '/assets/images/img2.jpg' }
+      { name: 'Produit C', price: 10000, quantity: 2, image: '/images/img2.jpg' }
     ]
   }
 ]

@@ -86,9 +86,6 @@
 </template>
 
 <script setup>
-definePageMeta({
-  middleware: 'auth', // Appliquer le middleware d'authentification
-})
 import { ref, computed } from 'vue'
 import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, ArcElement, CategoryScale, LinearScale } from 'chart.js'
 import { Bar, Pie } from 'vue-chartjs'
@@ -135,9 +132,9 @@ const categoryData = ref({
 
 // Top produits simulés
 const topProducts = ref([
-  { name: 'Robe en wax', sales: 120, revenue: 480000, image: '/assets/images/img1.png' },
-  { name: 'Chaussures cuir', sales: 90, revenue: 540000, image: '/assets/images/img2.jpg' },
-  { name: 'Collier artisanal', sales: 75, revenue: 225000, image: '/assets/images/img3.jpg' }
+  { name: 'Robe en wax', sales: 120, revenue: 480000, image: '/images/img1.png' },
+  { name: 'Chaussures cuir', sales: 90, revenue: 540000, image: '/images/img2.jpg' },
+  { name: 'Collier artisanal', sales: 75, revenue: 225000, image: '/images/img3.jpg' }
 ])
 
 function formatCurrency(amount) {

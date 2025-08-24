@@ -17,10 +17,6 @@
 </template>
 
 <script setup>
-definePageMeta({
-  middleware: 'auth', // Appliquer le middleware d'authentification
-})
-
 const notifications = [
   {
     title: "Alerte commande",

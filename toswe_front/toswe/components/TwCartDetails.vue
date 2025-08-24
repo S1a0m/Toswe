@@ -47,12 +47,12 @@
 import TwCartItem from './TwCartItem.vue'
 
 const cartItems = ref([
-  { imageSrc: '/assets/images/img1.png', productName: 'Produit 1', price: 2500, quantity: 2 },
-  { imageSrc: '/assets/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 },
-  { imageSrc: '/assets/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 },
-  { imageSrc: '/assets/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 },
-  { imageSrc: '/assets/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 },
-  { imageSrc: '/assets/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 }
+  { imageSrc: '/images/img1.png', productName: 'Produit 1', price: 2500, quantity: 2 },
+  { imageSrc: '/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 },
+  { imageSrc: '/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 },
+  { imageSrc: '/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 },
+  { imageSrc: '/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 },
+  { imageSrc: '/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 }
 ])
 
 const increaseQuantity = (index) => {

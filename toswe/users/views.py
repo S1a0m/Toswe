@@ -1,88 +1,156 @@
-from rest_framework import viewsets, status
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from rest_framework.decorators import action
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework import status
 import requests
-from datetime import datetime, timedelta
-from django.utils import timezone
-from django.conf import settings
-import jwt
 from rest_framework.views import APIView
 
-from users.models import User, Feedback, Notification
+from users.models import CustomUser, Feedback, Notification
 from products.models import Product, Cart, Order, Delivery, Payment
-from users.serializers import *
+from .serializers import *
 from toswe.payments import PaymentGateway
-from toswe.permissions import IsUserAuthenticated
 from toswe.utils import verify_token
 
+from toswe.utils import send_sms
 
-RACINE_API_URL = "https://racine.example.com/api"
-RACINE_TOKEN = "your_racine_api_token"
+from toswe.permissions import IsUserAuthenticated
+
+
+import jwt
+import random
+from datetime import datetime, timedelta
+
+from django.conf import settings
+from django.utils import timezone
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+
+from .models import CustomUser, SellerProfile
+from .serializers import UserConnexionSerializer
+from .authentication import JWTAuthentication
+
+
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
+    queryset = CustomUser.objects.all()
     serializer_class = UserConnexionSerializer
+    authentication_classes = [JWTAuthentication]
 
-    # def get_permissions(self):
-    #     if self.action in ['become_seller', 'become_premium', 'seller_stats']:
-    #         return [IsUserAuthenticated]
-    #     return [AllowAny]
-
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["post"], permission_classes=[AllowAny])
     def init_connexion(self, request):
-        """Étape 1: Soumission de l'id_racine"""
-        racine_id = request.data.get("racine_id")
+        """Étape 1: envoi du numéro → envoi OTP par SMS"""
+
+        phone = request.data.get("phone")
+        if not phone:
+            return Response({"detail": "Numéro de téléphone requis."}, status=400)
+
+        # Générer OTP 6 chiffres
+        otp = str(random.randint(100000, 999999))
+
         try:
-            user = User.objects.get(racine_id=racine_id)
-            # Notifie Racine d’une tentative de connexion
-            response = requests.post(f"{RACINE_API_URL}/notify-login/", json={ # Racine repond avec un hash de mdp
-                "racine_id": racine_id,
-                "client": "toswe"
-            }, headers={"Authorization": f"Bearer {RACINE_TOKEN}"})
-            user.session_mdp = response.json()["session_mdp"]
-            user.mdp_timeout = response.json()["mdp_timeout"]
+            user = CustomUser.objects.get(
+                phone=phone)  # utilisateur existant → on met à jour OTP
+            user.session_mdp = otp
+            user.mdp_timeout = timezone.now() + timedelta(minutes=5)
+            user.save()
+        except CustomUser.DoesNotExist:
+            # Si l'utilisateur n’existe pas → le créer (flux inscription implicite)
+            user = CustomUser.objects.create(
+                phone=phone, session_mdp=otp,
+                mdp_timeout=timezone.now() + timedelta(minutes=5)
+            )
+
+        # Envoi SMS
+        print(phone, f"Votre code de connexion Toswe est {otp}")
+        return Response({"detail": "Un code temporaire a été envoyé par SMS."})
+
+    @action(detail=False, methods=["post"], permission_classes=[AllowAny])
+    def confirm_connexion(self, request):
+        phone = request.data.get("phone")
+        otp = request.data.get("session_mdp")
+
+        if not phone or not otp:
+            return Response({"detail": "Numéro de téléphone et OTP requis."}, status=400)
+
+        try:
+            user = CustomUser.objects.get(phone=phone)
+        except CustomUser.DoesNotExist:
+            return Response({"detail": "Utilisateur inconnu."}, status=404)
+
+        if user.session_mdp == otp and user.mdp_timeout > timezone.now():
+            access_payload = {
+                "phone": user.phone,
+                "exp": datetime.utcnow() + timedelta(minutes=15)
+            }
+            refresh_payload = {
+                "phone": user.phone,
+                "type": "refresh",
+                "exp": datetime.utcnow() + timedelta(days=7)
+            }
+
+            access_token = jwt.encode(access_payload, settings.SECRET_KEY, algorithm="HS256")
+            refresh_token = jwt.encode(refresh_payload, settings.SECRET_KEY, algorithm="HS256")
+
+            user.last_authenticated = timezone.now()
             user.save()
 
-            return Response({"detail": "Connexion notifiée. Veuillez confirmer sur Racine."})
-        except User.DoesNotExist:
-            # Vérifie existence côté Racine
-            response = requests.get(f"{RACINE_API_URL}/check-user/{racine_id}/", headers={
-                "Authorization": f"Bearer {RACINE_TOKEN}"
-            })
-            if response.status_code == 404:
-                return Response({"detail": "Racine_id introuvable. Créez un compte sur Racine."}, status=404)
-            elif response.status_code == 200:
-                return Response({
-                    "detail": "Utilisateur trouvé sur Racine. Veuillez confirmer l'inscription dans Racine et autoriser Toswe à accéder à vos données."
-                })
-            else:
-                return Response({"detail": "Erreur côté Racine."}, status=502)
+            is_premium = False
+            is_brand = False
+            if user.is_seller and hasattr(user, "seller_profile"):
+                is_brand = user.seller_profile.is_brand
 
-    @action(detail=False, methods=["post"])
-    def confirm_connexion(self, request):
-        """Étape 2: Authentification avec mot de passe temporaire"""
-        racine_id = request.data.get("racine_id")
-        mdp = request.data.get("session_mdp")
+            if user.is_seller and hasattr(user, "seller_profile"):
+                is_premium = user.seller_profile.is_premium
 
-        try:
-            user = User.objects.get(racine_id=racine_id)
-            if user.session_mdp == mdp and user.mdp_timeout > timezone.now():
-                # Génère le token JWT
-                payload = {
-                    "racine_id": racine_id,
-                    "session_mdp": mdp,
-                    "exp": datetime.utcnow() + timedelta(days=7)
+            response = Response({
+                "access": access_token,
+               # "refresh": refresh_token,
+                "user": {
+                    "id": user.id,
+                    "phone": user.phone,
+                    "is_seller": user.is_seller,
+                    "is_premium": is_premium,
+                    "is_brand": is_brand,
                 }
-                token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-                user.is_authenticated = True
-                user.last_authenticated = timezone.now()
-                user.save()
+            })
 
-                return Response({"token": token})
-            return Response({"detail": "Mot de passe incorrect ou session expirée."}, status=401)
-        except User.DoesNotExist:
-            return Response({"detail": "Utilisateur non reconnu."}, status=404)
+            response.set_cookie(
+                key='refresh_token',
+                value=str(refresh_token),
+                httponly=True,
+                secure=False,  # A securiser apres
+                samesite='Lax',
+                path='/',
+                max_age=7 * 24 * 60 * 60  # 7 jours
+             )
+
+            return response
+
+        else:
+            return Response({"detail": "Code incorrect ou expiré."}, status=401)
+
+    @action(detail=False, methods=["post"], url_path="logout")
+    def logout(self, request):
+        response = Response({"detail": "Déconnecté avec succès."}, status=status.HTTP_200_OK)
+
+        # Supprimer le cookie contenant le refresh token
+        response.delete_cookie(
+            key="refresh_token",
+            path="/",  # doit correspondre à celui utilisé dans set_cookie
+            samesite="Lax"
+        )
+
+        return response
+
+    @action(detail=False, methods=["get"])
+    def me(self, request):
+        print("Le type ce salo", type(request.user))
+        user = request.user
+        return Response({
+            "id": user.id,
+            "phone": user.phone,
+            "is_seller": user.is_seller,
+        })
 
     @action(detail=True, methods=['post'])
     def become_seller(self, request, pk=None):
@@ -155,25 +223,55 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = SellerStatisticsSerializer(user)
         return Response(serializer.data)
 
+
+class RefreshTokenView(APIView):
+
+    # @csrf_exempt
+    def post(self, request):
+        # Récupérer le refresh token depuis le cookie
+        token = request.COOKIES.get("refresh_token")
+        print("Regarde bro:", token)
+        if not token:
+            return Response({"detail": "Aucun refresh token trouvé."}, status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+            if payload.get("type") != "refresh":
+                return Response({"detail": "Mauvais type de token."}, status=status.HTTP_401_UNAUTHORIZED)
+
+            # Générer un nouveau access token
+            new_access_payload = {
+                "phone": payload["phone"],
+                "exp": datetime.utcnow() + timedelta(minutes=15)
+            }
+            new_access_token = jwt.encode(new_access_payload, settings.SECRET_KEY, algorithm="HS256")
+
+            return Response({"access": new_access_token})
+
+        except jwt.ExpiredSignatureError:
+            return Response({"detail": "Refresh token expiré."}, status=status.HTTP_401_UNAUTHORIZED)
+        except jwt.InvalidTokenError:
+            return Response({"detail": "Token invalide."}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+
 class BrandViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.filter(is_seller=True, is_brand=True)
+    queryset = SellerProfile.objects.filter(is_brand=True)
     serializer_class = BrandSerializer
 
 class FeedbackViewSet(viewsets.ModelViewSet):
     queryset = Feedback.objects.all()
     serializer_class = UserFeedbackSerializer
 
-    pass
-
-    # def get_permissions(self):
-    #     if self.action == 'create':
-    #         return [IsUserAuthenticated()]
-    #     return [AllowAny()]
+    def get_permissions(self):
+        if self.action == 'create':
+            return [IsUserAuthenticated()]
+        return [AllowAny()]
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = UserNotificationsSerializer
-    # permission_classes = [IsUserAuthenticated]
+    permission_classes = [IsUserAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
@@ -188,18 +286,3 @@ class NotificationViewSet(viewsets.ModelViewSet):
         notification.save()
         return Response({"detail": "Notification supprimée (virtuellement)."})
 
-class RefreshTokenView(APIView):
-    def post(self, request):
-        user = verify_token(request.data.get("token"))
-        if user and user.get("authenticated"):
-            # Génère un nouveau token
-            payload = {
-                "racine_id": user["racine_id"],
-                "session_mdp": user["session_mdp"],
-                "exp": datetime.utcnow() + timedelta(minutes=15),
-            }
-            new_token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-
-            return Response({"token": new_token}, status=status.HTTP_200_OK)
-
-        return Response({"detail": "Token invalide."}, status=status.HTTP_401_UNAUTHORIZED)

@@ -27,10 +27,10 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const products = ref([
-  { id: 1, name: "Chemise locale", price: 7500, image: "/assets/images/img1.png" },
-  { id: 2, name: "Sac artisanal", price: 12000, image: "/assets/images/img2.png" },
-  { id: 3, name: "Sandales cuir", price: 9500, image: "/assets/images/img3.png" },
-  { id: 4, name: "Épices bio", price: 3500, image: "/assets/images/img4.png" },
+  { id: 1, name: "Chemise locale", price: 7500, image: "/images/img1.png" },
+  { id: 2, name: "Sac artisanal", price: 12000, image: "/images/img2.png" },
+  { id: 3, name: "Sandales cuir", price: 9500, image: "/images/img3.png" },
+  { id: 4, name: "Épices bio", price: 3500, image: "/images/img4.png" },
 ])
 
 const selectedIds = ref([...props.modelValue])

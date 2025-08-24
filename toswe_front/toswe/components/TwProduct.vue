@@ -61,7 +61,7 @@ import { goToProduct } from '@/utils/navigations';
 const props = defineProps({
   imageSrc: {
     type: String,
-    default: '/assets/images/img2.jpg'
+    default: '/images/img2.jpg'
   },
   productName: {
     type: String,

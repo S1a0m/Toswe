@@ -261,21 +261,23 @@ def predict_top_k(
     class_index_path: str = "class_index.json",
     k: int = 5,
     img_size: Tuple[int, int] = (224, 224),
-) -> List[int]:
+) -> List[Tuple[int, float]]:
     """
     Predict top-k DB IDs for a given image file.
-    Returns a list of IDs (not class indices).
+    Returns a list of (product_id, score).
     """
     model = tf.keras.models.load_model(model_path)
     class_to_dbid = _load_class_index(class_index_path)
 
     x = _prepare_single_image(image_path, img_size)
     preds = model.predict(x, verbose=0)[0]  # shape (C,)
+
     topk = tf.math.top_k(preds, k=min(k, preds.shape[0]))
     top_indices = topk.indices.numpy().tolist()
-    # map back to DB ids
-    top_db_ids = [class_to_dbid[idx] for idx in top_indices]
-    return top_db_ids
+    top_scores = topk.values.numpy().tolist()
+
+    return [(class_to_dbid[idx], float(score)) for idx, score in zip(top_indices, top_scores)]
+
 
 
 # ----------------------------

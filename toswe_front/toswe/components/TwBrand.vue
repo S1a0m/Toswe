@@ -50,7 +50,7 @@ import { goToShop } from '@/utils/navigations';
 const props = defineProps({
   imageSrc: {
     type: String,
-    default: '/assets/images/img1.png'
+    default: '@/assets/images/img1.png'
   },
   brandName: {
     type: String,

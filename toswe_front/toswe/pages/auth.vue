@@ -11,7 +11,7 @@
 
       <!-- Titre -->
       <h1 class="text-2xl font-bold text-center text-[#7D260F] mb-6">
-        Connexion via Racine
+        Connectez-vous
       </h1>
 
       <!-- Étape 1 -->
@@ -19,23 +19,24 @@
         <form
           v-if="step === 1"
           key="step1"
-          @submit.prevent="checkRacineId"
+          @submit.prevent="checkphone"
           class="space-y-4"
         >
           <div>
-            <label class="block text-sm font-semibold mb-1">ID Racine</label>
+            <label class="block text-sm font-semibold mb-1">Votre numéro de téléphone</label>
             <div class="relative">
               <input
-                v-model="racineId"
+                v-model="phone"
                 type="text"
                 class="w-full border rounded-lg p-3 pl-10 focus:ring-2 focus:ring-[#7D260F] outline-none"
-                placeholder="Ex: RAC123456"
+                placeholder="Ex: +229 01 2345678"
                 required
               />
               <span class="absolute left-3 top-3 text-gray-400">#</span>
             </div>
           </div>
           <button
+            @submit="initConnexion"
             type="submit"
             class="w-full bg-[#7D260F] text-white py-3 rounded-lg font-semibold shadow hover:bg-[#5c1d0c] transition"
             :disabled="loading"
@@ -48,18 +49,18 @@
         <form
           v-else-if="step === 2"
           key="step2"
-          @submit.prevent="finalLogin"
+          @submit.prevent="confirmConnexion"
           class="space-y-4"
         >
           <p class="text-gray-600 text-sm">
-            Retapez votre ID Racine et entrez le token généré dans l’app Racine.
+            Retapez votre numéro et entrez le pass qui vous a été envoyé par sms.
           </p>
 
           <div>
-            <label class="block text-sm font-semibold mb-1">ID Racine</label>
+            <label class="block text-sm font-semibold mb-1">Numéro de téléphone</label>
             <div class="relative">
               <input
-                v-model="racineIdConfirm"
+                v-model="phoneConfirm"
                 type="text"
                 class="w-full border rounded-lg p-3 pl-10 focus:ring-2 focus:ring-[#7D260F] outline-none"
                 required
@@ -69,10 +70,10 @@
           </div>
 
           <div>
-            <label class="block text-sm font-semibold mb-1">Token Racine</label>
+            <label class="block text-sm font-semibold mb-1">Pass</label>
             <div class="relative">
               <input
-                v-model="racineToken"
+                v-model="otp"
                 type="text"
                 class="w-full border rounded-lg p-3 pl-10 focus:ring-2 focus:ring-[#7D260F] outline-none"
                 placeholder="Collez le token ici"
@@ -111,28 +112,46 @@ import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 
 const step = ref(1)
-const racineId = ref('')
-const racineIdConfirm = ref('')
+const phone = ref('')
+const phoneConfirm = ref('')
 const racineToken = ref('')
 const loading = ref(false)
 
 const auth = useAuthStore()
 const router = useRouter()
 
-const checkRacineId = () => {
+const otp = ref("")
+
+const initConnexion = async () => {
+  await auth.initConnexion(phone.value)
+  step.value = 2
+}
+
+const confirmConnexion = async () => {
+  await auth.confirmConnexion(phone.value, otp.value)
+  // Redirection après connexion
+  navigateTo("/market")
+}
+
+const checkphone = () => {
   loading.value = true
   setTimeout(() => {
-    if (racineId.value.trim().length > 5) {
-      step.value = 2
-    } else {
-      alert('ID Racine invalide.')
-    }
+    auth.initConnexion(phone.value)
+      .then(() => {
+        step.value = 2
+      })
+      .catch((error) => {
+        alert(`Erreur: ${error.detail || 'Échec de la vérification de l\'ID Racine.'}`)
+      })
+      .finally(() => {
+        loading.value = false
+      })
     loading.value = false
   }, 1000)
 }
 
 const finalLogin = () => {
-  if (racineIdConfirm.value !== racineId.value) {
+  if (phoneConfirm.value !== phone.value) {
     alert("L'ID Racine ne correspond pas.")
     return
   }
@@ -145,7 +164,7 @@ const finalLogin = () => {
   setTimeout(() => {
     // Simuler login réussi
     auth.login({
-      id_racine: racineId.value,
+      id_racine: phone.value,
       username: 'John Doe', // simulé
       is_seller: true,      // exemple
       is_premium: false,

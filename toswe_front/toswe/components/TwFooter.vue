@@ -35,13 +35,13 @@
               >Fonctionnalités</a
             >
           </li>
-          <li
+          <!--<li
               v-if="canInstall"
               @click="install">
             <a href="#telechargement" class="text-gray-400 hover:underline"
               >Télécharger</a
             >
-          </li>
+          </li>-->
         </ul>
       </div>
 
@@ -108,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { usePwaInstall } from '@/composables/usePwaInstall'
+/*import { usePwaInstall } from '@/composables/usePwaInstall'
 
-const { canInstall, install } = usePwaInstall()
+const { canInstall, install } = usePwaInstall()*/
 </script>

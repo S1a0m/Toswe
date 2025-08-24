@@ -56,14 +56,14 @@ import { ref } from 'vue'
 const comments = ref([
   {
     username: 'Jean Dupont',
-    avatar: '/assets/images/img2.jpg',
+    avatar: '/images/img2.jpg',
     content: 'Super produit, la livraison était rapide et conforme à la description.',
     date: '08/08/2025',
     rating: 5
   },
   {
     username: 'Awa Koné',
-    avatar: '/assets/images/user2.jpg',
+    avatar: '/images/user2.jpg',
     content: 'Service client très réactif, je recommande vivement.',
     date: '09/08/2025',
     rating: 4
@@ -78,7 +78,7 @@ function addComment() {
 
   comments.value.push({
     username: 'Utilisateur Anonyme',
-    avatar: '/assets/images/default-avatar.png',
+    avatar: '/images/default-avatar.png',
     content: newComment.value,
     date: new Date().toLocaleDateString(),
     rating: newRating.value

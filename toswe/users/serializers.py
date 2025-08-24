@@ -1,17 +1,17 @@
 from rest_framework import serializers
-from users.models import User, Feedback, Notification
+from users.models import CustomUser, Feedback, Notification, SellerProfile
 from products.models import Product, Order, Delivery, Payment
 
 
 class UserConnexionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ['id', 'racine_id', 'is_authenticated', 'is_seller', 'is_premium']
+        model = CustomUser
+        fields = ['id', 'phone', 'session_mdp', 'is_authenticated', 'is_seller']
 
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ['id', 'racine_id', 'slogan']
+        model = SellerProfile
+        fields = ['id', 'shop_name', 'slogan']
 
 class UserFeedbackSerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,7 +31,7 @@ class SellerStatisticsSerializer(serializers.ModelSerializer):
     total_feedbacks = serializers.SerializerMethodField()
 
     class Meta:
-        model = User
+        model = CustomUser
         fields = ['id', 'racine_id', 'is_seller', 'is_premium',
                   'total_products', 'total_orders', 'total_feedbacks']
 

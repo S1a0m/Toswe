@@ -32,7 +32,7 @@ class ProductImage(models.Model):
         return f"Image de {self.product.name}"
 
 class Cart(models.Model):
-    user = models.ForeignKey('users.User', on_delete=models.CASCADE)
+    user = models.ForeignKey('users.CustomUser', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
 class CartItem(models.Model):
@@ -49,7 +49,7 @@ class Order(models.Model):
         ('cancelled', 'Cancelled')
     ]
 
-    user = models.ForeignKey('users.User', on_delete=models.CASCADE)
+    user = models.ForeignKey('users.CustomUser', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
 

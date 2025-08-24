@@ -1,7 +1,25 @@
 import jwt
 
 from toswe import settings
-from users.models import User, UserInteractionEvent
+from users.models import CustomUser, UserInteractionEvent
+from twilio.rest import Client
+from django.conf import settings
+
+
+def send_sms(phone_number: str, message: str):
+    """
+    Envoie un SMS via Twilio.
+    """
+    try:
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        sms = client.messages.create(
+            body=message,
+            from_=settings.TWILIO_PHONE_NUMBER,  # Ton numéro Twilio
+            to=phone_number,
+        )
+        return {"status": "success", "sid": sms.sid}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
 
 
 def verify_token(token):
@@ -13,7 +31,7 @@ def verify_token(token):
         try:
             decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'], options={"verify_exp": False})
             user_id = decoded.get("user_id")
-            user = User.objects.filter(id=user_id).first()
+            user = CustomUser.objects.filter(id=user_id).first()
             if user:
                 user.is_authenticated = False
                 user.save()

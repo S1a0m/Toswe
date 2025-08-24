@@ -10,9 +10,6 @@
 </template>
 
 <script setup>
-definePageMeta({
-  middleware: 'auth', // Appliquer le middleware d'authentification
-})
 
 const order = {
   id: 101,
@@ -20,14 +17,14 @@ const order = {
   status: 'En attente', // ou "Livrée", "Annulée"
   total: 15000,
   products: [
-    { name: 'Produit A', price: 5000, quantity: 1, image: '/assets/images/img1.png' },
-    { name: 'Produit B', price: 2500, quantity: 4, image: '/assets/images/img2.jpg' },
-    { name: 'Produit B', price: 2500, quantity: 4, image: '/assets/images/img2.jpg' },
-    { name: 'Produit B', price: 2500, quantity: 4, image: '/assets/images/img2.jpg' },
-    { name: 'Produit B', price: 2500, quantity: 4, image: '/assets/images/img2.jpg' },
-    { name: 'Produit B', price: 2500, quantity: 4, image: '/assets/images/img2.jpg' },
-    { name: 'Produit B', price: 2500, quantity: 4, image: '/assets/images/img2.jpg' },
-    { name: 'Produit B', price: 2500, quantity: 4, image: '/assets/images/img2.jpg' }
+    { name: 'Produit A', price: 5000, quantity: 1, image: '/images/img1.png' },
+    { name: 'Produit B', price: 2500, quantity: 4, image: '/images/img2.jpg' },
+    { name: 'Produit B', price: 2500, quantity: 4, image: '/images/img2.jpg' },
+    { name: 'Produit B', price: 2500, quantity: 4, image: '/images/img2.jpg' },
+    { name: 'Produit B', price: 2500, quantity: 4, image: '/images/img2.jpg' },
+    { name: 'Produit B', price: 2500, quantity: 4, image: '/images/img2.jpg' },
+    { name: 'Produit B', price: 2500, quantity: 4, image: '/images/img2.jpg' },
+    { name: 'Produit B', price: 2500, quantity: 4, image: '/images/img2.jpg' }
   ]
 }
 </script>

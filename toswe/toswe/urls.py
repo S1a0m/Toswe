@@ -5,6 +5,11 @@ from rest_framework import routers
 from django.conf import settings
 from django.conf.urls.static import static
 
+# from rest_framework_simplejwt.views import (
+#     TokenObtainPairView,
+#     TokenRefreshView,
+# )
+
 from products.views import ProductViewSet, CartViewSet, OrderViewSet, DeliveryViewSet, PaymentViewSet
 from users.views import UserViewSet, FeedbackViewSet, NotificationViewSet, RefreshTokenView, BrandViewSet
 
@@ -26,7 +31,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('tw-api/', include('rest_framework.urls')),
     path('api/', include(router.urls)),
-    path('refresh-token/', RefreshTokenView.as_view(), name='refresh-token'),
+    path('api/refresh_token/', RefreshTokenView.as_view(), name='refresh_token'),
+    # path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    # path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
 
 

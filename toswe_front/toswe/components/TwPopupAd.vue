@@ -16,7 +16,7 @@
       <!-- Contenu pub -->
       <div class="flex flex-col items-center text-center">
         <img
-          src="/assets/images/produit.jpg"
+          src="/images/produit.jpg"
           alt="Publicité"
           class="w-full h-40 object-cover rounded-xl mb-4 border border-white/20 shadow-md"
         />

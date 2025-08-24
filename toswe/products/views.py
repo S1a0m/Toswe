@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
-from users.models import User, UserInteractionEvent, Feedback, Notification
+from users.models import CustomUser, UserInteractionEvent, Feedback, Notification
 from products.models import Product, Cart, Order, Delivery, Payment
 from users.serializers import *
 
@@ -14,6 +14,7 @@ from products.serializers import *
 from toswe.permissions import IsUserAuthenticated
 
 from toswe.utils import track_user_interaction
+from users.authentication import JWTAuthentication
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from .spbi_model import predict_top_k
@@ -22,6 +23,7 @@ from .spbi_model import predict_top_k
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductDetailsSerializer
+    authentication_classes = [JWTAuthentication]
 
     # def get_permissions(self):
     #     if self.action in ['create', 'destroy', 'update']:
@@ -173,34 +175,46 @@ class ProductViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='identify')
     def identify_product(self, request):
         """
-        Receives an image and returns the matching product info.
+        Receives an image and returns the top-k matching products with scores.
         """
         uploaded_image = request.FILES.get('image')
 
         if not uploaded_image:
             return Response({"error": "No image uploaded."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not isinstance(uploaded_image, InMemoryUploadedFile):
-            return Response({"error": "Invalid image file."}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            # Predict product ID using your AI model
-            predicted_id = predict_top_k(uploaded_image)
+            import tempfile
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+                for chunk in uploaded_image.chunks():
+                    tmp.write(chunk)
+                tmp_path = tmp.name
 
-            # Retrieve product info from DB
-            product = Product.objects.filter(id=predicted_id).first()
-            if not product:
-                return Response({"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+            # Predict top-k product IDs
+            top_k_results = predict_top_k(tmp_path, k=5)  # [(id, score), ...]
 
-            # Prepare response data
-            data = {
-                "id": product.id,
-                "name": product.name,
-                "main_image": request.build_absolute_uri(product.main_image.url) if product.main_image else None,
-                "price": str(product.price),
-                "short_description": product.short_description or ""
-            }
-            return Response(data, status=status.HTTP_200_OK)
+            if not top_k_results:
+                return Response({"error": "No prediction."}, status=status.HTTP_404_NOT_FOUND)
+
+            # Retrieve products
+            product_ids = [pid for pid, _ in top_k_results]
+            products = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
+
+            # Build response list
+            results = []
+            for pid, score in top_k_results:
+                product = products.get(pid)
+                if not product:
+                    continue
+                results.append({
+                    "id": product.id,
+                    "name": product.name,
+                    "main_image": request.build_absolute_uri(product.main_image.url) if product.main_image else None,
+                    "price": str(product.price),
+                    "short_description": product.short_description or "",
+                    "score": round(score, 4),  # probabilité arrondie
+                })
+
+            return Response({"results": results}, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -22,8 +22,8 @@
       class="flex justify-center"
     >
       <TwBrand
-        :image-src="imageUrl"
-        :brand-name="brand.racine_id"
+        image-src="/images/img1.png"
+        :brand-name="brand.shop_name"
         :slogan="brand.slogan"
         :rating="brand.rating"
       />
@@ -44,7 +44,7 @@ import 'swiper/css/autoplay'
 import TwBrand from '~/components/TwBrand.vue'
 
 // Image temporaire
-const imageUrl = new URL('@/assets/images/img1.png', import.meta.url).href
+// const imageUrl = new URL('@/assets/images/img1.png', import.meta.url).href
 
 // Récupération des marques
 const { data: brands, pending, error } = await useAsyncData('brands', () =>

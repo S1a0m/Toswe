@@ -14,14 +14,22 @@ export default defineNuxtConfig({
     '@nuxt/icon',
     '@vueuse/motion/nuxt',
     '@pinia/nuxt',
-    '@vite-pwa/nuxt',
+    // '@vite-pwa/nuxt',
   ],
 
-  pwa: {
+ // plugins: ["~/plugins/init-auth.client.ts"],
+
+  runtimeConfig: {
+    public: {
+      apiBase: "http://127.0.0.1:8000/api"
+    }
+  },
+
+/*  pwa: {
     registerType: 'autoUpdate', // met à jour automatiquement le service worker
     manifest: {
-      name: 'To',
-      short_name: 'MonApp',
+      name: 'Tôswè',
+      short_name: 'Tôswè',
       description: 'Une application Nuxt transformée en PWA',
       theme_color: '#ffffff',
       background_color: '#ffffff',
@@ -50,7 +58,7 @@ export default defineNuxtConfig({
       enabled: true, // pour tester le service worker en mode dev
       type: 'module'
     }
-  },
+  },*/
   ssr: true,
   app: {
     head: {
@@ -70,9 +78,9 @@ export default defineNuxtConfig({
       ],
     },
   },
-  runtimeConfig: {
+  /*runtimeConfig: {
     public: {
       apiBase: process.env.API_BASE || 'http://localhost:8000/api',
     }
-  }
+  }*/
 })

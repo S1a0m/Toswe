@@ -42,6 +42,6 @@ export function goToAdCreate() {
     return navigateTo({ path: "/ad" })
 }
 
-export function goToAdOrder() {
+export function goToOrderDetails() {
     return navigateTo({ path: "/order" })
 }

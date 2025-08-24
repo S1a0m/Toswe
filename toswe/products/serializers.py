@@ -15,11 +15,11 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 class ProductSearchSerializer(serializers.ModelSerializer):
     main_image = serializers.SerializerMethodField()
-    racine_id = serializers.CharField(source="seller.user.racine_id")
+    shop_name = serializers.CharField(source="seller.shop_name")
 
     class Meta:
         model = Product
-        fields = ["id", "name", "price", "main_image", "racine_id"]
+        fields = ["id", "name", "price", "main_image", "shop_name"]
 
     def get_main_image(self, obj):
         main_img = obj.images.filter(is_main_image=True).first()

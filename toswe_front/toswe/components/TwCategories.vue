@@ -21,15 +21,15 @@
           category-name="Agriculture & agroalimentaire"
         />
         <TwCategory
-          :image-src="imageUrl"
+          image-src="/images/img1.png"
           category-name="Cuisine traditionnelle"
         />
         <TwCategory
-          :image-src="imageUrl"
+          image-src="/images/img1.png"
           category-name="Artisanat culturel"
         />
         <TwCategory
-          :image-src="imageUrl"
+          image-src="/images/img1.png"
           category-name="Cosmétiques naturels"
         />
       </div>
@@ -40,5 +40,5 @@
 
 
 <script setup>
-const imageUrl = new URL('@/public/images/img1.png', import.meta.url).href
+// const imageUrl = new URL('@/assets/images/img1.png', import.meta.url).href
 </script>

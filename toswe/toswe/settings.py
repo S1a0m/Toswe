@@ -135,7 +135,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 50,
-    "DEFAULT_AUTHENTICATION_CLASSES": ('rest_framework_simplejwt.authentication.JWTAuthentication',),
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "users.authentication.JWTAuthentication",
+        # "rest_framework.authentication.SessionAuthentication",  # optionnel
+    ],
 }
 
 
@@ -159,10 +162,37 @@ MEDIA_URL = '/media/'
 FERNET_KEY = os.environ.get("FERNET_KEY", Fernet.generate_key()) # Probleme ici
 fernet = Fernet(FERNET_KEY)
 
+CORS_ALLOW_CREDENTIALS = True
 
 # Autoriser le front Nuxt
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Adresse du front Nuxt en dev
+    "http://127.0.0.1:3000",  # Adresse du front Nuxt en dev
+    "http://localhost:3000",
 ]
 
-FRONTEND_URL = "http://localhost:3000"
+CORS_ALLOW_HEADERS = [
+    "authorization",
+    "content-type",
+    "x-csrftoken",
+    "accept",
+    "origin",
+    "user-agent",
+    "x-requested-with",
+]
+
+# (pour éviter les surprises)
+CORS_EXPOSE_HEADERS = ["Set-Cookie"]
+
+AUTH_USER_MODEL = 'users.CustomUser'
+
+# CSRF_TRUSTED_ORIGINS = [
+#     "http://127.0.0.1:3000",
+#     "http://localhost:3000",
+# ]
+
+
+FRONTEND_URL = "http://127.0.0.1:3000"
+
+TWILIO_ACCOUNT_SID = "xxxxxxxxxxxxxxxx"
+TWILIO_AUTH_TOKEN = "xxxxxxxxxxxxxxxx"
+TWILIO_PHONE_NUMBER = "+1234567890"

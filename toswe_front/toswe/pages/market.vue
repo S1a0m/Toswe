@@ -28,8 +28,8 @@
 </template>
 
 <script setup>
-const config = useRuntimeConfig();
+/*const config = useRuntimeConfig();
 const { data } = await useFetch('/users', {
   baseURL: config.public.apiBase
-});
+});*/
 </script>

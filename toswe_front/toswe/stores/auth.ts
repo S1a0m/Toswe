@@ -1,99 +1,99 @@
 // stores/auth.ts
-import { defineStore } from 'pinia'
-import { useStorage } from '@vueuse/core'
-import { goToMarket } from '@/utils/navigations';
-
-export const useAuthStore = defineStore('auth', {
-  state: () => ({
-    accessToken: useStorage<string | null>('accessToken', null),
-    refreshToken: useStorage<string | null>('refreshToken', null),
-    user: useStorage<any>('user', null), // { id_racine, username, is_seller, is_premium }
-  }),
-
-  getters: {
-    isAuthenticated: (state) => !!state.accessToken,
-    isSeller: (state) => state.user?.is_seller ?? false,
-    isPremium: (state) => state.user?.is_premium ?? false,
-  },
-
-  actions: {
-    login(userData: { id_racine: string; username: string; is_seller?: boolean; is_premium?: boolean }) {
-      // Simuler un accessToken
-      this.accessToken = 'fake_token_' + Math.random().toString(36).substring(2)
-      this.refreshToken = 'fake_refresh_' + Math.random().toString(36).substring(2)
-      this.user = {
-        ...userData,
-        is_seller: userData.is_seller ?? false,
-        is_premium: userData.is_premium ?? false,
-      }
-    },
-
-    logout() {
-      this.accessToken = null
-      this.refreshToken = null
-      this.user = null
-      goToMarket()
-    },
-  },
-})
-
-
-
-/**
- * // store/auth.ts
 import { defineStore } from "pinia"
-import { useStorage } from "@vueuse/core" // pratique pour persister automatiquement
+import { useStorage } from "@vueuse/core"
+import { goToMarket } from "@/utils/navigations"
+
+interface User {
+  id: number
+  phone: string
+  is_seller: boolean
+  is_premium: boolean
+  is_brand: boolean
+}
+
+
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
-    accessToken: useStorage("accessToken", null),
-    refreshToken: useStorage("refreshToken", null),
-    user: useStorage("user", null) as any, // { id_racine, username, is_seller, is_premium, ... }
+    accessToken: null as string | null, // <-- persisté refreshTokenValue: useStorage<string | null>("refresh_token", null),
+    user: useStorage<User | null>("user", null),
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.accessToken,
+    isAuthenticated: (state) => state.accessToken && !!state.user, // !!state.refreshTokenValue
     isSeller: (state) => state.user?.is_seller ?? false,
-    isPremium: (state) => state.user?.is_premium ?? false,
+    isPremiumSeller: (state) => state.user?.is_premium ?? false,
+    isBrand: (state) => state.user?.is_brand ?? false,
   },
 
   actions: {
-    async login(idRacine: string, token: string) {
+    async initConnexion(phone: string) {
       try {
-        // Ici tu appelles ton backend Toswè (qui parle avec Racine)
-        const res = await $fetch("/api/auth/login/", {
-          method: "POST",
-          body: { id_racine: idRacine, token },
-        })
-
-        this.accessToken = res.access
-        this.refreshToken = res.refresh
-        this.user = res.user
-      } catch (error) {
-        throw new Error("Connexion échouée")
+        const res = await $fetch<{ detail: string }>(
+          "http://127.0.0.1:8000/api/user/init_connexion/",
+          {
+            method: "POST",
+            body: { phone },
+          }
+        )
+        return res.detail
+      } catch (e: any) {
+        throw new Error(e?.data?.detail || "Erreur d'initialisation connexion")
       }
     },
 
-    async fetchUser() {
-      if (!this.accessToken) return
+    async confirmConnexion(phone: string, otp: string) {
       try {
-        const user = await $fetch("/api/auth/me/", {
-          headers: { Authorization: `Bearer ${this.accessToken}` },
-        })
-        this.user = user
-      } catch (error) {
+        const res = await $fetch<{ access: string; user: User }>(
+          "http://127.0.0.1:8000/api/user/confirm_connexion/",
+          {
+            method: "POST",
+            body: { phone, session_mdp: otp },
+            credentials: "include", // <-- Pour recevoir le cookie
+          }
+        )
+
+        this.accessToken = res.access
+        this.user = res.user
+      } catch (e: any) {
+        throw new Error(e?.data?.detail || "Code invalide")
+      }
+    },
+
+    
+
+    async doRefreshToken() {
+      try {
+        const res = await $fetch<{ access: string }>(
+          "http://127.0.0.1:8000/api/refresh_token/",
+          {
+            method: "POST",
+            credentials: "include", // 🔑 très important pour envoyer le cookie
+          }
+        )
+        this.accessToken = res.access
+      } catch {
         this.logout()
       }
     },
 
-    async refresh() {
-      if (!this.refreshToken) return
+
+    async fetchUser() {
+      if (!this.accessToken) return
       try {
-        const res = await $fetch("/api/auth/refresh/", {
-          method: "POST",
-          body: { refresh: this.refreshToken },
+        const user = await $fetch<User>("http://127.0.0.1:8000/api/user/me/", {
+          headers: { Authorization: `Bearer ${this.accessToken}` },
         })
-        this.accessToken = res.access
+        this.user = user
+      } catch {
+        this.logout()
+      }
+    },
+
+    async initialize() {
+      try {
+        await this.doRefreshToken()
+        await this.fetchUser()
       } catch {
         this.logout()
       }
@@ -101,10 +101,23 @@ export const useAuthStore = defineStore("auth", {
 
     logout() {
       this.accessToken = null
-      this.refreshToken = null
       this.user = null
+
+      // Optionnel : appel backend pour supprimer le cookie côté serveur
+      $fetch("http://127.0.0.1:8000/api/user/logout/", {
+        method: "POST",
+        credentials: "include",
+      }).catch(() => {})
+
+      goToMarket()
     },
+
+    setAccessToken(token: string) {
+      this.accessToken = token
+    }
+
   },
 })
 
- */
+
+

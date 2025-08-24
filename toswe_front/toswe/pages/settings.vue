@@ -42,9 +42,6 @@
 </template>
 
 <script setup>
-definePageMeta({
-  middleware: 'auth', // Appliquer le middleware d'authentification
-})
 import { goToStats, goToAdCreate } from '@/utils/navigations'
 import { useAuthStore } from '@/stores/auth'
 

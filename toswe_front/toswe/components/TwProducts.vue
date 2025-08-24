@@ -32,7 +32,7 @@ const props = defineProps({
 
 const products = [
   {
-    image: '/assets/images/img1.jpg',
+    image: '/images/img1.jpg',
     name: 'Produit A',
     description: 'Un super produit local.',
     price: 19.99,
@@ -40,7 +40,7 @@ const products = [
     badge: 'Nouveau'
   },
   {
-    image: '/assets/images/img2.jpg',
+    image: '/images/img2.jpg',
     name: 'Produit B',
     description: 'Un autre produit qui cartonne.',
     price: 29.99,
@@ -48,7 +48,7 @@ const products = [
     badge: 'Promo'
   },
   {
-    image: '/assets/images/img3.jpg',
+    image: '/images/img3.jpg',
     name: 'Produit C',
     description: 'Encore un produit local premium.',
     price: 39.99,
@@ -56,7 +56,7 @@ const products = [
     badge: 'Best Seller'
   },
   {
-    image: '/assets/images/img3.jpg',
+    image: '/images/img3.jpg',
     name: 'Produit C',
     description: 'Encore un produit local premium.',
     price: 39.99,
@@ -64,7 +64,7 @@ const products = [
     badge: 'Best Seller'
   },
   {
-    image: '/assets/images/img3.jpg',
+    image: '/images/img3.jpg',
     name: 'Produit C',
     description: 'Encore un produit local premium.',
     price: 39.99,
@@ -72,7 +72,7 @@ const products = [
     badge: 'Best Seller'
   },
   {
-    image: '/assets/images/img3.jpg',
+    image: '/images/img3.jpg',
     name: 'Produit C',
     description: 'Encore un produit local premium.',
     price: 39.99,
@@ -80,7 +80,7 @@ const products = [
     badge: 'Best Seller'
   },
   {
-    image: '/assets/images/img3.jpg',
+    image: '/images/img3.jpg',
     name: 'Produit C',
     description: 'Encore un produit local premium.',
     price: 39.99,
