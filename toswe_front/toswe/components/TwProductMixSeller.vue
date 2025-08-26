@@ -9,7 +9,7 @@
           />
           <div class="p-4">
             <h3 class="font-bold text-lg mb-1">{{ item.name }}</h3>
-            <p class="text-sm text-gray-500 mb-2">{{ item.racine_id }}</p>
+            <p class="text-sm text-gray-500 mb-2">{{ item.shop_name }}</p>
             <p class="text-red-600 font-bold">{{ item.price }} fcfa</p>
           </div>
         </div>

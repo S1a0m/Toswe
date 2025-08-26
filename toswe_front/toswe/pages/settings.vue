@@ -6,8 +6,9 @@
 
     <!-- Compte -->
     <div class="mb-8">
-      <h2 class="text-lg font-semibold text-gray-600 mb-3">Compte userracine#R</h2>
-      <TwSettingsItem icon="uil:user" label="Profil" />
+      <h2 class="text-lg font-semibold text-gray-600 mb-3">Compte </h2>
+      <TwSettingsItem icon="uil:user" label="Profil" @click="profilPopup.showPopup()"/>
+      <TwSettingsItem icon="uil:check-circle" label="Vérifier votre compte"  v-if="!auth.isVerified && auth.isSeller" @click="verifyPopup.showPopup()"/>
       <TwSettingsItem icon="uil:signout" label="Se déconnecter" @click="auth.logout"/>
       <TwSettingsItem icon="uil:trash" label="Supprimer le compte" danger />
     </div>
@@ -15,7 +16,7 @@
     <!-- Vente -->
     <div class="mb-8">
       <h2 class="text-lg font-semibold text-gray-600 mb-3">Vente</h2>
-      <TwSettingsItem icon="uil:briefcase" label="Devenir vendeur" v-if="!auth.isSeller"/>
+      <TwSettingsItem icon="uil:briefcase" label="Devenir vendeur" v-if="!auth.isSeller" @click="becomeSellerPopup.showPopup()"/>
       <TwSettingsItem icon="uil:star" label="Devenir vendeur premium" v-if="auth.isSeller && !auth.isPremiumSeller"/>
       <TwSettingsItem icon="uil:chart" label="Voir mes statistiques vendeur" v-if="auth.isPremiumSeller" @click="goToStats"/>
     </div>
@@ -30,15 +31,20 @@
     <!-- Préférences -->
     <div>
       <h2 class="text-lg font-semibold text-gray-600 mb-3">Préférences</h2>
-      <TwSettingsItem icon="uil:shopping-cart" label="Préférences produits" />
+      <TwSettingsItem icon="uil:shopping-cart" label="Préférences produits" @click="preferencesPopup.showPopup()"/>
       <TwSettingsToggle
+        v-if="auth.isPremiumSeller"
         icon="uil:lock"
         label="Toujours payer avant livraison"
         v-model="auth.mustPayBeforeDelivery"
       />
-      <TwSettingsItem icon="uil:share-alt" label="Voir les infos partagées par Racine à Toswe" />
+      <TwSettingsItem icon="uil:share-alt" label="Partager le lien de ma boutique"/>
     </div>
   </section>
+  <TwPopupProfil ref="profilPopup" />
+  <TwPopupVerifyAccount ref="verifyPopup" />
+  <TwPopupBecomeSeller ref="becomeSellerPopup" />
+  <TwPopupPreferences ref="preferencesPopup" />
 </template>
 
 <script setup>
@@ -46,4 +52,9 @@ import { goToStats, goToAdCreate } from '@/utils/navigations'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
+
+const profilPopup = ref(null)
+const verifyPopup = ref(null)
+const becomeSellerPopup = ref(null)
+const preferencesPopup = ref(null)
 </script>

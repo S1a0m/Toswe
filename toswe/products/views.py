@@ -1,5 +1,5 @@
 from django.core import signing
-from django.db.models import Q
+from django.db.models import Q, Count
 from rest_framework import viewsets, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -42,8 +42,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def suggestions(self, request):
         user = request.user
-        if not user.is_authenticated:
-            return Response({"detail": "Authentification requise."}, status=401)
+        # if not user.is_authenticated:
+        #     return Response({"detail": "Authentification requise."}, status=401)
 
         # Étape 1 : On regarde dans quelles catégories l'utilisateur interagit le plus
         top_categories = (
@@ -239,14 +239,36 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 
 class CartViewSet(viewsets.ModelViewSet):
-    serializer_class = UserCartSerializer
-    permission_classes = [IsUserAuthenticated]
+    serializer_class = CartSerializer
+    authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
         return Cart.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        return serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=["get"])
+    def me(self, request):
+        """
+        Récupérer le panier de l’utilisateur connecté
+        """
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        serializer = self.get_serializer(cart)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["post"])
+    def sync(self, request):
+        """
+        ⚡ Remplace entièrement le panier de l’utilisateur connecté
+        (pour le frontend → push local → serveur)
+        """
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        serializer = self.get_serializer(cart, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = UserOrdersSerializer

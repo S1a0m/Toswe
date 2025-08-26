@@ -46,8 +46,10 @@
         <span class="text-xl font-bold text-[#7D260F]">{{ price }} fcfa</span>
         <button
           class="px-4 py-2 bg-gradient-to-r from-[#7D260F] to-[#A13B20] text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg hover:from-[#A13B20] hover:to-[#7D260F] transition-all duration-300"
+          :class="{ animate: isAnimating }"
+          @click="handleAddClick"
         >
-          Ajouter
+          {{ isAdded ? "Panier" : "Ajouter" }}
         </button>
       </div>
     </div>
@@ -58,7 +60,14 @@
 
 <script setup>
 import { goToProduct } from '@/utils/navigations';
+import { useCartStore } from "@/stores/cart"
+
+
 const props = defineProps({
+  id: {
+    type: Number,
+    required: true
+  },
   imageSrc: {
     type: String,
     default: '/images/img2.jpg'
@@ -84,4 +93,47 @@ const props = defineProps({
     default: 'Nouveau'
   }
 })
+
+const isAdded = ref(false)
+const isAnimating = ref(false)
+
+const cart = useCartStore()
+
+const product = {
+    id: props.id,
+    img: props.imageSrc,
+    name: props.productName,
+    price: props.price
+}
+
+function handleAddClick() {
+  if (isAdded.value) {
+    goToProduct()
+    return
+  }
+
+  cart.addToCart(product)
+  isAdded.value = true
+  isAnimating.value = true
+
+  setTimeout(() => {
+    isAnimating.value = false
+  }, 300)
+}
 </script>
+
+<style scoped>
+
+button.animate {
+  animation: bounce 0.3s ease;
+}
+
+@keyframes bounce {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.15); }
+  60% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+
+</style>

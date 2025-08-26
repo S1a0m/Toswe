@@ -4,24 +4,22 @@
   <div class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
 
     <!-- Liste des articles -->
-    <div v-if="cartItems.length > 0">
+    <div v-if="cart.items.length > 0">
       <TwCartItem
-        v-for="(item, index) in cartItems"
+        v-for="(item, index) in cart.items"
         :key="index"
-        :imageSrc="item.imageSrc"
-        :productName="item.productName"
+        :id="item.id"
+        :imageSrc="item.img"
+        :productName="item.name"
         :price="item.price"
         :quantity="item.quantity"
-        @increase="increaseQuantity(index)"
-        @decrease="decreaseQuantity(index)"
-        @remove="removeItem(index)"
       />
 
       <!-- Total -->
       <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-200">
         <span class="text-lg font-semibold">Total :</span>
         <span class="text-xl font-bold text-[#7D260F]">
-          {{ totalPrice.toLocaleString() }} FCFA
+          {{ cart.totalAmount }} fcfa
         </span>
       </div>
 
@@ -37,8 +35,15 @@
 
     <!-- Panier vide -->
     <div v-else class="text-center text-gray-500 py-10">
-      Votre panier est vide.
+      <Icon
+        name="mdi:cart-outline"
+        class="mx-auto mb-6 text-gray-400 animate-bounce-slow"
+        style="font-size: 72px;"
+      />
+      <p class="text-lg font-medium text-gray-600">Votre panier est vide.</p>
     </div>
+
+
   </div>
   </section>
 </template>
@@ -46,30 +51,35 @@
 <script setup>
 import TwCartItem from './TwCartItem.vue'
 
+import { useCartStore } from "@/stores/cart"
+
+definePageMeta({
+  prerender: true
+})
+
+const cart = useCartStore()
+
 const cartItems = ref([
-  { imageSrc: '/images/img1.png', productName: 'Produit 1', price: 2500, quantity: 2 },
-  { imageSrc: '/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 },
-  { imageSrc: '/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 },
-  { imageSrc: '/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 },
-  { imageSrc: '/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 },
-  { imageSrc: '/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 }
+  { id: 1, imageSrc: '/images/img1.png', productName: 'Produit 1', price: 2500, quantity: 2 },
+  { id: 2, imageSrc: '/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 },
+  { id: 3, imageSrc: '/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 },
+  { id: 4, imageSrc: '/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 },
+  { id: 5, imageSrc: '/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 },
+  { id: 6, imageSrc: '/images/img2.jpg', productName: 'Produit 2', price: 5000, quantity: 1 }
 ])
 
-const increaseQuantity = (index) => {
-  cartItems.value[index].quantity++
-}
-
-const decreaseQuantity = (index) => {
-  if (cartItems.value[index].quantity > 1) {
-    cartItems.value[index].quantity--
+</script>
+<style scoped>
+@keyframes bounceSlow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
   }
 }
 
-const removeItem = (index) => {
-  cartItems.value.splice(index, 1)
+.animate-bounce-slow {
+  animation: bounceSlow 2.5s infinite;
 }
-
-const totalPrice = computed(() =>
-  cartItems.value.reduce((total, item) => total + item.price * item.quantity, 0)
-)
-</script>
+</style>

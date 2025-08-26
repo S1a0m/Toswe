@@ -13,6 +13,36 @@ class BrandSerializer(serializers.ModelSerializer):
         model = SellerProfile
         fields = ['id', 'shop_name', 'slogan']
 
+class BecomeSellerSerializer(serializers.ModelSerializer):
+    shop_name = serializers.CharField(required=True, max_length=100)
+    logo = serializers.ImageField(required=False)
+    slogan = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    about = serializers.CharField(required=True)
+    address = serializers.CharField(required=True)
+    categories = serializers.CharField(required=False)
+
+    class Meta:
+        model = SellerProfile
+        fields = ["shop_name", "logo", "slogan", "about", "categories", "address"]
+
+    def create(self, validated_data):
+        user = self.context["request"].user
+        # update ou create
+        profile, created = SellerProfile.objects.update_or_create(
+            user=user,
+            defaults={
+                "shop_name": validated_data["shop_name"],
+                "logo": validated_data.get("logo"),
+                "slogan": validated_data.get("slogan", ""),
+                "about": validated_data["about"],
+                "category": validated_data.get("categories"),
+            }
+        )
+        user.is_seller = True
+        user.address = validated_data["address"]
+        user.save()
+        return profile
+
 class UserFeedbackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Feedback

@@ -3,7 +3,7 @@ from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 
 from django.utils import timezone
-from products.models import Product
+from products.models import Product, Category
 
 from django.contrib.auth.base_user import BaseUserManager
 
@@ -70,20 +70,27 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 class SellerProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="seller_profile")
     shop_name = models.CharField(default='', max_length=100, null=True, blank=True)
+    logo = models.ImageField(upload_to="logo", null=True, blank=True)
     loyal_customers = models.ManyToManyField(CustomUser, related_name="loyal_customers", blank=True)
+    categories = models.ManyToManyField(Category, related_name="categories", blank=True)
 
     slogan = models.CharField(max_length=255, default="")
     about = models.TextField(blank=True)
 
     commercial_register = models.FileField(upload_to="commercial_register", null=True, blank=True)
+    id_card = models.FileField(upload_to="id_card", null=True, blank=True)
 
     is_brand = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False) # Registre de commerce verifie
     is_premium = models.BooleanField(default=False)
 
+    force_payment = models.BooleanField(default=False)
+
     def __str__(self):
         return self.user.username
 
+class ProductsPreferences(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
 
 class UserLog(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="log")

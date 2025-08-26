@@ -1,17 +1,11 @@
 from rest_framework import serializers
-from products.models import Product, Cart, Order, OrderItem, Delivery, Payment, ProductImage
+from products.models import Product, Cart, Order, OrderItem, Delivery, Payment, ProductImage, CartItem
+
 
 class ProductImageSerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
-
     class Meta:
         model = ProductImage
-        fields = ['id', 'image_url']
-
-    def get_image_url(self, obj):
-        if obj.image:
-            return obj.image.url
-        return None
+        fields = ["id", "image", "is_main_image"]
 
 class ProductSearchSerializer(serializers.ModelSerializer):
     main_image = serializers.SerializerMethodField()
@@ -27,40 +21,68 @@ class ProductSearchSerializer(serializers.ModelSerializer):
             return main_img.image.url
         return None
 
-# === PRODUITS ===
+
+class ProductSerializer(serializers.ModelSerializer):
+    main_image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        fields = ["id", "name", "price", "main_image"]
+
+    def get_main_image(self, obj):
+        main_img = obj.images.filter(is_main_image=True).first()
+        if main_img:
+            return ProductImageSerializer(main_img).data
+        return None
+
 
 class ProductDetailsSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
-    qr_code_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = ["id", "name", "price", "description", "images"]
 
 
-class ProductSuggestionsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = ['id', 'name', 'price', 'thumbnail', 'is_sponsored']
-
-
-class AnnouncementsProductsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = ['id', 'name', 'announcement_text', 'price']
-
-
-# === PANIER ===
-
-class UserCartSerializer(serializers.ModelSerializer):
-    product = ProductDetailsSerializer(read_only=True)
+class CartItemSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
     product_id = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.all(), source='product', write_only=True
+        queryset=Product.objects.all(),
+        source="product",
+        write_only=True
     )
 
     class Meta:
+        model = CartItem
+        fields = ["id", "product", "product_id", "quantity"]
+
+
+class CartSerializer(serializers.ModelSerializer):
+    items = CartItemSerializer(many=True)
+
+    class Meta:
         model = Cart
-        fields = ['id', 'product', 'product_id', 'quantity', 'added_at']
+        fields = ["id", "user", "items", "created_at"]
+        read_only_fields = ["id", "user", "created_at"]
+
+    def create(self, validated_data):
+        items_data = validated_data.pop("items", [])
+        cart = Cart.objects.create(**validated_data)
+        for item in items_data:
+            CartItem.objects.create(cart=cart, **item)
+        return cart
+
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop("items", [])
+        instance.save()
+
+        # ⚡ simplification : on vide puis on recrée les items
+        instance.items.all().delete()
+        for item in items_data:
+            CartItem.objects.create(cart=instance, **item)
+
+        return instance
+
 
 
 # === COMMANDE ===

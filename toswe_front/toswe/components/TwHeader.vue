@@ -165,7 +165,7 @@
     </transition>
   </header>
 
-  <div class="mb-18"></div>
+  <div class="mb-17"></div>
   <TwPopupContacts ref="contactsPopup" />
 </template>
 

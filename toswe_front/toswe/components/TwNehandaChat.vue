@@ -186,18 +186,17 @@ async function send() {
   isTyping.value = true
 
   try {
+    // Récupérer dernier conversation_id si présent
     const lastConv = messages.value.find(m => m.conversation_id)
     const convId = lastConv?.conversation_id
 
     const payload = { message: text, conversation_id: convId || null }
 
-    const res = await $apiFetch('http://127.0.0.1:8080/nehanda/chat', {
+    // 👉 Ici $apiFetch renvoie déjà du JSON, pas besoin de res.json()
+    const json = await $apiFetch('http://127.0.0.1:8080/nehanda/chat', {
       method: 'POST',
-      body: JSON.stringify(payload)
+      body: payload, // pas besoin de JSON.stringify, $fetch gère
     })
-
-    if (!res.ok) throw new Error('API error')
-    const json = await res.json()
 
     // Réponse backend
     const assistantReply = json.response
@@ -224,6 +223,7 @@ async function send() {
     isTyping.value = false
   }
 }
+
 
 
 function cannedReply(userText) {

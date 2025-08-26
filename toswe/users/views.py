@@ -2,6 +2,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 import requests
 from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from users.models import CustomUser, Feedback, Notification
 from products.models import Product, Cart, Order, Delivery, Payment
@@ -34,6 +35,7 @@ from .authentication import JWTAuthentication
 class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserConnexionSerializer
+    # parser_classes = [MultiPartParser, FormParser]
     authentication_classes = [JWTAuthentication]
 
     @action(detail=False, methods=["post"], permission_classes=[AllowAny])
@@ -96,21 +98,33 @@ class UserViewSet(viewsets.ModelViewSet):
 
             is_premium = False
             is_brand = False
+            is_verified = False
+            slogan = ""
+            about = ""
+            shop_name = ""
             if user.is_seller and hasattr(user, "seller_profile"):
                 is_brand = user.seller_profile.is_brand
-
-            if user.is_seller and hasattr(user, "seller_profile"):
                 is_premium = user.seller_profile.is_premium
+                is_verified = user.seller_profile.is_verified
+                slogan = user.seller_profile.slogan
+                about = user.seller_profile.about
+                shop_name = user.seller_profile.shop_name
 
             response = Response({
                 "access": access_token,
                # "refresh": refresh_token,
                 "user": {
                     "id": user.id,
+                    "username": user.username,
+                    "address": user.address,
                     "phone": user.phone,
                     "is_seller": user.is_seller,
                     "is_premium": is_premium,
                     "is_brand": is_brand,
+                    "is_verified": is_verified,
+                    "shop_name": shop_name,
+                    "slogan": slogan,
+                    "about": about,
                 }
             })
 
@@ -144,44 +158,129 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def me(self, request):
-        print("Le type ce salo", type(request.user))
         user = request.user
+
+        is_premium = False
+        is_brand = False
+        is_verified = False
+        slogan = ""
+        about = ""
+        shop_name = ""
+        if user.is_seller and hasattr(user, "seller_profile"):
+            is_brand = user.seller_profile.is_brand
+            is_premium = user.seller_profile.is_premium
+            is_verified = user.seller_profile.is_verified
+            slogan = user.seller_profile.slogan
+            about = user.seller_profile.about
+            shop_name = user.seller_profile.shop_name
+
+        return Response({"id": user.id, "username": user.username, "address": user.address, "phone": user.phone,
+                     "is_seller": user.is_seller, "is_premium": is_premium, "is_brand": is_brand,
+                     "is_verified": is_verified, "shop_name": shop_name, "slogan": slogan, "about": about, })
+
+    @action(detail=False, methods=["post"])
+    def update_me(self, request):
+        user = request.user
+        data = request.data
+
+        # Champs de base utilisateur
+        username = data.get("username")
+        address = data.get("address")
+        phone = data.get("phone")
+
+        if username:
+            user.username = username
+        if address:
+            user.address = address
+        if phone:
+            user.phone = phone
+
+        # Valeurs par défaut
+        is_premium = False
+        is_brand = False
+        is_verified = False
+        shop_name = ""
+        slogan = ""
+        about = ""
+
+        seller_profile = None
+        if user.is_seller and hasattr(user, "seller_profile"):
+            seller_profile = user.seller_profile
+            shop_name = data.get("shop_name", seller_profile.shop_name)
+            slogan = data.get("slogan", seller_profile.slogan)
+            about = data.get("about", seller_profile.about)
+
+            seller_profile.shop_name = shop_name
+            seller_profile.slogan = slogan
+            seller_profile.about = about
+
+            is_brand = seller_profile.is_brand
+            is_premium = seller_profile.is_premium
+            is_verified = seller_profile.is_verified
+
+            seller_profile.save()
+
+        user.save()
+
+        return Response(
+            {
+                "id": user.id,
+                "username": user.username,
+                "address": user.address,
+                "phone": user.phone,
+                "is_seller": user.is_seller,
+                "is_premium": is_premium,
+                "is_brand": is_brand,
+                "is_verified": is_verified,
+                "shop_name": shop_name,
+                "slogan": slogan,
+                "about": about,
+
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["post"], url_path="verify_account")
+    def verify_account(self, request):
+        user = request.user
+
+        # if not user.is_authenticated:
+        #     return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not user.is_seller:
+            return Response({"error": "Only sellers can verify their account"}, status=status.HTTP_403_FORBIDDEN)
+
+        seller_profile = getattr(user, "seller_profile", None)
+        if not seller_profile:
+            return Response({"error": "Seller profile not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        id_card = request.FILES.get("id_card")
+        commercial_register = request.FILES.get("commercial_register")
+
+        if not id_card or not commercial_register:
+            return Response(
+                {"error": "Both ID card and commercial register are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Sauvegarde des fichiers
+        seller_profile.id_card = id_card
+        seller_profile.commercial_register = commercial_register
+        seller_profile.is_verified = False  # toujours false → admin doit confirmer
+        seller_profile.save()
+
         return Response({
-            "id": user.id,
-            "phone": user.phone,
-            "is_seller": user.is_seller,
-        })
+            "message": "Documents uploaded successfully. Verification pending.",
+            "is_verified": seller_profile.is_verified
+        }, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'])
-    def become_seller(self, request, pk=None):
-        """Devenir vendeur sur Toswe (vérification via Racine)"""
-        user = self.get_object()
-
-        # Appel à l’API Racine (à adapter à ton URL réelle)
-        url = "https://api.racine.bj/user-info/"
-        headers = {"Authorization": f"Bearer {request.headers.get('Authorization')}"}
-        payload = {"racine_id": user.racine_id}
-
-        try:
-            response = requests.post(url, json=payload, headers=headers)
-            if response.status_code != 200:
-                return Response({"detail": "Impossible de contacter Racine."}, status=502)
-
-            data = response.json()
-
-            # Vérifie les données obligatoires
-            if not data.get("is_verified"):
-                return Response({"detail": "Votre identité Racine n'est pas encore vérifiée."}, status=403)
-            if not data.get("address") or not data.get("full_name"):
-                return Response({"detail": "Adresse et nom complet requis via Racine."}, status=400)
-
-            # Tu peux aussi sauvegarder ces infos localement si tu veux
-            user.is_seller = True
-            user.save()
-            return Response({'status': 'seller enabled'})
-
-        except Exception as e:
-            return Response({"detail": "Erreur lors de la vérification Racine.", "error": str(e)}, status=500)
+    @action(detail=False, methods=["post"])
+    def become_seller(self, request):
+        serializer = BecomeSellerSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        profile = serializer.save()
+        return Response({
+            "message": "Votre profil vendeur a été créé/mis à jour avec succès.",
+            "seller_profile": BecomeSellerSerializer(profile).data
+        }, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'])
     def become_premium(self, request, pk=None):

@@ -7,10 +7,10 @@
     
     <!-- Badge du nombre d’articles -->
     <span
-      v-if="cartCount > 0"
+      v-if="cart.totalInBasket > 0"
       class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow"
     >
-      {{ cartCount }}
+      {{ cart.totalInBasket }}
     </span>
   </button>
 </template>
@@ -19,5 +19,11 @@
 import { ref } from 'vue'
 import { goToCart } from '@/utils/navigations'
 
-const cartCount = ref(3) // Exemple : nombre d'articles
+import { useCartStore } from '@/stores/cart'
+
+const cart = useCartStore()
+
+onMounted(() => {
+  cart.loadFromLocalStorage()
+})
 </script>

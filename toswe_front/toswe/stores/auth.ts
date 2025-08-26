@@ -1,14 +1,20 @@
 // stores/auth.ts
 import { defineStore } from "pinia"
-import { useStorage } from "@vueuse/core"
+import { get, useStorage } from "@vueuse/core"
 import { goToMarket } from "@/utils/navigations"
 
 interface User {
   id: number
   phone: string
+  address: string
   is_seller: boolean
   is_premium: boolean
   is_brand: boolean
+  is_verified: boolean
+  slogan: string
+  about: string
+  username: string
+  shop_name: string
 }
 
 
@@ -24,6 +30,13 @@ export const useAuthStore = defineStore("auth", {
     isSeller: (state) => state.user?.is_seller ?? false,
     isPremiumSeller: (state) => state.user?.is_premium ?? false,
     isBrand: (state) => state.user?.is_brand ?? false,
+    isVerified: (state) => state.user?.is_verified ?? false,
+    getSlogan: (state) => state.user?.slogan ?? '',
+    getAbout: (state) => state.user?.about ?? '',
+    getUsername: (state) => state.user?.username ?? '',
+    getShopName: (state) => state.user?.shop_name ?? '',
+    getPhone: (state) => state.user?.phone ?? '',
+    getAddress: (state) => state.user?.address ?? '',
   },
 
   actions: {
@@ -77,7 +90,6 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
-
     async fetchUser() {
       if (!this.accessToken) return
       try {
@@ -87,6 +99,38 @@ export const useAuthStore = defineStore("auth", {
         this.user = user
       } catch {
         this.logout()
+      }
+    },
+
+    async updateUser(username: string, phone: string, address: string, shop_name: string, about: string, slogan: string){
+      if (!this.accessToken) return
+      try {
+        const user = await $fetch<any>("http://127.0.0.1:8000/api/user/update_me/", {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${this.accessToken}` },
+          body: { username, phone, address, shop_name, about, slogan }
+        })
+        this.user = user
+      } catch {
+        this.logout()
+      }
+    },
+
+    async verifyAccount(id_card: File, commercial_register: File) {
+      if (!this.accessToken) return
+      try {
+        const formData = new FormData()
+        formData.append('id_card', id_card)
+        formData.append('commercial_register', commercial_register)
+
+        const res = await $fetch<{ detail: string }>("http://127.0.0.1:8000/api/user/verify_account/", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${this.accessToken}` },
+          body: formData
+        })
+        this.user!.is_verified = false // en attente de validation admin
+      } catch (e: any) {
+        throw new Error(e?.data?.detail || "Erreur de vérification du compte")
       }
     },
 

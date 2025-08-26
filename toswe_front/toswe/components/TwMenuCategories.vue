@@ -39,7 +39,7 @@ const categories = [
   'Artisanat',
   'Céréales',
   'Cosmétiques',
-  'Cuisines',
+  'Cuisines & Ustensiles',
   'Fruits',
   'Marques',
   'Vêtements',
