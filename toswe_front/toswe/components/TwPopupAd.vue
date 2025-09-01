@@ -8,7 +8,7 @@
       <!-- Bouton fermer -->
       <button
         @click="closePopup"
-        class="absolute top-2 right-2 text-white/80 hover:text-white transition"
+        class="absolute top-2 right-2 text-black/80 hover:text-black cursor-pointer transition"
       >
         <Icon name="uil:times" class="w-5 h-5" />
       </button>

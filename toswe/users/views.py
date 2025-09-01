@@ -1,10 +1,11 @@
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 import requests
+from django.db import models
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 
-from users.models import CustomUser, Feedback, Notification
+from users.models import CustomUser, Notification, UserInteractionEvent
 from products.models import Product, Cart, Order, Delivery, Payment
 from .serializers import *
 from toswe.payments import PaymentGateway
@@ -23,7 +24,7 @@ from django.conf import settings
 from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from .models import CustomUser, SellerProfile
@@ -238,6 +239,54 @@ class UserViewSet(viewsets.ModelViewSet):
 
         }, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=["post"])
+    def interaction_event(self, request):
+        events = request.data.get("events", [])
+        for ev in events:
+            UserInteractionEvent.objects.create(
+                user=request.user,
+                product_id=ev.get("product"),
+                action=ev["action"],
+                timestamp=ev["timestamp"],
+                details=ev.get("details", {})
+            )
+        return Response({"status": "ok"}, status=201)
+
+    @action(detail=False, methods=["get"])
+    def sellers(self, request):
+        """
+        Récupère la liste des vendeurs.
+        Les vendeurs premium apparaissent en premier,
+        suivis des marques, puis des vendeurs classiques.
+        """
+        sellers = SellerProfile.objects.all()
+
+        # Tri personnalisé
+        sellers = sellers.order_by(
+            # Premium en premier
+            models.Case(
+                models.When(is_premium=True, then=0),
+                models.When(is_brand=True, then=1),
+                default=2,
+                output_field=models.IntegerField(),
+            )
+        )
+
+        serializer = SellerListSerializer(sellers, many=True, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["get"], permission_classes=[AllowAny])
+    def brands(self, request):
+        """
+        Retourner toutes les marques (SellerProfile),
+        d'abord premium puis non premium.
+        """
+        # Récupérer tous les profils vendeur
+        sellers = SellerProfile.objects.all().order_by("-is_premium", "shop_name")
+
+        serializer = BrandSerializer(sellers, many=True, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     @action(detail=False, methods=["post"], url_path="verify_account")
     def verify_account(self, request):
         user = request.user
@@ -354,23 +403,9 @@ class RefreshTokenView(APIView):
 
 
 
-class BrandViewSet(viewsets.ModelViewSet):
-    queryset = SellerProfile.objects.filter(is_brand=True)
-    serializer_class = BrandSerializer
-
-class FeedbackViewSet(viewsets.ModelViewSet):
-    queryset = Feedback.objects.all()
-    serializer_class = UserFeedbackSerializer
-
-    def get_permissions(self):
-        if self.action == 'create':
-            return [IsUserAuthenticated()]
-        return [AllowAny()]
-
-
 class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = UserNotificationsSerializer
-    permission_classes = [IsUserAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
         user = self.request.user

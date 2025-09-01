@@ -108,7 +108,7 @@ const product = {
 
 function handleAddClick() {
   if (isAdded.value) {
-    goToProduct()
+    goToCart()
     return
   }
 

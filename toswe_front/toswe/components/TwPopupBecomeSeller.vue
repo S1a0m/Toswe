@@ -35,33 +35,46 @@
           </div>
 
           <!-- Formulaire -->
-          <form class="w-full space-y-4" @submit.prevent="updateUser">
+          <form class="w-full space-y-4" @submit.prevent="submitForm">
+            <!-- Nom boutique -->
             <div>
-                <label class="label">Nom de votre boutique</label>
-                <input type="text" placeholder="Nom de la boutique" class="input" v-model="shopName" />
-            </div>
-            <div>
-                <label class="label">Catégorie</label>
-                <select name="categories" id="categories" v-model="selectedCategories" multiple>
-                  <option v-for="category in categories" :key="category" :value="category">
-                    {{ category }}
-                  </option>
-                </select>
-            </div>
-            <div>
-              <label class="label">Votre logo</label>
-              <input type="file" class="input" accept="image/*,application/pdf" @change="onFileChange($event, 'logo')" />
-            </div>
-            <div>
-                <label class="label">À propos</label>
-                <textarea placeholder="Parlez un peu de votre boutique..." class="input" rows="3" v-model="about"></textarea>
-            </div>
-            <div>
-                <label class="label">Slogan</label>
-                <textarea placeholder="Votre slogan" class="input" rows="2" v-model="slogan"></textarea>
+              <label class="label">Nom de votre boutique</label>
+              <input type="text" placeholder="Nom de la boutique" class="input" v-model="shopName" />
             </div>
 
-            <!-- Bouton CTA -->
+            <!-- Catégories -->
+            <div>
+              <label class="label">Catégorie</label>
+              <select class="input" v-model="selectedCategories" multiple>
+                <option v-for="category in categories" :key="category" :value="category">
+                  {{ category }}
+                </option>
+              </select>
+              <p class="text-xs text-gray-500 mt-1">Maintenez <kbd>Ctrl</kbd> (ou <kbd>Cmd</kbd>) pour sélectionner plusieurs.</p>
+            </div>
+
+            <!-- Logo + preview -->
+            <div>
+              <label class="label">Votre logo</label>
+              <input type="file" class="input" accept="image/*" @change="onFileChange" />
+              <div v-if="logoPreview" class="mt-3 flex justify-center">
+                <img :src="logoPreview" alt="Aperçu logo" class="max-h-32 rounded-lg shadow-md" />
+              </div>
+            </div>
+
+            <!-- À propos -->
+            <div>
+              <label class="label">À propos</label>
+              <textarea placeholder="Parlez un peu de votre boutique..." class="input" rows="3" v-model="about"></textarea>
+            </div>
+
+            <!-- Slogan -->
+            <div>
+              <label class="label">Slogan</label>
+              <textarea placeholder="Votre slogan" class="input" rows="2" v-model="slogan"></textarea>
+            </div>
+
+            <!-- CTA -->
             <button
               type="submit"
               class="w-full px-6 py-3 bg-[#7D260F] text-white text-base font-semibold rounded-full 
@@ -80,30 +93,22 @@
 <script setup>
 import { useAuthStore } from '@/stores/auth'
 const auth = useAuthStore()
-const visible = ref(false)
+const { $apiFetch } = useNuxtApp()
 
+const visible = ref(false)
 const showPopup = () => { visible.value = true }
 const closePopup = () => { visible.value = false }
 defineExpose({ showPopup })
 
-const shopName = ref(auth.getShopName)
-const about = ref(auth.getAbout)
-const slogan = ref(auth.getSlogan)
-const address = ref(auth.getAddress)
-const phone = ref(auth.getPhone)
-const username = ref(auth.getUsername)
+// Champs du formulaire
+const shopName = ref("")
+const about = ref("")
+const slogan = ref("")
+const selectedCategories = ref([])
+const logoFile = ref(null)
+const logoPreview = ref(null)
 
-const updateUser = async () => {
-  await auth.updateUser(
-    username.value,
-    phone.value,
-    address.value,
-    shopName.value,
-    about.value,
-    slogan.value
-  )
-}
-
+// Catégories disponibles
 const categories = [
   'Accessoires',
   'Agroalimentaire',
@@ -116,6 +121,41 @@ const categories = [
   'Vêtements',
 ]
 
+// Gestion du fichier
+function onFileChange(e) {
+  const file = e.target.files[0]
+  if (file) {
+    logoFile.value = file
+    logoPreview.value = URL.createObjectURL(file)
+  }
+}
+
+// Soumission formulaire
+async function submitForm() {
+  if (!auth.accessToken) return
+
+  const formData = new FormData()
+  formData.append("shop_name", shopName.value)
+  formData.append("about", about.value)
+  formData.append("slogan", slogan.value)
+  formData.append("address", auth.getAddress) // depuis ton store
+  formData.append("category", selectedCategories.value.join(",")) // backend reçoit string CSV
+  if (logoFile.value) {
+    formData.append("logo", logoFile.value)
+  }
+
+  try {
+    const json = await $apiFetch("/user/become_seller/", {
+      method: "POST",
+      body: formData,
+    })
+    console.log("Seller profile created:", json)
+    auth.user.is_seller = true
+    closePopup()
+  } catch (err) {
+    console.error("Erreur création vendeur:", err)
+  }
+}
 </script>
 
 <style scoped>

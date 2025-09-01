@@ -12,6 +12,9 @@ export function goToNotifications()  {
 export function goToSettings()  {
     return navigateTo({ path: "/settings" })
 }
+export function goToMyShop()  {
+    return navigateTo({ path: "/myshop" })
+}
 export function goToShop()  {
     return navigateTo({ path: "/shop" })
 }
@@ -44,4 +47,12 @@ export function goToAdCreate() {
 
 export function goToOrderDetails() {
     return navigateTo({ path: "/order" })
+}
+
+export function goToPerformances() {
+    return navigateTo({ path: "/performances" })
+}
+
+export function goToPremium() {
+    return navigateTo({ path: "/premium" })
 }

@@ -1,5 +1,5 @@
 <template>
-  <section class="px-4 md:px-8 py-12 max-w-3xl mx-auto">
+  <section class="px-4 md:px-8 py-12 max-w-6xl mx-auto">
     <h2 class="text-2xl font-bold text-[#7D260F] mb-6 font-[Kenia]">
       Paramètres
     </h2>
@@ -9,6 +9,7 @@
       <h2 class="text-lg font-semibold text-gray-600 mb-3">Compte </h2>
       <TwSettingsItem icon="uil:user" label="Profil" @click="profilPopup.showPopup()"/>
       <TwSettingsItem icon="uil:check-circle" label="Vérifier votre compte"  v-if="!auth.isVerified && auth.isSeller" @click="verifyPopup.showPopup()"/>
+      <TwSettingsItem icon="uil:star" label="Devenir vendeur premium" v-if="auth.isSeller && auth.isPremiumSeller" @click="goToPremium"/>
       <TwSettingsItem icon="uil:signout" label="Se déconnecter" @click="auth.logout"/>
       <TwSettingsItem icon="uil:trash" label="Supprimer le compte" danger />
     </div>
@@ -25,7 +26,7 @@
     <div class="mb-8" v-if="auth.isPremiumSeller">
       <h2 class="text-lg font-semibold text-gray-600 mb-3">Publicité</h2>
       <TwSettingsItem icon="uil:megaphone" label="Créer une campagne publicitaire" @click="goToAdCreate"/>
-      <TwSettingsItem icon="uil:chart" label="Voir mes performances publicitaires" />
+      <TwSettingsItem icon="uil:chart" label="Voir mes performances publicitaires" @click="goToPerformances"/>
     </div>
 
     <!-- Préférences -->

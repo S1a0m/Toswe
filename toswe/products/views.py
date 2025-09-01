@@ -5,8 +5,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
-from users.models import CustomUser, UserInteractionEvent, Feedback, Notification
-from products.models import Product, Cart, Order, Delivery, Payment
+from users.models import CustomUser, UserInteractionEvent, Notification
+from products.models import Product, Cart, Order, Delivery, Payment, CartItem
 from users.serializers import *
 
 from products.serializers import *
@@ -20,51 +20,132 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from .spbi_model import predict_top_k
 
 
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Count, Q
+
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductDetailsSerializer
     authentication_classes = [JWTAuthentication]
 
-    # def get_permissions(self):
-    #     if self.action in ['create', 'destroy', 'update']:
-    #         return [IsUserAuthenticated()]
-    #     return None
-
     def get_serializer_class(self):
-        if self.action == 'retrieve':
+        if self.action in ['suggestions', 'similar']:
+            return ProductSerializer
+        elif self.action == 'retrieve':
             return ProductDetailsSerializer
-        elif self.action == 'suggestions':
-            return ProductSuggestionsSerializer
         elif self.action == 'announcements':
             return AnnouncementsProductsSerializer
         return super().get_serializer_class()
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def suggestions(self, request):
-        user = request.user
-        # if not user.is_authenticated:
-        #     return Response({"detail": "Authentification requise."}, status=401)
+        """
+        Suggestions de produits :
+        - Utilisateur connecté → recommandations selon ses catégories fréquentes.
+        - Non connecté → suggestions génériques.
+        - Supporte ?category=tout ou ?category=<slug>.
+        - Mélange sponsorisés, promos, populaires, nouveaux, et fallback.
+        """
+        user = request.user if request.user and request.user.is_authenticated else None
+        category_param = request.query_params.get("category", "tout").lower()
 
-        # Étape 1 : On regarde dans quelles catégories l'utilisateur interagit le plus
-        top_categories = (
-            UserInteractionEvent.objects
-            .filter(user=user, product__category__isnull=False)
-            .values('product__category')
-            .annotate(freq=Count('id'))
-            .order_by('-freq')
-            .values_list('product__category', flat=True)[:3]
+        # Étape 1 : Catégories prioritaires
+        top_categories = []
+        if user:
+            top_categories = list(
+                UserInteractionEvent.objects
+                .filter(user=user, product__category__isnull=False)
+                .values('product__category')
+                .annotate(freq=Count('id'))
+                .order_by('-freq')
+                .values_list('product__category', flat=True)[:3]
+            )
+
+        # Étape 2 : Base de la requête
+        products = Product.objects.all()
+
+        if top_categories:
+            products = products.filter(category__in=top_categories)
+
+        if category_param != "tout":
+            products = products.filter(category__name__iexact=category_param)
+
+        # Étape 3 : Priorisation par statut
+        now = timezone.now()
+        popular_ids = (
+            CartItem.objects
+            .values("product")
+            .annotate(count=Count("id"))
+            .filter(count__gte=10)  # seuil popularité
+            .values_list("product", flat=True)
         )
 
-        # Étape 2 : On récupère des produits sponsorisés dans ces catégories
-        products = (
-            Product.objects
-            .filter(is_sponsored=True, category__in=top_categories)
-            .distinct()[:10]
-        )
+        products = products.annotate(
+            priority=Count("id", filter=Q(is_sponsored=True)) * 4 +
+                     Count("id", filter=Q(is_promoted=True)) * 3 +
+                     Count("id", filter=Q(id__in=popular_ids)) * 2 +
+                     Count("id", filter=Q(created_at__gte=now - timedelta(days=30))) * 1
+        ).order_by("-priority", "-created_at")
 
-        # Fallback : si aucune interaction, proposer des produits sponsorisés génériques
+        products = products.distinct()[:10]
+
+        # Étape 4 : Fallback si aucun produit
         if not products.exists():
-            products = Product.objects.filter(is_sponsored=True)[:10]
+            products = Product.objects.all().order_by("-created_at")[:10]
+
+        serializer = self.get_serializer(products, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
+    def similar(self, request, pk=None):
+        """
+        Produits similaires :
+        - Basés sur la catégorie du produit cible.
+        - Priorité : sponsorisés, promos, populaires, nouveaux, puis autres.
+        - Si utilisateur connecté → booste les produits avec lesquels il a déjà interagi.
+        """
+        try:
+            target_product = Product.objects.get(pk=pk)
+        except Product.DoesNotExist:
+            return Response({"detail": "Produit non trouvé."}, status=404)
+
+        user = request.user if request.user and request.user.is_authenticated else None
+        now = timezone.now()
+
+        # Base : même catégorie que le produit cible
+        products = Product.objects.filter(
+            category=target_product.category
+        ).exclude(id=target_product.id)
+
+        # Popularité
+        popular_ids = (
+            CartItem.objects
+            .values("product")
+            .annotate(count=Count("id"))
+            .filter(count__gte=10)
+            .values_list("product", flat=True)
+        )
+
+        # Si utilisateur connecté → on booste ses interactions
+        user_interacted = []
+        if user:
+            user_interacted = list(
+                UserInteractionEvent.objects.filter(
+                    user=user,
+                    product__category=target_product.category
+                ).values_list("product_id", flat=True)
+            )
+
+        products = products.annotate(
+            priority=Count("id", filter=Q(is_sponsored=True)) * 4 +
+                     Count("id", filter=Q(promotion__is_active=True)) * 3 +
+                     Count("id", filter=Q(id__in=popular_ids)) * 2 +
+                     Count("id", filter=Q(created_at__gte=now - timedelta(days=30))) * 1 +
+                     Count("id", filter=Q(id__in=user_interacted)) * 5
+        ).order_by("-priority", "-created_at")
+
+        products = products.distinct()[:10]
 
         serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
@@ -101,25 +182,6 @@ class ProductViewSet(viewsets.ModelViewSet):
             return Response({"error": "QR code invalide"}, status=400)
         except Product.DoesNotExist:
             return Response({"error": "Produit introuvable"}, status=404)
-
-    @action(detail=True, methods=['get'])
-    def view(self, request, pk=None):
-        product = self.get_object()
-
-        # Enregistre l'interaction
-        track_user_interaction(
-            user=request.user,
-            product=product,
-            action='view'
-        )
-
-        serializer = self.get_serializer(product)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['get'])
-    def qr_code(self, request, pk=None):
-        product = self.get_object()
-        pass
 
     @action(detail=False, methods=['get'])
     def announcements(self, request):
@@ -272,7 +334,7 @@ class CartViewSet(viewsets.ModelViewSet):
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = UserOrdersSerializer
-    permission_classes = [IsUserAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
@@ -324,11 +386,56 @@ class DeliveryViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Delivery.objects.filter(order__user=self.request.user)
 
+class FeedbackViewSet(viewsets.ModelViewSet):
+    queryset = Feedback.objects.all().order_by("-created_at")
+    serializer_class = FeedbackSerializer
+    authentication_classes = [JWTAuthentication]
 
+    def perform_create(self, serializer):
+        """
+        Lorsqu'un utilisateur crée un feedback,
+        on l'associe automatiquement à l'utilisateur connecté.
+        """
+        serializer.save(user=self.request.user)
+
+    def get_queryset(self):
+        """
+        filtrer les feedbacks par produit :
+        /api/feedbacks/?product=ID
+        """
+        queryset = super().get_queryset()
+        product_id = self.request.query_params.get("product")
+        if product_id:
+            queryset = queryset.filter(product_id=product_id)
+        return queryset
 
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
-    serializer_class = UserPaymentSerializer
+    serializer_class = PaymentSerializer
+    authentication_classes = [JWTAuthentication]
+
+    def perform_create(self, serializer):
+        payment = serializer.save(user=self.request.user)
+
+        # Workflow selon payment_type
+        if payment.payment_type == "premium":
+            seller_profile = self.request.user.seller_profile
+            seller_profile.is_premium = True
+            seller_profile.save()
+
+        elif payment.payment_type == "sponsorship" and payment.product:
+            payment.product.is_sponsored = True
+            payment.product.save()
+
+        elif payment.payment_type == "advertisement" and payment.product:
+            # Exemple simple : créer une publicité liée
+            # Advertisement.objects.create(
+            #     user=self.request.user,
+            #     product=payment.product,
+            #     amount=payment.amount,
+            #     paid_at=payment.paid_at
+            # )
+            pass
 
 # class SponsoredProductViewSet(viewsets.ReadOnlyModelViewSet):
 #     queryset = Product.objects.filter(is_sponsored=True)

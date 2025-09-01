@@ -7,11 +7,13 @@ from products.models import Product, Category
 
 from django.contrib.auth.base_user import BaseUserManager
 
+
 class CustomUserManager(BaseUserManager):
     """
     Manager personnalisé pour le modèle CustomUser
     utilisant le champ `phone` comme identifiant principal
     """
+
     def create_user(self, phone, password=None, **extra_fields):
         if not phone:
             raise ValueError("Le numéro de téléphone est obligatoire")
@@ -40,7 +42,6 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-
     session_mdp = models.CharField(max_length=6, blank=True, null=True)
     mdp_timeout = models.DateTimeField(blank=True, null=True)
     last_authenticated = models.DateTimeField(blank=True, null=True)
@@ -81,16 +82,20 @@ class SellerProfile(models.Model):
     id_card = models.FileField(upload_to="id_card", null=True, blank=True)
 
     is_brand = models.BooleanField(default=False)
-    is_verified = models.BooleanField(default=False) # Registre de commerce verifie
+    is_verified = models.BooleanField(default=False)  # Registre de commerce verifie
     is_premium = models.BooleanField(default=False)
+
+    rating = models.FloatField(default=0)
 
     force_payment = models.BooleanField(default=False)
 
     def __str__(self):
         return self.user.username
 
+
 class ProductsPreferences(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+
 
 class UserLog(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="log")
@@ -100,7 +105,8 @@ class UserLog(models.Model):
     total_add_to_cart = models.PositiveIntegerField(default=0)
     total_purchases = models.PositiveIntegerField(default=0)
 
-    last_product_viewed = models.ForeignKey(Product, null=True, blank=True, on_delete=models.SET_NULL, related_name="last_viewed_by")
+    last_product_viewed = models.ForeignKey(Product, null=True, blank=True, on_delete=models.SET_NULL,
+                                            related_name="last_viewed_by")
     last_search_query = models.CharField(max_length=255, blank=True, null=True)
     last_activity = models.DateTimeField(default=timezone.now)
 
@@ -113,6 +119,7 @@ class SellerStatistics(models.Model):
     total_products = models.PositiveIntegerField(default=0)
     total_orders = models.PositiveIntegerField(default=0)
     total_income = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    total_loyal_customers = models.PositiveIntegerField(default=0)
     average_order_value = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
 
     last_sale_date = models.DateTimeField(null=True, blank=True)
@@ -152,10 +159,4 @@ class Notification(models.Model):
         return self.title
 
 
-class Feedback(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
-    rating = models.PositiveIntegerField(default=5)
-    comment = models.TextField(blank=True)
-    is_verified_purchase = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+

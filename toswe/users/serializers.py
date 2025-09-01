@@ -1,6 +1,7 @@
+from django.db.models import Avg
 from rest_framework import serializers
-from users.models import CustomUser, Feedback, Notification, SellerProfile
-from products.models import Product, Order, Delivery, Payment
+from users.models import CustomUser, Notification, SellerProfile
+from products.models import Product, Order, Delivery, Payment, Feedback
 
 
 class UserConnexionSerializer(serializers.ModelSerializer):
@@ -9,9 +10,31 @@ class UserConnexionSerializer(serializers.ModelSerializer):
         fields = ['id', 'phone', 'session_mdp', 'is_authenticated', 'is_seller']
 
 class BrandSerializer(serializers.ModelSerializer):
+    rating = serializers.FloatField()
     class Meta:
         model = SellerProfile
-        fields = ['id', 'shop_name', 'slogan']
+        fields = ['id', 'shop_name', 'logo', 'slogan', 'rating']
+
+    def get_rating(self, obj):
+        # Récupérer tous les produits du vendeur
+        products = obj.product_set.all()
+
+        # Calculer la moyenne des ratings liés à ces produits
+        avg_rating = Feedback.objects.filter(product__in=products).aggregate(avg=Avg("rating"))["avg"]
+
+        # Si aucun rating, renvoyer 0
+        return round(avg_rating, 1) if avg_rating else 0.0
+
+
+class SellerListSerializer(serializers.ModelSerializer):
+    total_loyal_customers = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SellerProfile
+        fields = ['id', 'shop_name', 'logo', 'total_loyal_customers']
+
+    def get_total_loyal_customers(self, obj):
+        return obj.loyal_customers.count()
 
 class BecomeSellerSerializer(serializers.ModelSerializer):
     shop_name = serializers.CharField(required=True, max_length=100)
@@ -35,18 +58,13 @@ class BecomeSellerSerializer(serializers.ModelSerializer):
                 "logo": validated_data.get("logo"),
                 "slogan": validated_data.get("slogan", ""),
                 "about": validated_data["about"],
-                "category": validated_data.get("categories"),
+                "categories": validated_data.get("categories"),
             }
         )
         user.is_seller = True
         user.address = validated_data["address"]
         user.save()
         return profile
-
-class UserFeedbackSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Feedback
-        fields = ['id', 'user', 'message', 'created_at']
 
 
 class UserNotificationsSerializer(serializers.ModelSerializer):

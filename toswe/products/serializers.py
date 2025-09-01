@@ -1,11 +1,20 @@
+from datetime import datetime, timedelta
+
+from django.utils import timezone
 from rest_framework import serializers
-from products.models import Product, Cart, Order, OrderItem, Delivery, Payment, ProductImage, CartItem
+from django.db.models import Avg, Count
+from products.models import Product, Cart, Order, OrderItem, Delivery, Payment, ProductImage, CartItem, Feedback, ProductVideo
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
         fields = ["id", "image", "is_main_image"]
+
+class ProductVideoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductVideo
+        fields = ["id", "video"]
 
 class ProductSearchSerializer(serializers.ModelSerializer):
     main_image = serializers.SerializerMethodField()
@@ -24,10 +33,13 @@ class ProductSearchSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     main_image = serializers.SerializerMethodField()
+    total_rating = serializers.SerializerMethodField()
+    short_description = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = ["id", "name", "price", "main_image"]
+        fields = ["id", "name", "price", "main_image", "short_description", "total_rating", "status", "is_sponsored"]
 
     def get_main_image(self, obj):
         main_img = obj.images.filter(is_main_image=True).first()
@@ -35,13 +47,64 @@ class ProductSerializer(serializers.ModelSerializer):
             return ProductImageSerializer(main_img).data
         return None
 
+    def get_total_rating(self, obj):
+        stats = obj.feedback_set.aggregate(avg=Avg("rating"), count=Count("id"))
+        return {
+            "average": round(stats["avg"], 1) if stats["avg"] else 0,
+            "count": stats["count"]
+        }
+
+    def get_short_description(self, obj):
+        max_length = 80  # nombre max de caractères
+        if len(obj.description) > max_length:
+            return obj.description[:max_length] + "..."
+        return obj.description
+
+    def get_status(self, obj):
+        """Calcule dynamiquement le statut du produit"""
+        now = timezone.now()
+
+        # 1. Promo (⚠️ à adapter selon ton modèle de promo)
+        if hasattr(obj, "promotion") and obj.promotion.is_active:
+            return "promo"
+
+        # 2. Popularité (beaucoup d’ajouts au panier)
+        cart_count = CartItem.objects.filter(product=obj).count()
+        if cart_count >= 10:  # seuil à ajuster
+            return "popular"
+
+        # 3. Produit récent
+        if obj.created_at >= now - timedelta(days=30):
+            return "new"
+
+        # 4. Par défaut, renvoyer celui en base
+        return obj.status
+
 
 class ProductDetailsSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
+    videos = ProductVideoSerializer(many=True, read_only=True)
+    total_rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = ["id", "name", "price", "description", "images"]
+        fields = ["id", "name", "price", "total_rating", "description", "images", "videos"]
+
+    def get_total_rating(self, obj):
+        stats = obj.feedback_set.aggregate(avg=Avg("rating"), count=Count("id"))
+        return {
+            "average": round(stats["avg"], 1) if stats["avg"] else 0,
+            "count": stats["count"]
+        }
+
+class FeedbackSerializer(serializers.ModelSerializer):
+    user_name = serializers.SerializerMethodField()
+    class Meta:
+        model = Feedback
+        fields = ["id", "product", "user_name", "rating", "comment", "created_at"]
+
+    def get_user_name(self, obj):
+        return obj.user.username
 
 
 class CartItemSerializer(serializers.ModelSerializer):
@@ -84,6 +147,11 @@ class CartSerializer(serializers.ModelSerializer):
         return instance
 
 
+class UserFeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = ['id', 'user', 'message', 'created_at']
+
 
 # === COMMANDE ===
 
@@ -119,7 +187,27 @@ class UserDeliveriesSerializer(serializers.ModelSerializer):
 
 # === PAIEMENT ===
 
-class UserPaymentSerializer(serializers.ModelSerializer):
+class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
-        fields = ['id', 'user', 'amount', 'payment_method', 'status', 'created_at']
+        fields = ["id", "user", "payment_type", "method", "amount",
+                  "order", "product", "advertisement",
+                  "is_successful", "paid_at"]
+        read_only_fields = ["id", "paid_at", "is_successful"]
+
+    def validate(self, data):
+        p_type = data.get("payment_type")
+
+        if p_type == "order" and not data.get("order"):
+            raise serializers.ValidationError("Une commande est requise pour un paiement de type 'order'.")
+        if p_type == "sponsorship" and not data.get("product"):
+            raise serializers.ValidationError("Un produit est requis pour une sponsorisation.")
+        if p_type == "advertisement" and not data.get("advertisement"):
+            raise serializers.ValidationError("Une publicité est requise pour ce paiement.")
+
+        return data
+
+    def create(self, validated_data):
+        user = self.context["request"].user
+        validated_data["user"] = user
+        return super().create(validated_data)

@@ -15,9 +15,9 @@
       1024: { slidesPerView: 3 },  // Desktop : 3 cartes
       1280: { slidesPerView: 4 }   // Très grands écrans : 4 cartes
     }"
-  >
+  > <!--brands?.results-->
     <SwiperSlide
-      v-for="brand in brands?.results"
+      v-for="brand in brands"
       :key="brand.id"
       class="flex justify-center"
     >
@@ -48,6 +48,6 @@ import TwBrand from '~/components/TwBrand.vue'
 
 // Récupération des marques
 const { data: brands, pending, error } = await useAsyncData('brands', () =>
-  $fetch('http://127.0.0.1:8000/api/brands/')
+  $fetch('http://127.0.0.1:8000/api/user/brands/')
 )
 </script>

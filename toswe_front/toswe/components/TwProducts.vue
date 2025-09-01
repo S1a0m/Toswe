@@ -1,6 +1,6 @@
 <template>
-  <section class="px-4 md:px-8 py-12">
-    <h2 class="text-3xl font-bold text-center text-[#7D260F] mb-10 font-[Kenia]">
+  <section class="max-w-6xl px-4 md:px-8 py-10 mx-auto">
+    <h2 class="text-2xl font-bold text-[#7D260F] mb-2 font-[Kenia]">
       {{ title }}
     </h2>
 

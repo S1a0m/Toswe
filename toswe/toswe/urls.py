@@ -10,13 +10,12 @@ from django.conf.urls.static import static
 #     TokenRefreshView,
 # )
 
-from products.views import ProductViewSet, CartViewSet, OrderViewSet, DeliveryViewSet, PaymentViewSet
-from users.views import UserViewSet, FeedbackViewSet, NotificationViewSet, RefreshTokenView, BrandViewSet
+from products.views import ProductViewSet, CartViewSet, OrderViewSet, DeliveryViewSet, PaymentViewSet, FeedbackViewSet
+from users.views import UserViewSet, NotificationViewSet, RefreshTokenView
 
 router = routers.SimpleRouter()
 
 router.register(r'user', UserViewSet, basename='user')
-router.register(r'brands', BrandViewSet, basename='brands')
 router.register(r'feedback', FeedbackViewSet, basename='feedback')
 router.register(r'notification', NotificationViewSet, basename='notification')
 

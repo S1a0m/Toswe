@@ -1,5 +1,5 @@
 <template>
-  <div v-if="auth.isSeller" class="w-full max-w-3xl mx-auto mb-4 bg-white/30 backdrop-blur-lg rounded-2xl shadow-lg p-4">
+  <div v-if="auth.isSeller" class="w-full max-w-6xl mx-auto mb-4 bg-white/30 backdrop-blur-lg rounded-2xl shadow-lg p-4">
     <!-- Tabs -->
     <div class="flex justify-around border-b border-gray-300 mb-4">
       <button

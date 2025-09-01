@@ -8,7 +8,8 @@
           <h1 class="text-lg font-semibold text-gray-900">Nehanda</h1>
           <p class="text-sm text-gray-600">Posez une question, demandez une recommandation ou programmez une commande.</p>
         </div>
-        <div class="ml-auto text-sm text-gray-500">Connecté</div>
+        <div class="ml-auto text-sm text-gray-500">
+          <span v-if="auth.isAuthenticated" class="text-sm flex items-center gap-1 font-semibold"><span class="bg-green-500 w-2 h-2 inline-block rounded-full"></span>{{ auth.getUsername}}</span></div>
       </div>
     </header>
 
@@ -96,6 +97,8 @@
 <script setup>
 import { ref, onMounted, watch, nextTick } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
+import { useAuthStore } from '@/stores/auth'
+const auth = useAuthStore()
 
 const STORAGE_KEY = 'nehanda_conversation_v1'
 

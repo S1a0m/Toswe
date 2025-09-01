@@ -1,18 +1,22 @@
 <template>
-  <section class="bg-white rounded-lg shadow-sm p-6 space-y-6">
+  <section
+    class="bg-white rounded-2xl shadow-md p-6 space-y-6 max-w-4xl mx-auto transition hover:shadow-lg"
+  >
     <!-- Header -->
     <div class="flex justify-between items-start border-b pb-4">
-      <div>
-        <h2 class="text-lg font-bold">Commande #{{ order.id }}</h2>
+      <div class="space-y-1">
+        <h2 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <span class="text-gray-400">Commande #{{ order.id }}</span>
+        </h2>
         <p class="text-sm text-gray-500">{{ order.date }}</p>
-        <p
-          class="mt-1 px-3 py-1 text-xs font-medium rounded-full inline-block"
+        <span
+          class="mt-1 px-3 py-1 text-xs font-medium rounded-full"
           :class="statusClasses[order.status] || statusClasses.default"
         >
           {{ order.status }}
-        </p>
+        </span>
       </div>
-      <p class="text-lg font-bold text-gray-900">{{ order.total }} FCFA</p>
+      <p class="text-xl font-bold text-gray-900">{{ order.total.toLocaleString() }} FCFA</p>
     </div>
 
     <!-- Produits -->
@@ -25,26 +29,30 @@
         <img
           :src="product.image"
           :alt="product.name"
-          class="w-16 h-16 object-cover rounded-lg"
+          class="w-16 h-16 object-cover rounded-lg shadow-sm"
         />
         <div class="flex-1">
           <p class="font-medium text-gray-900">{{ product.name }}</p>
-          <p class="text-sm text-gray-500">{{ product.price }} FCFA × {{ product.quantity }}</p>
+          <p class="text-sm text-gray-500">
+            {{ product.price.toLocaleString() }} FCFA × {{ product.quantity }}
+          </p>
         </div>
         <p class="font-semibold text-gray-900">
-          {{ product.price * product.quantity }} FCFA
+          {{ (product.price * product.quantity).toLocaleString() }} FCFA
         </p>
       </div>
     </div>
 
     <!-- Actions -->
     <div class="flex justify-end gap-3 pt-4 border-t">
-      <button class="px-4 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50">
+      <button
+        class="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+      >
         Télécharger la facture
       </button>
       <button
         v-if="order.status === 'En attente'"
-        class="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600"
+        class="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
       >
         Annuler la commande
       </button>
@@ -61,9 +69,9 @@ defineProps({
 })
 
 const statusClasses = {
-  "En attente": "bg-yellow-100 text-yellow-700",
-  "Livrée": "bg-green-100 text-green-700",
-  "Annulée": "bg-red-100 text-red-700",
-  default: "bg-gray-100 text-gray-500"
+  "En attente": "bg-yellow-100 text-yellow-800 ring-1 ring-yellow-300",
+  "Livrée": "bg-green-100 text-green-800 ring-1 ring-green-300",
+  "Annulée": "bg-red-100 text-red-800 ring-1 ring-red-300",
+  default: "bg-gray-100 text-gray-600 ring-1 ring-gray-200"
 }
 </script>

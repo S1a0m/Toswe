@@ -10,7 +10,7 @@
           Plateforme intelligente de vente et de livraison locale. 
         </p>
         <p class="text-gray-400">
-          Si c'est pas africain, laisse, c'est pas Tôswè !
+          Ce qui n'est pas africain n'est pas Tôswè !
         </p>
       </div>
 

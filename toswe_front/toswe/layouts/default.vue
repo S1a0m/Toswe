@@ -1,5 +1,7 @@
 <template>
   <TwHeader></TwHeader>
-    <slot></slot>
+    <div class="min-h-screen">
+      <slot></slot>
+    </div>
   <TwFooter></TwFooter>
 </template>

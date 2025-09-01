@@ -1,5 +1,6 @@
 <template>
     <TwNehandaChat />
+    <TwMenuSide />
 </template>
 
 <script>

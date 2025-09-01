@@ -32,10 +32,28 @@
             <h3 class="text-xl font-bold text-gray-900 dark:text-white">
               Choisissez vos préférences produits
             </h3>
+            <p class="text-sm text-gray-500 mt-1">Sélectionnez les produits qui vous intéressent</p>
           </div>
 
           <!-- Formulaire -->
-          <form class="w-full space-y-4" @submit.prevent="">
+          <form class="w-full space-y-4" @submit.prevent="submitPreferences">
+
+            <!-- Liste des préférences -->
+            <div class="grid grid-cols-2 gap-3">
+              <label
+                v-for="pref in productPreferences"
+                :key="pref"
+                class="flex items-center space-x-2 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  class="rounded border-gray-300 text-[#7D260F] focus:ring-[#7D260F]"
+                  :value="pref"
+                  v-model="selectedPreferences"
+                />
+                <span class="text-sm text-gray-700">{{ pref }}</span>
+              </label>
+            </div>
 
             <!-- Bouton CTA -->
             <button
@@ -56,12 +74,41 @@
 <script setup>
 import { useAuthStore } from '@/stores/auth'
 const auth = useAuthStore()
-const visible = ref(false)
+const { $apiFetch } = useNuxtApp()
 
+const visible = ref(false)
 const showPopup = () => { visible.value = true }
 const closePopup = () => { visible.value = false }
 defineExpose({ showPopup })
 
+// Liste des préférences produits (tu peux la charger du backend si tu veux)
+const productPreferences = [
+  "Fruits",
+  "Légumes",
+  "Vêtements",
+  "Cosmétiques",
+  "Accessoires",
+  "Agroalimentaire",
+  "Céréales",
+  "Artisanat",
+]
+
+// Sélections utilisateur
+const selectedPreferences = ref([])
+
+// Soumettre au backend
+async function submitPreferences() {
+  try {
+    const res = await $apiFetch("/user/preferences/", {
+      method: "POST",
+      body: { preferences: selectedPreferences.value },
+    })
+    console.log("Préférences sauvegardées:", res)
+    closePopup()
+  } catch (err) {
+    console.error("Erreur lors de l’envoi des préférences:", err)
+  }
+}
 </script>
 
 <style scoped>
@@ -73,25 +120,5 @@ defineExpose({ showPopup })
 .fade-leave-to {
   opacity: 0;
   transform: translateY(20px) scale(0.95);
-}
-.label {
-  display: block;
-  margin-bottom: 0.25rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-}
-.input {
-  width: 100%;
-  border-radius: 0.75rem;
-  border: 1px solid #d1d5db;
-  padding: 0.75rem 1rem;
-  font-size: 0.95rem;
-  outline: none;
-  transition: border 0.2s, box-shadow 0.2s;
-}
-.input:focus {
-  border-color: #7D260F;
-  box-shadow: 0 0 0 2px rgba(125, 38, 15, 0.2);
 }
 </style>

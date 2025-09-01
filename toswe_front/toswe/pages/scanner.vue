@@ -1,5 +1,6 @@
 <template>
-  <section class="min-h-screen flex flex-col bg-white text-black">
+  <section class="min-h-screen flex flex-col text-black">
+    <TwMenuSide />
     <!-- Titre -->
     <header class="p-6 text-center">
       <h1 class="text-3xl font-bold text-[#7D260F]">Scanner un produit</h1>
@@ -36,7 +37,7 @@
     </div>
 
     <!-- Boutons d’action -->
-    <footer class="sticky bottom-0 w-full bg-white border-t border-gray-200 p-4 flex gap-3">
+    <footer class="sticky bottom-0 w-full border-t border-gray-200 p-4 flex gap-3">
       <button
         @click="toggleCamera"
         class="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 transition"
@@ -66,6 +67,9 @@
 </template>
 
 <script setup>
+definePageMeta({
+  layout: false,
+})
 
 import { ref, onBeforeUnmount } from 'vue'
 

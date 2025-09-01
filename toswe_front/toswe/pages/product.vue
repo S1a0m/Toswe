@@ -1,7 +1,7 @@
 <template>
     <TwProductDetails />
     <TwComments />
-    <TwProducts title="D'autres produits du même vendeur" />
+    <TwProducts title="Produits du même vendeur" />
     <span 
       @click="goToShop" 
       class="block w-fit mx-auto mt-6 px-4 py-2 text-center text-[#7D260F] font-medium 
