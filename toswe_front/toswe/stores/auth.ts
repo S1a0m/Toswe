@@ -144,14 +144,17 @@ export const useAuthStore = defineStore("auth", {
     },
 
     logout() {
-      this.accessToken = null
-      this.user = null
 
       // Optionnel : appel backend pour supprimer le cookie côté serveur
       $fetch("http://127.0.0.1:8000/api/user/logout/", {
         method: "POST",
+        headers: {
+          "Authorization": `Bearer ${this.accessToken}`,  // 👈 important
+        },
         credentials: "include",
       }).catch(() => {})
+      this.accessToken = null
+      this.user = null
 
       goToMarket()
     },

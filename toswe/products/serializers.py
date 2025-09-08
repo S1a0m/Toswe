@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from rest_framework import serializers
 from django.db.models import Avg, Count
-from products.models import Product, Cart, Order, OrderItem, Delivery, Payment, ProductImage, CartItem, Feedback, ProductVideo
+from products.models import Product, Cart, Order, OrderItem, Delivery, Payment, ProductImage, CartItem, Feedback, ProductVideo, Category, Ad
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -80,6 +80,12 @@ class ProductSerializer(serializers.ModelSerializer):
         # 4. Par défaut, renvoyer celui en base
         return obj.status
 
+class AdSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Ad
+        fields = ["id", "title", "description", "image", "is_active", "created_at", "updated_at", "product"]
+
 
 class ProductDetailsSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
@@ -88,7 +94,7 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ["id", "name", "price", "total_rating", "description", "images", "videos"]
+        fields = ["id", "seller", "name", "price", "total_rating", "description", "images", "videos", "is_sponsored"]
 
     def get_total_rating(self, obj):
         stats = obj.feedback_set.aggregate(avg=Avg("rating"), count=Count("id"))
@@ -96,6 +102,11 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             "average": round(stats["avg"], 1) if stats["avg"] else 0,
             "count": stats["count"]
         }
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ["id", "name"]
 
 class FeedbackSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
@@ -106,9 +117,21 @@ class FeedbackSerializer(serializers.ModelSerializer):
     def get_user_name(self, obj):
         return obj.user.username
 
+class ProductCartSerializer(serializers.ModelSerializer):
+    main_image = serializers.SerializerMethodField()
+    class Meta:
+        model = Product
+        fields = ["id", "name", "price", "main_image"]
+
+    def get_main_image(self, obj):
+        main_img = obj.images.filter(is_main_image=True).first()
+        if main_img:
+            return ProductImageSerializer(main_img).data
+        return None
+
 
 class CartItemSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
+    product = ProductCartSerializer(read_only=True)
     product_id = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(),
         source="product",
@@ -147,35 +170,62 @@ class CartSerializer(serializers.ModelSerializer):
         return instance
 
 
-class UserFeedbackSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Feedback
-        fields = ['id', 'user', 'message', 'created_at']
 
 
 # === COMMANDE ===
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product = ProductDetailsSerializer(read_only=True)
+    product = ProductSerializer(read_only=True)
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(),
+        source="product",
+        write_only=True
+    )
 
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'quantity']
+        fields = ["id", "product", "product_id", "quantity", "price"]
 
 
-class UserOrdersSerializer(serializers.ModelSerializer):
-    items = OrderItemSerializer(many=True, read_only=True)
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True)
 
     class Meta:
         model = Order
-        fields = ['id', 'user', 'total_price', 'payment_method', 'created_at', 'items']
-        read_only_fields = ['user', 'created_at']
+        fields = [
+            "id", "user", "phone_number", "contact_method", "address",
+            "status", "created_at", "items"
+        ]
+        read_only_fields = ["id", "user", "status", "created_at"]
+
+    def create(self, validated_data):
+        items_data = validated_data.pop("items", [])
+        user = self.context["request"].user if self.context["request"].user.is_authenticated else None
+
+        order = Order.objects.create(user=user, **validated_data)
+
+        for item in items_data:
+            product = item["product"]
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=item["quantity"],
+                price=product.price
+            )
+
+        from toswe.utils import generate_order_pdf
+        pdf_content = generate_order_pdf(order)
+        order.pdf.save(f"order_{order.id}.pdf", pdf_content)
+        order.save()
+
+        return order
+
 
 
 # === LIVRAISON ===
 
-class UserDeliveriesSerializer(serializers.ModelSerializer):
-    order = UserOrdersSerializer(read_only=True)
+class DeliveriesSerializer(serializers.ModelSerializer):
+    order = OrderSerializer(read_only=True)
     order_id = serializers.PrimaryKeyRelatedField(
         queryset=Order.objects.all(), source='order', write_only=True
     )

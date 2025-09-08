@@ -10,7 +10,7 @@ from django.conf.urls.static import static
 #     TokenRefreshView,
 # )
 
-from products.views import ProductViewSet, CartViewSet, OrderViewSet, DeliveryViewSet, PaymentViewSet, FeedbackViewSet
+from products.views import ProductViewSet, CartViewSet, OrderViewSet, DeliveryViewSet, PaymentViewSet, FeedbackViewSet, CategoryViewSet, AdViewSet
 from users.views import UserViewSet, NotificationViewSet, RefreshTokenView
 
 router = routers.SimpleRouter()
@@ -19,11 +19,13 @@ router.register(r'user', UserViewSet, basename='user')
 router.register(r'feedback', FeedbackViewSet, basename='feedback')
 router.register(r'notification', NotificationViewSet, basename='notification')
 
+router.register(r'category', CategoryViewSet, basename='category')
 router.register(r'product', ProductViewSet, basename='product')
 router.register(r'cart', CartViewSet, basename='cart')
 router.register(r'order', OrderViewSet, basename='order')
 router.register(r'delivery', DeliveryViewSet, basename='delivery')
 
+router.register(r"ad", AdViewSet, basename="ad")
 router.register(r'payment', PaymentViewSet, basename='payment')
 
 urlpatterns = [

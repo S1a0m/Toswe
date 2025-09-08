@@ -1,13 +1,22 @@
 <template>
   <div
-    class="bg-gradient-to-br from-white/90 to-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 w-full"
+    class="relative bg-gradient-to-br from-white/90 to-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 w-full"
+    :class="{ 'border-yellow-400 shadow-yellow-200/50': isSponsored }"
   >
+    <!-- Ruban Sponsorisé -->
+    <div
+      v-if="isSponsored"
+      class="absolute top-0 right-0 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg shadow-md uppercase tracking-wide"
+    >
+      Sponsorisé
+    </div>
+
     <!-- Image -->
     <div class="relative w-full h-48 overflow-hidden group">
       <img
-        src="/assets/images/img2.jpg"
+        :src="`http://127.0.0.1:8000${imageSrc}/`"
         :alt="productName"
-        @click="goToProduct"
+        @click="goToProductDetails(id)"
         class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 hover:cursor-pointer"
       />
       <span
@@ -21,8 +30,9 @@
     <!-- Contenu -->
     <div class="p-5 flex flex-col gap-3">
       <!-- Nom -->
-      <h3 class="font-bold text-lg text-gray-900 line-clamp-1 hover:cursor-pointer"
-      @click="goToProduct"
+      <h3
+        class="font-bold text-lg text-gray-900 line-clamp-1 hover:cursor-pointer"
+        @click="goToProductDetails(id)"
       >
         {{ productName }}
       </h3>
@@ -36,7 +46,13 @@
           :key="n"
           name="uil:star"
           size="18"
-          :class="n <= Math.floor(rating) ? 'text-yellow-500' : (n - rating < 1 ? 'text-yellow-400/60' : 'text-gray-300')"
+          :class="
+            n <= Math.floor(rating)
+              ? 'text-yellow-500'
+              : n - rating < 1
+              ? 'text-yellow-400/60'
+              : 'text-gray-300'
+          "
         />
         <span class="text-xs text-gray-500">({{ rating.toFixed(1) }})</span>
       </div>
@@ -56,54 +72,35 @@
   </div>
 </template>
 
-
-
 <script setup>
-import { goToProduct } from '@/utils/navigations';
-import { useCartStore } from "@/stores/cart"
+import { useCartStore } from '@/stores/cart'
+import { useNavigation } from '@/composables/useNavigation'
+import { useInteractionsStore } from '@/stores/interactions'
 
+const { goToProductDetails } = useNavigation()
 
 const props = defineProps({
-  id: {
-    type: Number,
-    required: true
-  },
-  imageSrc: {
-    type: String,
-    default: '/images/img2.jpg'
-  },
-  productName: {
-    type: String,
-    default: 'Nom du produit'
-  },
-  description: {
-    type: String,
-    default: 'Courte description du produit.'
-  },
-  price: {
-    type: Number,
-    default: 3000
-  },
-  rating: {
-    type: Number,
-    default: 4.5
-  },
-  badge: {
-    type: String,
-    default: 'Nouveau'
-  }
+  id: { type: Number, required: true },
+  imageSrc: { type: String, default: '/images/img2.jpg' },
+  productName: { type: String, default: 'Nom du produit' },
+  description: { type: String, default: 'Courte description du produit.' },
+  price: { type: Number, default: 3000 },
+  rating: { type: Number, default: 4.5 },
+  badge: { type: String, default: 'Nouveau' },
+  isSponsored: { type: Boolean, default: false } // 👈 ajouté
 })
 
 const isAdded = ref(false)
 const isAnimating = ref(false)
 
 const cart = useCartStore()
+const interactions = useInteractionsStore()
 
 const product = {
-    id: props.id,
-    img: props.imageSrc,
-    name: props.productName,
-    price: props.price
+  id: props.id,
+  img: props.imageSrc,
+  name: props.productName,
+  price: props.price
 }
 
 function handleAddClick() {
@@ -113,6 +110,7 @@ function handleAddClick() {
   }
 
   cart.addToCart(product)
+  interactions.addInteraction('add', props.id, "product added to cart")
   isAdded.value = true
   isAnimating.value = true
 

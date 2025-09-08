@@ -187,7 +187,7 @@
         </div>
       </section>
     </main>
-
+    <TwCart />
     <TwMenuSide />
   </div>
 </template>

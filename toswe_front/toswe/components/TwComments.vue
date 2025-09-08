@@ -1,7 +1,7 @@
 <template>
   <section class="max-w-6xl mx-auto mt-5 px-4">
     <!-- Titre -->
-    <h3 class="text-xl font-bold text-[#7D260F] mb-6">Commentaires ({{ comments.length }})</h3>
+    <h3 class="text-xl font-bold text-[#7D260F] mb-6">Commentaires ({{ feedbacks.results.length }})</h3>
 
     <!-- Liste des commentaires -->
     <div
@@ -10,34 +10,56 @@
     >
       <div class="space-y-4 mb-8">
         <TwComment
-          v-for="(comment, index) in comments"
+          v-for="(feedback, index) in feedbacks.results"
           :key="index"
-          :username="comment.username"
-          :avatar="comment.avatar"
-          :content="comment.content"
-          :date="comment.date"
-          :rating="comment.rating"
+          :username="feedback.user_name"
+          :avatar="feedback.avatar"
+          :content="feedback.comment"
+          :date="feedback.created_at"
+          :rating="feedback.rating"
         />
       </div>
 
       <!-- Gradient pour cacher le bas si pas expand -->
       <div
-        v-if="!expanded"
+        v-if="!expanded && feedbacks.results.length > 1"
         class="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-white to-transparent"
       ></div>
     </div>
 
     <!-- Bouton toggle -->
     <button
-      v-if="comments.length > 1"
+      v-if="feedbacks.results.length > 1"
       @click="expanded = !expanded"
       class="text-[#7D260F] font-medium mt-2 hover:underline"
     >
       {{ expanded ? 'Réduire' : 'Afficher plus' }}
     </button>
 
+    <p v-if="feedbacks.results.length === 0 && auth.isAuthenticated" class="text-gray-500">Soyez le premier à laisser un commentaire !</p>
+    <!-- Message si non connecté -->
+    <!-- Message incitatif si non connecté -->
+    <div
+      v-if="!auth.isAuthenticated"
+      class="bg-[#FFF5F2] border border-[#F3D0C3] rounded-lg p-4 mt-6 text-center"
+    >
+      <p class="text-gray-700 text-sm md:text-base mb-3">
+        💬 Vous avez quelque chose à dire ?  
+        <span class="font-semibold text-[#7D260F]">Connectez-vous</span> pour partager votre avis et rejoindre la discussion !
+      </p>
+      <button
+        @click="goToAuth"
+        class="bg-[#7D260F] text-white px-5 py-2 rounded-lg font-medium shadow-md hover:bg-[#5c1c07] transition-colors duration-300"
+      >
+        🔑 Se connecter maintenant
+      </button>
+    </div>
+
+
+
     <!-- Formulaire -->
     <form
+      v-if="auth.isAuthenticated"
       @submit.prevent="addComment"
       class="bg-white p-4 border border-gray-200 rounded-lg shadow-sm space-y-4 mt-6"
     >
@@ -74,49 +96,52 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '@/stores/auth'
 import { ref } from 'vue'
+import { useRoute } from 'vue-router'
+
+const auth = useAuthStore()
 
 const expanded = ref(false)
+const route = useRoute() 
 
-const comments = ref([
-  {
-    username: 'Jean Dupont',
-    avatar: '/images/img2.jpg',
-    content: 'Super produit, la livraison était rapide et conforme à la description.',
-    date: '08/08/2025',
-    rating: 5
-  },
-  {
-    username: 'Awa Koné',
-    avatar: '/images/user2.jpg',
-    content: 'Service client très réactif, je recommande vivement.',
-    date: '09/08/2025',
-    rating: 4
-  },
-  {
-    username: 'Awa Koné',
-    avatar: '/images/user2.jpg',
-    content: 'Service client très réactif, je recommande vivement.',
-    date: '09/08/2025',
-    rating: 4
-  }
-])
+// Chargement du produit
+const { data: feedbacks, pending, error } = await useAsyncData('feedback', () =>
+  $fetch(`http://127.0.0.1:8000/api/feedback/?product=${route.query.id}`)
+)
 
 const newComment = ref('')
 const newRating = ref(0)
 
-function addComment() {
+async function addComment() {
   if (!newComment.value.trim() || newRating.value === 0) return
 
-  comments.value.push({
-    username: 'Utilisateur Anonyme',
-    avatar: '/images/default-avatar.png',
-    content: newComment.value,
-    date: new Date().toLocaleDateString(),
-    rating: newRating.value
-  })
+  try {
+    const response = await $fetch('http://127.0.0.1:8000/api/feedback/', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${auth.accessToken}`
+      },
+      credentials: 'include',
+      body: {
+        product: route.query.id,
+        comment: newComment.value,
+        rating: newRating.value
+      }
+    })
+
+    feedbacks.value.results.push({
+      user_name: response.user_name || 'Utilisateur Anonyme',
+      avatar: '/images/default-avatar.png',
+      comment: response.comment,
+      created_at: response.created_at,
+      rating: response.rating
+    })
 
   newComment.value = ''
   newRating.value = 0
+  } catch (error) {
+    console.error('Erreur lors de l\'ajout du commentaire :', error)
+  }
 }
 </script>

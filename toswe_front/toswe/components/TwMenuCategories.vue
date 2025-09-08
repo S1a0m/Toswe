@@ -11,16 +11,16 @@
         class="flex gap-6 overflow-x-auto scrollbar-hide text-gray-700 font-[Kumbh_Sans] text-sm md:text-base"
       >
         <button
-          v-for="category in categories"
-          :key="category"
-          @click="activeCategory = category"
+          v-for="category in categories.results"
+          :key="category.id"
+          @click="activeCategory = category.name"
           class="relative pb-1 transition-colors"
-          :class="activeCategory === category ? 'text-[#7D260F] font-semibold' : 'hover:text-[#7D260F]'"
+          :class="activeCategory === category.name ? 'text-[#7D260F] font-semibold' : 'hover:text-[#7D260F]'"
         >
-          {{ category }}
+          {{ category.name }}
           <!-- Soulignement actif -->
           <span
-            v-if="activeCategory === category"
+            v-if="activeCategory === category.name"
             class="absolute bottom-0 left-0 w-full h-[2px] bg-[#7D260F] rounded-full"
           ></span>
         </button>
@@ -32,20 +32,18 @@
 <script setup>
 import { ref } from 'vue'
 
-const categories = [
-  'Tout',
-  'Accessoires',
-  'Agroalimentaire',
-  'Artisanat',
-  'Céréales',
-  'Cosmétiques',
-  'Cuisines & Ustensiles',
-  'Fruits',
-  'Marques',
-  'Vêtements',
-]
+const { data: categories, pending, error } = await useAsyncData('categories', () =>
+  $fetch('http://127.0.0.1:8000/api/category/')
+)
+
 
 const activeCategory = ref('Tout')
+
+const emit = defineEmits(['categorySelected'])
+
+watch(activeCategory, (newCategory) => {
+  emit('categorySelected', newCategory)
+})
 </script>
 
 <style>

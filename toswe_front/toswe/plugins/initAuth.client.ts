@@ -1,11 +1,14 @@
 import { useAuthStore } from '~/stores/auth'
 import { useCartStore } from '~/stores/cart'
+import { useInteractionsStore } from '~/stores/interactions'
 
 export default defineNuxtPlugin(async () => {
   const auth = useAuthStore()
   const cart = useCartStore()
+  const interactions = useInteractionsStore()
 
-  // On tente d'initialiser l'utilisateur
   await auth.initialize()
-  // await cart.initCart()
+  await cart.initCart()
+
+  interactions.initialize()
 })

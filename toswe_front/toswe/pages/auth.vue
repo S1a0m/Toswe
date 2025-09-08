@@ -11,7 +11,7 @@
 
       <!-- Titre -->
       <h1 class="text-2xl font-bold text-center text-[#7D260F] mb-6">
-        Connectez-vous
+        Mi do gbe nu mi ɖo Tôswè xwe 
       </h1>
 
       <!-- Étape 1 -->

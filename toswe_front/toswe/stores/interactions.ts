@@ -6,7 +6,7 @@ export const useInteractionsStore = defineStore('interactions', {
   state: () => ({
     events: [] as Array<{
       product?: number | null
-      action: 'view' | 'click' | 'search' | 'cart' | 'buy'
+      action: 'view' | 'click' | 'search' | 'add' | 'buy'
       timestamp: string
       details?: Record<string, any>
     }>
@@ -24,7 +24,7 @@ export const useInteractionsStore = defineStore('interactions', {
     },
 
     // Ajouter une interaction
-    addInteraction(action: 'view' | 'click' | 'search' | 'cart' | 'buy', product?: number, details?: Record<string, any>) {
+    addInteraction(action: 'view' | 'click' | 'search' | 'add' | 'buy', product?: number, details?: Record<string, any>) {
       const event = {
         product: product ?? null,
         action,
@@ -49,7 +49,7 @@ export const useInteractionsStore = defineStore('interactions', {
       if (this.events.length === 0) return
 
       try {
-        await useFetch('http://127.0.0.1:8000/api/interactions/', {
+        await useFetch('http://127.0.0.1:8000/api/user/interaction_events/', {
           method: 'POST',
           body: { events: this.events },
           headers: {

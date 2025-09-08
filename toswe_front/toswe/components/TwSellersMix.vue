@@ -17,13 +17,14 @@
     }"
   >
     <SwiperSlide
-      v-for="(brand, index) in brands"
+      v-for="(seller, index) in sellers"
       :key="index"
       class="flex justify-center"
     >
       <TwSellerMix
-        :image-src="brand.image"
-        :brand-name="brand.name"
+        :image-src="seller.logo"
+        :shop-name="seller.shop_name"
+        :loyal-clients="seller.total_loyal_customers"
       />
     </SwiperSlide>
   </Swiper>
@@ -40,15 +41,9 @@ import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 import 'swiper/css/autoplay'
 
-import TwBrand from '~/components/TwBrand.vue'
-
 // const imageUrl = new URL('@/assets/images/img1.png', import.meta.url).href
 
-const brands = [
-  { image: "/images/img1.png", name: 'Marque 1', slogan: 'Toujours avec vous' },
-  { image: "/images/img1.png", name: 'Marque 2', slogan: 'L’excellence au quotidien' },
-  { image: "/images/img1.png", name: 'Marque 3', slogan: 'Votre confort, une priorité' },
-  { image: "/images/img1.png", name: 'Marque 4', slogan: 'Naturellement meilleur' },
-  { image: "/images/img1.png", name: 'Marque 5', slogan: 'Innovation et tradition' }
-]
+const { data: sellers, pending, error } = await useAsyncData('sellers', () =>
+  $fetch('http://127.0.0.1:8000/api/user/sellers/')
+)
 </script>

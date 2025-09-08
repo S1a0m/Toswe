@@ -20,3 +20,4 @@ tensorflow~=2.20.0
 twilio~=9.7.1
 typing~=3.7.4.3
 SQLAlchemy~=2.0.43
+reportlab~=4.4.3

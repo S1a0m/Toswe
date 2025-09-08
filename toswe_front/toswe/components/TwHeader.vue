@@ -2,7 +2,7 @@
   <header
     :class="[
       'fixed top-0 left-0 w-full z-[1000] text-white shadow-md backdrop-blur-md transition-all duration-300',
-      isScrolled ? 'bg-[#6B1F0D]/80 py-2' : 'bg-[#7D260F]/60 py-4'
+      isScrolled ? 'bg-[rgba(107,31,13,0.8)] py-2' : 'bg-[rgba(125,38,15,0.6)] py-4'
     ]"
   >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

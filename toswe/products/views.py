@@ -1,12 +1,12 @@
 from django.core import signing
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Case, When, Value, BooleanField
 from rest_framework import viewsets, status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.decorators import action
+from rest_framework.decorators import action, permission_classes
 
-from users.models import CustomUser, UserInteractionEvent, Notification
-from products.models import Product, Cart, Order, Delivery, Payment, CartItem
+from users.models import CustomUser, UserInteractionEvent, Notification, SellerProfile
+from products.models import Product, Cart, Order, Delivery, Payment, CartItem, Ad
 from users.serializers import *
 
 from products.serializers import *
@@ -17,17 +17,24 @@ from toswe.utils import track_user_interaction
 from users.authentication import JWTAuthentication
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
+
+from .models import Category
+from .serializers import CategorySerializer
 from .spbi_model import predict_top_k
 
 
 from django.utils import timezone
 from datetime import timedelta
-from django.db.models import Count, Q
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductDetailsSerializer
     authentication_classes = [JWTAuthentication]
+    permission_classes = [AllowAny]
 
     def get_serializer_class(self):
         if self.action in ['suggestions', 'similar']:
@@ -48,10 +55,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         - Mélange sponsorisés, promos, populaires, nouveaux, et fallback.
         """
         user = request.user if request.user and request.user.is_authenticated else None
-        category_param = request.query_params.get("category", "tout").lower()
+        category_param = request.query_params.get("category", "Tout").lower()
 
         # Étape 1 : Catégories prioritaires
         top_categories = []
+        print("Utilisateur", request.user.is_authenticated)
         if user:
             top_categories = list(
                 UserInteractionEvent.objects
@@ -62,13 +70,15 @@ class ProductViewSet(viewsets.ModelViewSet):
                 .values_list('product__category', flat=True)[:3]
             )
 
+        print(f"Top categories: {top_categories}")
+
         # Étape 2 : Base de la requête
         products = Product.objects.all()
 
         if top_categories:
             products = products.filter(category__in=top_categories)
 
-        if category_param != "tout":
+        if category_param != "Tout":
             products = products.filter(category__name__iexact=category_param)
 
         # Étape 3 : Priorisation par statut
@@ -86,14 +96,19 @@ class ProductViewSet(viewsets.ModelViewSet):
                      Count("id", filter=Q(is_promoted=True)) * 3 +
                      Count("id", filter=Q(id__in=popular_ids)) * 2 +
                      Count("id", filter=Q(created_at__gte=now - timedelta(days=30))) * 1
-        ).order_by("-priority", "-created_at")
-
-        products = products.distinct()[:10]
+        ).order_by("-priority", "-created_at").distinct()
 
         # Étape 4 : Fallback si aucun produit
         if not products.exists():
-            products = Product.objects.all().order_by("-created_at")[:10]
+            products = Product.objects.all().order_by("-created_at")
 
+        # 🚀 Utiliser la pagination DRF
+        page = self.paginate_queryset(products)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # Si pas de pagination définie → retour normal
         serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
 
@@ -139,7 +154,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         products = products.annotate(
             priority=Count("id", filter=Q(is_sponsored=True)) * 4 +
-                     Count("id", filter=Q(promotion__is_active=True)) * 3 +
+                     Count("id", filter=Q(is_promoted=True)) * 3 +
                      Count("id", filter=Q(id__in=popular_ids)) * 2 +
                      Count("id", filter=Q(created_at__gte=now - timedelta(days=30))) * 1 +
                      Count("id", filter=Q(id__in=user_interacted)) * 5
@@ -149,6 +164,30 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
+    def seller_products(self, request, pk=None):
+        """
+        Retourne la liste des produits d'un vendeur donné (pk = id du seller).
+        - Supporte la pagination.
+        - Utilise ProductSerializer par défaut pour la liste.
+        """
+
+        try:
+            seller = SellerProfile.objects.get(pk=pk)
+        except SellerProfile.DoesNotExist:
+            return Response({"detail": "Vendeur introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        products = Product.objects.filter(seller=seller).order_by("-created_at")
+
+        # Pagination
+        page = self.paginate_queryset(products)
+        if page is not None:
+            serializer = ProductSerializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+
+        serializer = ProductSerializer(products, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'])# , url_path='qr-code')
     def get_qr_code(self, request, pk=None):
@@ -299,13 +338,37 @@ class ProductViewSet(viewsets.ModelViewSet):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class AdViewSet(viewsets.ModelViewSet):
+    # queryset = Ad.objects.all()
+    serializer_class = AdSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        qs = (
+            Ad.objects.filter(is_active=True)
+            .select_related("product", "product__seller")  # ⚡ accès direct produit & vendeur
+            .annotate(
+                premium_first=Case(
+                    When(product__seller__is_premium=True, then=Value(1)),
+                    default=Value(0),
+                    output_field=BooleanField(),
+                )
+            )
+            .order_by("-premium_first", "-created_at")
+        )
+        return qs
+
+    def perform_create(self, serializer):
+        # Ici tu peux lier l’annonce à l’utilisateur si tu veux plus tard
+        serializer.save()
 
 class CartViewSet(viewsets.ModelViewSet):
     serializer_class = CartSerializer
     authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
-        return Cart.objects.filter(user=self.request.user)
+        return Cart.objects.filter()#(user=self.request.user)
 
     def perform_create(self, serializer):
         return serializer.save(user=self.request.user)
@@ -333,55 +396,24 @@ class CartViewSet(viewsets.ModelViewSet):
 
 
 class OrderViewSet(viewsets.ModelViewSet):
-    serializer_class = UserOrdersSerializer
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
     authentication_classes = [JWTAuthentication]
 
+    def get_permissions(self):
+        if self.action == "create":
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        if self.request.user.is_authenticated:
+            return Order.objects.filter(user=self.request.user)
+        return Order.objects.none()
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-    @action(detail=False, methods=["post"])
-    def checkout(self, request):
-        """
-        Étape de paiement avant la commande.
-        L'utilisateur choisit un mode de paiement : 'momo' ou 'physique'
-        """
-        user = request.user
-        payment_method = request.data.get("payment_method")  # 'momo' ou 'physique'
-
-        if payment_method not in ['momo', 'physique']:
-            return Response({"error": "Mode de paiement invalide."}, status=400)
-
-        cart_items = Cart.objects.filter(user=user)
-        if not cart_items.exists():
-            return Response({"error": "Votre panier est vide."}, status=400)
-
-        total_amount = sum(item.product.price * item.quantity for item in cart_items)
-
-        # Exemple de traitement momo (à implémenter réellement plus tard)
-        if payment_method == "momo":
-            phone = request.data.get("phone")
-            if not phone:
-                return Response({"error": "Numéro requis pour Mobile Money."}, status=400)
-            # Appel API de paiement ici
-            # if paiement_reussi:
-            #     pass
-            # else:
-            #     return Response(...)
-
-        # Création de la commande
-        order = Order.objects.create(user=user, total_price=total_amount, payment_method=payment_method)
-        for item in cart_items:
-            order.items.create(product=item.product, quantity=item.quantity)
-        cart_items.delete()
-
-        return Response({"message": "Commande validée avec succès", "order_id": order.id}, status=201)
 
 class DeliveryViewSet(viewsets.ModelViewSet):
-    serializer_class = UserDeliveriesSerializer
-    permission_classes = [IsUserAuthenticated]
+    serializer_class = DeliveriesSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Delivery.objects.filter(order__user=self.request.user)
@@ -389,7 +421,8 @@ class DeliveryViewSet(viewsets.ModelViewSet):
 class FeedbackViewSet(viewsets.ModelViewSet):
     queryset = Feedback.objects.all().order_by("-created_at")
     serializer_class = FeedbackSerializer
-    authentication_classes = [JWTAuthentication]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         """

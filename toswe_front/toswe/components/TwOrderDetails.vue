@@ -16,7 +16,7 @@
           {{ order.status }}
         </span>
       </div>
-      <p class="text-xl font-bold text-gray-900">{{ order.total.toLocaleString() }} FCFA</p>
+      <p class="text-xl font-bold text-gray-900">{{ order.total }} fcfa</p>
     </div>
 
     <!-- Produits -->
@@ -34,11 +34,11 @@
         <div class="flex-1">
           <p class="font-medium text-gray-900">{{ product.name }}</p>
           <p class="text-sm text-gray-500">
-            {{ product.price.toLocaleString() }} FCFA × {{ product.quantity }}
+            {{ product.price }} fcfa × {{ product.quantity }}
           </p>
         </div>
         <p class="font-semibold text-gray-900">
-          {{ (product.price * product.quantity).toLocaleString() }} FCFA
+          {{ (product.price * product.quantity) }} fcfa
         </p>
       </div>
     </div>

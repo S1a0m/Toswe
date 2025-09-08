@@ -1,5 +1,5 @@
 from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.models import PermissionsMixin
+from django.contrib.auth.models import PermissionsMixin, AnonymousUser
 from django.db import models
 
 from django.utils import timezone
@@ -54,7 +54,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
 
-    is_authenticated = models.BooleanField(default=False)
+    # is_authenticated = models.BooleanField(default=False)
 
     is_seller = models.BooleanField(default=False)
 

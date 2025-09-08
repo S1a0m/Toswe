@@ -26,13 +26,15 @@ export const useCartStore = defineStore("cart", {
 
   actions: {
     async initCart() {
-      const { $apiFetch } = useNuxtApp()
+      // const { $apiFetch } = useNuxtApp()
       const auth = useAuthStore()
 
       if (auth.isAuthenticated) {
         // Charger depuis le serveur
         try {
-          const cart = await $apiFetch(`http://127.0.0.1:8000/api/cart/me/`, {
+          const cart = await $fetch(`http://127.0.0.1:8000/api/cart/me/`, {
+            headers: { Authorization: `Bearer ${auth.accessToken}` },
+            credentials: "include",
           })
           this.items = cart.items || []
           this.saveToLocalStorage()

@@ -32,12 +32,13 @@ from .serializers import UserConnexionSerializer
 from .authentication import JWTAuthentication
 
 
+# parser_classes = [MultiPartParser, FormParser]
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserConnexionSerializer
-    # parser_classes = [MultiPartParser, FormParser]
     authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=["post"], permission_classes=[AllowAny])
     def init_connexion(self, request):
@@ -240,7 +241,7 @@ class UserViewSet(viewsets.ModelViewSet):
         }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["post"])
-    def interaction_event(self, request):
+    def interaction_events(self, request):
         events = request.data.get("events", [])
         for ev in events:
             UserInteractionEvent.objects.create(
@@ -252,7 +253,7 @@ class UserViewSet(viewsets.ModelViewSet):
             )
         return Response({"status": "ok"}, status=201)
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["get"], permission_classes=[AllowAny])
     def sellers(self, request):
         """
         Récupère la liste des vendeurs.
@@ -378,7 +379,6 @@ class RefreshTokenView(APIView):
     def post(self, request):
         # Récupérer le refresh token depuis le cookie
         token = request.COOKIES.get("refresh_token")
-        print("Regarde bro:", token)
         if not token:
             return Response({"detail": "Aucun refresh token trouvé."}, status=status.HTTP_401_UNAUTHORIZED)
 
