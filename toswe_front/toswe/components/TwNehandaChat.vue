@@ -37,7 +37,7 @@
               </div>
 
               <div v-if="msg.role === 'user'" class="ml-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-[#f6d8b6] to-[#fff] flex items-center justify-center text-sm font-semibold text-[#7D260F]">U</div>
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-[#f6d8b6] to-[#fff] flex items-center justify-center text-sm font-semibold text-[#7D260F]">{{ auth.getUsername[0] }}</div>
               </div>
             </div>
 

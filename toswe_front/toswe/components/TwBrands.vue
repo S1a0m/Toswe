@@ -22,10 +22,11 @@
       class="flex justify-center"
     >
       <TwBrand
-        image-src="/images/img1.png"
+        :image-src="brand.logo"
         :brand-name="brand.shop_name"
         :slogan="brand.slogan"
         :rating="brand.rating"
+        :seller-id="brand.seller_id"
       />
     </SwiperSlide>
   </Swiper>

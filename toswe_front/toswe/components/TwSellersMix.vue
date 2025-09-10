@@ -2,10 +2,6 @@
   <Swiper
     :modules="[Autoplay]"
     :loop="true"
-    :autoplay="{
-      delay: 0,
-      disableOnInteraction: false
-    }"
     :speed="4000"
     :space-between="20"
     grabCursor
@@ -22,9 +18,11 @@
       class="flex justify-center"
     >
       <TwSellerMix
+        :id="seller.id"
+        :seller-id="seller.seller_user_id"
         :image-src="seller.logo"
         :shop-name="seller.shop_name"
-        :loyal-clients="seller.total_loyal_customers"
+        :total-subscribers="seller.total_subscribers"
       />
     </SwiperSlide>
   </Swiper>
@@ -32,6 +30,11 @@
 
 
 <script setup>
+/**
+    :autoplay="{
+      delay: 0,
+      disableOnInteraction: false
+    }" */
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { Autoplay } from 'swiper/modules'
 

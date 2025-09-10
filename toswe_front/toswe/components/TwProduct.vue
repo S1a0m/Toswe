@@ -1,6 +1,7 @@
+<!-- TwProduct.vue -->
 <template>
   <div
-    class="relative bg-gradient-to-br from-white/90 to-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 w-full"
+    class="group relative bg-gradient-to-br from-white/90 to-white/80 backdrop-blur-lg rounded-xl shadow-md border border-white/30 overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all duration-300 w-full"
     :class="{ 'border-yellow-400 shadow-yellow-200/50': isSponsored }"
   >
     <!-- Ruban Sponsorisé -->
@@ -11,33 +12,33 @@
       Sponsorisé
     </div>
 
-    <!-- Image -->
-    <div class="relative w-full h-48 overflow-hidden group">
+    <!-- Image compacte -->
+    <div class="aspect-square bg-gray-50 overflow-hidden group">
       <img
         :src="`http://127.0.0.1:8000${imageSrc}/`"
         :alt="productName"
         @click="goToProductDetails(id)"
-        class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 hover:cursor-pointer"
+        class="size-full object-cover transform group-hover:scale-110 transition-transform duration-500 hover:cursor-pointer"
       />
       <span
         v-if="badge"
-        class="absolute top-3 left-3 bg-gradient-to-r from-[#7D260F] to-[#A13B20] text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md"
+        class="absolute top-3 left-3 bg-gradient-to-r from-[#7D260F] to-[#A13B20] text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow-md"
       >
         {{ badge }}
       </span>
     </div>
 
-    <!-- Contenu -->
-    <div class="p-5 flex flex-col gap-3">
+    <!-- Contenu compact -->
+    <div class="p-3 flex flex-col gap-2">
       <!-- Nom -->
       <h3
-        class="font-bold text-lg text-gray-900 line-clamp-1 hover:cursor-pointer"
+        class="font-medium text-sm text-gray-900 truncate hover:cursor-pointer"
         @click="goToProductDetails(id)"
       >
         {{ productName }}
       </h3>
       <!-- Description -->
-      <p class="text-sm text-gray-600 line-clamp-2">{{ description }}</p>
+      <p class="text-xs text-gray-600 line-clamp-2">{{ description }}</p>
 
       <!-- Étoiles -->
       <div class="flex items-center gap-1">
@@ -45,7 +46,7 @@
           v-for="n in 5"
           :key="n"
           name="uil:star"
-          size="18"
+          size="14"
           :class="
             n <= Math.floor(rating)
               ? 'text-yellow-500'
@@ -57,11 +58,11 @@
         <span class="text-xs text-gray-500">({{ rating.toFixed(1) }})</span>
       </div>
 
-      <!-- Prix -->
-      <div class="flex items-center justify-between mt-2">
-        <span class="text-xl font-bold text-[#7D260F]">{{ price }} fcfa</span>
+      <!-- Prix + bouton -->
+      <div class="mt-2 flex items-center justify-between">
+        <span class="text-sm font-semibold text-[#7D260F]">{{ price }} FCFA</span>
         <button
-          class="px-4 py-2 bg-gradient-to-r from-[#7D260F] to-[#A13B20] text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg hover:from-[#A13B20] hover:to-[#7D260F] transition-all duration-300"
+          class="px-3 py-1.5 bg-gradient-to-r from-[#7D260F] to-[#A13B20] text-white text-xs font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-[#A13B20] hover:to-[#7D260F] transition-all duration-300"
           :class="{ animate: isAnimating }"
           @click="handleAddClick"
         >
@@ -71,6 +72,7 @@
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { useCartStore } from '@/stores/cart'
@@ -97,8 +99,8 @@ const cart = useCartStore()
 const interactions = useInteractionsStore()
 
 const product = {
-  id: props.id,
-  img: props.imageSrc,
+  product_id: props.id,
+  main_image: props.imageSrc,
   name: props.productName,
   price: props.price
 }

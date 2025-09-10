@@ -12,9 +12,12 @@
         <div class="flex items-center space-x-3 hover:cursor-pointer" @click="goToMarket">
           <img src="/assets/images/logo.png" alt="Tôswè" class="h-8 w-auto" />
           <span class="font-bold text-xl font-[Kumbh_Sans] tracking-wide">Tôswè</span>
-          <span v-if="auth.isAuthenticated" class="text-sm flex items-center gap-1 font-semibold">
-            <span class="bg-green-500 w-2 h-2 inline-block rounded-full"></span>{{ auth.getUsername }}
-          </span>
+          <div class="flex flex-col text-xs">
+            <span v-if="auth.isAuthenticated" class="text-sm flex items-center gap-1 font-semibold">
+              <span class="bg-green-500 w-2 h-2 inline-block rounded-full"></span>{{ auth.getUsername }}
+            </span>
+            <span class="text-xs text-gray-500 flex items-center gap-1" v-if="auth.isSeller"> <Icon name="uil:shopping-cart" size="16" /> Vendeur</span>
+          </div>
         </div>
 
         <!-- Menu desktop -->

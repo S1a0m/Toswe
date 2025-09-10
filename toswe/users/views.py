@@ -260,7 +260,7 @@ class UserViewSet(viewsets.ModelViewSet):
         Les vendeurs premium apparaissent en premier,
         suivis des marques, puis des vendeurs classiques.
         """
-        sellers = SellerProfile.objects.all()
+        sellers = SellerProfile.objects.filter(show_on_market = True)
 
         # Tri personnalisé
         sellers = sellers.order_by(
@@ -276,6 +276,19 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = SellerListSerializer(sellers, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=["get"])#, permission_classes=[AllowAny])
+    def shop_header(self, request, pk=None):
+        """Retourne les infos du header d'une boutique"""
+        user = self.get_object()  # ← CustomUser
+        print("Utilisateur: ", user.username)
+        try:
+            seller_profile = user.seller_profile
+        except SellerProfile.DoesNotExist:
+            return Response({"detail": "Cet utilisateur n’est pas un vendeur."}, status=400)
+
+        serializer = ShopHeaderSerializer(seller_profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     @action(detail=False, methods=["get"], permission_classes=[AllowAny])
     def brands(self, request):
         """
@@ -283,7 +296,7 @@ class UserViewSet(viewsets.ModelViewSet):
         d'abord premium puis non premium.
         """
         # Récupérer tous les profils vendeur
-        sellers = SellerProfile.objects.all().order_by("-is_premium", "shop_name")
+        sellers = SellerProfile.objects.filter(is_brand=True, show_on_market=True).order_by("-is_premium", "shop_name")
 
         serializer = BrandSerializer(sellers, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -321,6 +334,28 @@ class UserViewSet(viewsets.ModelViewSet):
             "message": "Documents uploaded successfully. Verification pending.",
             "is_verified": seller_profile.is_verified
         }, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path="subscribe")
+    def subscribe(self, request, pk=None):
+        """Un utilisateur s'abonne ou se désabonne d’un vendeur"""
+        seller_user = self.get_object()
+        # print("Utilisateur subscribe:", seller_user)
+        if not hasattr(seller_user, "seller_profile"):
+            return Response({"detail": "Cet utilisateur n’est pas un vendeur."}, status=400)
+
+        seller_profile = seller_user.seller_profile
+        client = request.user
+
+        if client == seller_user:
+            return Response({"detail": "Vous ne pouvez pas vous abonner à vous-même."}, status=400)
+
+        subscribed = seller_profile.subscribers.filter(id=client.id).exists()
+        if subscribed:
+            seller_profile.subscribers.remove(client)
+            return Response({"subscribed": False, "detail": "Désabonnement effectué ✅"})
+        else:
+            seller_profile.subscribers.add(client)
+            return Response({"subscribed": True, "detail": "Abonnement réussi 🎉"})
 
     @action(detail=False, methods=["post"])
     def become_seller(self, request):
@@ -406,6 +441,7 @@ class RefreshTokenView(APIView):
 class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = UserNotificationsSerializer
     authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user

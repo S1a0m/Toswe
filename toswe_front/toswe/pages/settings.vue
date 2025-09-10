@@ -39,7 +39,7 @@
         label="Toujours payer avant livraison"
         v-model="auth.mustPayBeforeDelivery"
       />
-      <TwSettingsItem icon="uil:share-alt" label="Partager le lien de ma boutique"/>
+      <TwSettingsItem v-if="auth.isSeller" icon="uil:share-alt" label="Partager le lien de ma boutique"/>
     </div>
   </section>
   <TwPopupProfil ref="profilPopup" />

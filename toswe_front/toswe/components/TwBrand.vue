@@ -37,7 +37,7 @@
       class="hover:cursor-pointer mt-3 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r bg-[#7D260F] 
              text-white text-sm sm:text-base font-semibold rounded-full shadow-md hover:shadow-lg 
              hover:bg-[#661f0c] transition-all duration-300 flex items-center"
-      @click="goToShop"
+      @click="goToShopDetails(sellerId)"
     >
       <Icon name="carbon:chevron-right" size="16" class="mr-1" /> <span>Boutique</span>
     </button>
@@ -46,7 +46,7 @@
 
 
 <script setup>
-import { goToShop } from '@/utils/navigations';
+import { useNavigation } from '@/composables/useNavigation'
 const props = defineProps({
   imageSrc: {
     type: String,
@@ -63,8 +63,14 @@ const props = defineProps({
   rating: {
     type: Number,
     default: 4.5 // sur 5
+  },
+  sellerId: {
+    type: Number,
+    required: true
   }
 })
+
+const { goToShopDetails } = useNavigation()
 </script>
 
 <style scoped>

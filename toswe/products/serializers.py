@@ -36,16 +36,20 @@ class ProductSerializer(serializers.ModelSerializer):
     total_rating = serializers.SerializerMethodField()
     short_description = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
+    seller_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = ["id", "name", "price", "main_image", "short_description", "total_rating", "status", "is_sponsored"]
+        fields = ["id", "seller_id", "name", "price", "main_image", "short_description", "total_rating", "status", "is_sponsored"]
 
     def get_main_image(self, obj):
         main_img = obj.images.filter(is_main_image=True).first()
         if main_img:
             return ProductImageSerializer(main_img).data
         return None
+
+    def get_seller_id(self, obj):
+        return obj.seller.user.id
 
     def get_total_rating(self, obj):
         stats = obj.feedback_set.aggregate(avg=Avg("rating"), count=Count("id"))
@@ -79,6 +83,28 @@ class ProductSerializer(serializers.ModelSerializer):
 
         # 4. Par défaut, renvoyer celui en base
         return obj.status
+
+# serializers.py
+from rest_framework import serializers
+from .models import ProductPromotion
+
+class ProductPromotionSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source="product.name", read_only=True)
+    seller_name = serializers.CharField(source="product.seller.shop_name", read_only=True)
+
+    class Meta:
+        model = ProductPromotion
+        fields = [
+            "id",
+            "product",
+            "product_name",
+            "seller_name",
+            "poster",
+            "message",
+            "created_at",
+            "ended_at",
+        ]
+
 
 class AdSerializer(serializers.ModelSerializer):
 
@@ -131,16 +157,25 @@ class ProductCartSerializer(serializers.ModelSerializer):
 
 
 class CartItemSerializer(serializers.ModelSerializer):
-    product = ProductCartSerializer(read_only=True)
     product_id = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(),
         source="product",
-        write_only=True
+        # write_only=True
     )
+
+    # champs calculés à plat
+    name = serializers.CharField(source="product.name", read_only=True)
+    price = serializers.DecimalField(source="product.price", max_digits=10, decimal_places=2, read_only=True)
+    main_image = serializers.SerializerMethodField()
 
     class Meta:
         model = CartItem
-        fields = ["id", "product", "product_id", "quantity"]
+        fields = ["id", "product_id", "name", "price", "main_image", "quantity"]
+
+    def get_main_image(self, obj):
+        main_img = obj.product.images.filter(is_main_image=True).first()
+        return main_img.image.url if main_img else None
+
 
 
 class CartSerializer(serializers.ModelSerializer):

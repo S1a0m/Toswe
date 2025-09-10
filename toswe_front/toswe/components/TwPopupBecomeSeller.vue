@@ -46,8 +46,8 @@
             <div>
               <label class="label">Catégorie</label>
               <select class="input" v-model="selectedCategories" multiple>
-                <option v-for="category in categories" :key="category" :value="category">
-                  {{ category }}
+                <option v-for="category in categories.results" :key="category.id" :value="category.id">
+                  {{ category.name }}
                 </option>
               </select>
               <p class="text-xs text-gray-500 mt-1">Maintenez <kbd>Ctrl</kbd> (ou <kbd>Cmd</kbd>) pour sélectionner plusieurs.</p>
@@ -102,6 +102,7 @@ defineExpose({ showPopup })
 
 // Champs du formulaire
 const shopName = ref("")
+// const address = ref(auth.getAddress || "")
 const about = ref("")
 const slogan = ref("")
 const selectedCategories = ref([])
@@ -109,7 +110,10 @@ const logoFile = ref(null)
 const logoPreview = ref(null)
 
 // Catégories disponibles
-const categories = [
+const { data: categories, pending, error } = await useAsyncData('categories', () =>
+  $fetch('http://127.0.0.1:8000/api/category/')
+)
+/*const categories = [
   'Accessoires',
   'Agroalimentaire',
   'Artisanat',
@@ -119,7 +123,7 @@ const categories = [
   'Fruits',
   'Marques',
   'Vêtements',
-]
+]*/
 
 // Gestion du fichier
 function onFileChange(e) {
@@ -138,14 +142,14 @@ async function submitForm() {
   formData.append("shop_name", shopName.value)
   formData.append("about", about.value)
   formData.append("slogan", slogan.value)
-  formData.append("address", auth.getAddress) // depuis ton store
-  formData.append("category", selectedCategories.value.join(",")) // backend reçoit string CSV
+  //formData.append("address", address.value) // depuis ton store
+  formData.append("categories", selectedCategories.value.join(",")) // backend reçoit string CSV
   if (logoFile.value) {
     formData.append("logo", logoFile.value)
   }
 
   try {
-    const json = await $apiFetch("/user/become_seller/", {
+    const json = await $apiFetch("http://127.0.0.1:8000/api/user/become_seller/", {
       method: "POST",
       body: formData,
     })

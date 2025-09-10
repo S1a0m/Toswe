@@ -2,7 +2,7 @@ import { defineStore } from "pinia"
 import { useAuthStore } from "./auth"
 
 interface CartItem {
-  id: number | string
+  product_id: number | string
   name: string
   price: number
   quantity: number
@@ -48,8 +48,8 @@ export const useCartStore = defineStore("cart", {
       }
     },
 
-    addToCart(product: Partial<CartItem> & { id: number | string; name: string; price: number; main_image: string }) {
-      const existing = this.items.find((p) => p.id === product.id)
+    addToCart(product: Partial<CartItem> & { product_id: number | string; name: string; price: number; main_image: string }) {
+      const existing = this.items.find((p) => p.product_id === product.product_id)
       if (existing) {
         existing.quantity += 1
       } else {
@@ -58,13 +58,13 @@ export const useCartStore = defineStore("cart", {
       this.persist()
     },
 
-    removeFromCart(id: number | string) {
-      this.items = this.items.filter((p) => p.id !== id)
+    removeFromCart(product_id: number | string) {
+      this.items = this.items.filter((p) => p.product_id !== product_id)
       this.persist()
     },
 
-    updateQuantity(id: number | string, newQty: number) {
-      const item = this.items.find((p) => p.id === id)
+    updateQuantity(product_id: number | string, newQty: number) {
+      const item = this.items.find((p) => p.product_id === product_id)
       if (item) item.quantity = newQty
       this.persist()
     },
@@ -96,7 +96,7 @@ export const useCartStore = defineStore("cart", {
             (item) =>
               item &&
               typeof item === "object" &&
-              "id" in item &&
+              "product_id" in item &&
               "name" in item &&
               "price" in item &&
               "quantity" in item

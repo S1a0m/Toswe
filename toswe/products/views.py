@@ -1,12 +1,13 @@
 from django.core import signing
-from django.db.models import Q, Count, Case, When, Value, BooleanField
+from django.db.models import Q, Count, Case, When, Value, BooleanField, IntegerField
 from rest_framework import viewsets, status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.decorators import action, permission_classes
+from django.utils.timezone import now
 
 from users.models import CustomUser, UserInteractionEvent, Notification, SellerProfile
-from products.models import Product, Cart, Order, Delivery, Payment, CartItem, Ad
+from products.models import Product, Cart, Order, Delivery, Payment, CartItem, Ad, ProductPromotion
 from users.serializers import *
 
 from products.serializers import *
@@ -49,37 +50,34 @@ class ProductViewSet(viewsets.ModelViewSet):
     def suggestions(self, request):
         """
         Suggestions de produits :
-        - Utilisateur connecté → recommandations selon ses catégories fréquentes.
+        - Utilisateur connecté → boost sur ses catégories fréquentes.
         - Non connecté → suggestions génériques.
         - Supporte ?category=tout ou ?category=<slug>.
         - Mélange sponsorisés, promos, populaires, nouveaux, et fallback.
         """
         user = request.user if request.user and request.user.is_authenticated else None
-        category_param = request.query_params.get("category", "Tout").lower()
+        category_param = request.query_params.get("category", "tout").lower()
 
         # Étape 1 : Catégories prioritaires
         top_categories = []
-        print("Utilisateur", request.user.is_authenticated)
         if user:
             top_categories = list(
                 UserInteractionEvent.objects
                 .filter(user=user, product__category__isnull=False)
-                .values('product__category')
-                .annotate(freq=Count('id'))
-                .order_by('-freq')
-                .values_list('product__category', flat=True)[:3]
+                .values("product__category")
+                .annotate(freq=Count("id"))
+                .order_by("-freq")
+                .values_list("product__category", flat=True)[:3]
             )
 
-        print(f"Top categories: {top_categories}")
+        print(f"Top categories IDs: {top_categories}")
 
         # Étape 2 : Base de la requête
         products = Product.objects.all()
 
-        if top_categories:
-            products = products.filter(category__in=top_categories)
-
-        if category_param != "Tout":
+        if category_param != "tout":
             products = products.filter(category__name__iexact=category_param)
+            print("Products filtrés par param :", list(products.values("id", "name", "category__name")))
 
         # Étape 3 : Priorisation par statut
         now = timezone.now()
@@ -90,17 +88,31 @@ class ProductViewSet(viewsets.ModelViewSet):
             .filter(count__gte=10)  # seuil popularité
             .values_list("product", flat=True)
         )
+        print("Popular product IDs :", list(popular_ids))
 
         products = products.annotate(
-            priority=Count("id", filter=Q(is_sponsored=True)) * 4 +
-                     Count("id", filter=Q(is_promoted=True)) * 3 +
-                     Count("id", filter=Q(id__in=popular_ids)) * 2 +
-                     Count("id", filter=Q(created_at__gte=now - timedelta(days=30))) * 1
-        ).order_by("-priority", "-created_at").distinct()
+            priority=(
+                # boost catégories préférées
+                    Case(When(category__in=top_categories, then=Value(5)), default=Value(0),
+                         output_field=IntegerField()) +
+                    # sponsorisés > promos > populaires > nouveaux
+                    Case(When(is_sponsored=True, then=Value(4)), default=Value(0), output_field=IntegerField()) +
+                    Case(When(is_promoted=True, then=Value(3)), default=Value(0), output_field=IntegerField()) +
+                    Case(When(id__in=popular_ids, then=Value(2)), default=Value(0), output_field=IntegerField()) +
+                    Case(
+                        When(created_at__gte=now - timedelta(days=30), then=Value(1)),
+                        default=Value(0),
+                        output_field=IntegerField()
+                    )
+            )
+        ).order_by("-priority", "-created_at")
+
+        print("Products après priorisation :", list(products.values("id", "name", "priority", "category__name")))
 
         # Étape 4 : Fallback si aucun produit
         if not products.exists():
             products = Product.objects.all().order_by("-created_at")
+            print("Fallback : aucun produit priorisé trouvé → retour aux récents")
 
         # 🚀 Utiliser la pagination DRF
         page = self.paginate_queryset(products)
@@ -338,6 +350,45 @@ class ProductViewSet(viewsets.ModelViewSet):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class ProductPromotionViewSet(viewsets.ModelViewSet):
+    queryset = ProductPromotion.objects.all().select_related("product", "product__seller")
+    serializer_class = ProductPromotionSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        """
+        Lorsqu’un vendeur crée une promotion, on s’assure que
+        la promotion est liée à son produit.
+        """
+        product = serializer.validated_data["product"]
+        # Vérifie que l’utilisateur connecté est bien le vendeur du produit
+        if hasattr(product, "seller") and product.seller.user == self.request.user:
+            serializer.save()
+        #else:
+            #raise serializers.ValidationError("Vous ne pouvez créer une promotion que pour vos propres produits.")
+
+    @action(detail=False, methods=["get"], url_path="seller/(?P<seller_id>[^/.]+)")
+    def by_seller(self, request, seller_id=None):
+        """
+        Retourne toutes les promotions d’un vendeur spécifique.
+        - Les clients voient uniquement les promotions actives
+        - Le vendeur lui-même voit toutes ses promotions
+        """
+        qs = self.get_queryset().filter(product__seller__id=seller_id)
+
+        # Si ce n’est pas le vendeur connecté → filtrer sur les promos actives
+        if request.user.is_authenticated:
+            if not qs.filter(product__seller__user=request.user).exists():
+                qs = qs.filter(ended_at__gte=now())
+        else:
+            qs = qs.filter(ended_at__gte=now())
+
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
+
+
+
+
 class AdViewSet(viewsets.ModelViewSet):
     # queryset = Ad.objects.all()
     serializer_class = AdSerializer
@@ -366,9 +417,11 @@ class AdViewSet(viewsets.ModelViewSet):
 class CartViewSet(viewsets.ModelViewSet):
     serializer_class = CartSerializer
     authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Cart.objects.filter()#(user=self.request.user)
+        # 🔒 filtre par utilisateur
+        return Cart.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         return serializer.save(user=self.request.user)
@@ -378,7 +431,7 @@ class CartViewSet(viewsets.ModelViewSet):
         """
         Récupérer le panier de l’utilisateur connecté
         """
-        cart, created = Cart.objects.get_or_create(user=request.user)
+        cart, _ = Cart.objects.get_or_create(user=request.user)
         serializer = self.get_serializer(cart)
         return Response(serializer.data)
 
@@ -386,9 +439,9 @@ class CartViewSet(viewsets.ModelViewSet):
     def sync(self, request):
         """
         ⚡ Remplace entièrement le panier de l’utilisateur connecté
-        (pour le frontend → push local → serveur)
+        (le frontend pousse son localStorage → serveur)
         """
-        cart, created = Cart.objects.get_or_create(user=request.user)
+        cart, _ = Cart.objects.get_or_create(user=request.user)
         serializer = self.get_serializer(cart, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()

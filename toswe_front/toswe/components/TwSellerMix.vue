@@ -1,49 +1,57 @@
 <template>
   <div
-    class="flex flex-col items-center text-center bg-gradient-to-br from-white/95 to-white/85 backdrop-blur-lg 
-           rounded-2xl shadow-lg border border-[#7D260F33]/30 overflow-hidden
-           w-full max-w-xs sm:max-w-sm md:max-w-md
-           hover:shadow-2xl hover:scale-105 transition-all duration-300"
+    class="flex flex-col items-center text-center 
+           bg-white/90 backdrop-blur-md
+           rounded-3xl shadow-lg border border-gray-200 
+           overflow-hidden w-full max-w-sm 
+           hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
   >
-    <!-- Image / Logo principal (occupe la moitié de la carte) -->
-    <div class="w-full h-40 sm:h-48 flex items-center justify-center bg-white">
+    <!-- Image / Logo -->
+    <div class="w-full h-44 flex items-center justify-center bg-gray-50">
       <img
         :src="imageSrc"
         :alt="shopName"
-        class="w-full h-full object-contain drop-shadow"
+        class="w-full h-full object-contain p-4"
       />
     </div>
 
-    <!-- Contenu texte -->
-    <div class="p-6">
-      <!-- Nom de la boutique -->
-      <h3 class="font-bold text-base sm:text-lg text-gray-900 mb-2">{{ shopName }}</h3>
+    <!-- Contenu -->
+    <div class="p-6 w-full">
+      <!-- Nom -->
+      <h3 class="font-semibold text-lg sm:text-xl text-gray-900 truncate">
+        {{ shopName }}
+      </h3>
 
-      <!-- Nombre de clients fidèles -->
-      <p class="text-sm text-gray-700 mb-4">
-        <span class="font-semibold text-[#7D260F]">{{ loyalClients }}</span> abonnés
+      <!-- Abonnés -->
+      <p class="text-sm text-gray-600 mt-1">
+        <span class="font-semibold text-[#7D260F]">{{ totalSubscribers }}</span> abonnés
       </p>
 
       <!-- Boutons -->
-      <div class="flex gap-3 mt-2 justify-center">
+      <div class="flex gap-3 mt-5 justify-center">
+        <!-- Bouton favoris -->
         <button
-          class="flex items-center justify-center w-12 h-12 bg-white text-[#7D260F] 
-                  border border-[#7D260F] rounded-full font-semibold
-                  shadow-md hover:shadow-lg hover:bg-[#7D260F]/10 
-                  transform transition-all duration-300 
-                  active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#7D260F]/50"
-          @click="becomeLoyalClient"
+          class="flex items-center justify-center w-11 h-11 
+                 rounded-full border border-[#7D260F] text-[#7D260F] bg-white
+                 shadow-sm hover:bg-[#7D260F]/10 hover:shadow-md 
+                 transition-all duration-300 active:scale-95 
+                 focus:outline-none focus:ring-2 focus:ring-[#7D260F]/40"
+          @click="toggleSubscribe"
+          aria-label="S'abonner"
         >
-          <Icon 
-            name="uil:heart" 
-            class="transition-transform duration-300 hover:scale-125 hover:text-[#7D260F]"
+          <Icon
+            :name="isSubscribed ? 'uil:heart-alt' : 'uil:heart'"
+            class="text-lg"
           />
         </button>
+
+        <!-- Bouton visiter -->
         <button
-          class="px-4 py-2 bg-[#7D260F] text-white text-sm sm:text-base font-semibold 
-                 rounded-full shadow-md hover:shadow-lg hover:bg-[#661f0c] 
-                 transition-all duration-300 flex items-center gap-1"
-          @click="goToShop"
+          class="px-5 py-2.5 bg-[#7D260F] text-white text-sm sm:text-base font-medium 
+                 rounded-full shadow-sm hover:shadow-md hover:bg-[#661f0c] 
+                 transition-all duration-300 active:scale-95 
+                 focus:outline-none focus:ring-2 focus:ring-[#7D260F]/40 flex items-center gap-1"
+          @click="goToShopDetails(sellerId)"
         >
           Visiter
         </button>
@@ -53,24 +61,43 @@
 </template>
 
 <script setup>
-import { goToShop } from '@/utils/navigations';
+import { useAuthStore } from "@/stores/auth"
+import { useNavigation } from '@/composables/useNavigation'
+import { ref } from "vue"
 
 const props = defineProps({
-  imageSrc: {
-    type: String,
-    default: '/images/pagne.jpg'
-  },
-  shopName: {
-    type: String,
-    default: 'Nom de la boutique'
-  },
-  loyalClients: {
-    type: Number,
-    default: 128
-  }
+  id: { type: Number, required: true },
+  sellerId: { type: Number, required: true },
+  imageSrc: { type: String, default: "/images/pagne.jpg" },
+  shopName: { type: String, default: "Nom de la boutique" },
+  totalSubscribers: { type: Number, default: 128 },
+  initialSubscribed: { type: Boolean, default: false }
 })
 
-const becomeLoyalClient = () => {
-  alert("Vous êtes devenu client fidèle 🎉");
+const auth = useAuthStore()
+const isSubscribed = ref(props.initialSubscribed)
+const totalSubscribers = ref(props.totalSubscribers)
+
+const toggleSubscribe = async () => {
+  if (!auth.isAuthenticated) {
+    return alert("Vous devez être connecté pour vous abonner.")
+  }
+
+  try {
+    const res = await $fetch(
+      `http://127.0.0.1:8000/api/user/${props.sellerId}/subscribe/`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${auth.accessToken}` }
+      }
+    )
+
+    isSubscribed.value = res.subscribed
+    totalSubscribers.value += res.subscribed ? 1 : -1
+  } catch (err) {
+    alert("Erreur : " + (err?.data?.detail || err.message))
+  }
 }
+
+const { goToShopDetails } = useNavigation()
 </script>

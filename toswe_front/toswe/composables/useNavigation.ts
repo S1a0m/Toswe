@@ -8,7 +8,14 @@ export function useNavigation() {
         return navigateTo({ path: "/product", query: { id: productId } })
     }
 
+    function goToShopDetails(shopId: number) {
+        const interactions = useInteractionsStore()
+        interactions.addInteraction('view', shopId, "shop details viewed")
+        return navigateTo({ path: "/shop", query: { id: shopId } })
+    }
+
     return {
-        goToProductDetails
+        goToProductDetails,
+        goToShopDetails
     }
 }

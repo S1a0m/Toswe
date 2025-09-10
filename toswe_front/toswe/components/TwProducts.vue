@@ -1,11 +1,11 @@
 <template>
   <section class="max-w-6xl px-4 md:px-8 py-10 mx-auto">
-    <h2 class="text-2xl font-bold text-[#7D260F] mb-2 font-[Kenia]">
+    <h2 class="text-2xl font-bold text-[#7D260F] mb-2 font-[Kenia]" v-if="title">
       {{ title }}
     </h2>
 
     <div
-      class="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+      class="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
     >
       <TwProduct
         v-for="(product, index) in products"
@@ -22,7 +22,6 @@
     </div>
   </section>
 </template>
-
 
 <script setup>
 const props = defineProps({

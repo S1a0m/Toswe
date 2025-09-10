@@ -9,6 +9,7 @@
           v-for="(item, index) in cart.items"
           :key="index"
           :id="item.id"
+          :product_id="item.product_id"
           :imageSrc="item.main_image"
           :productName="item.name"
           :price="item.price"
@@ -78,7 +79,7 @@ async function handlePayment(payload) {
       contact_method: payload.contactMethod, // "whatsapp" | "call"
       address: payload.address,
       items: cart.items.map(item => ({
-        product_id: item.id,
+        product_id: item.product_id,
         quantity: item.quantity,
         price: item.price
       }))
@@ -96,9 +97,9 @@ async function handlePayment(payload) {
 
     console.log("Commande créée :", response)
 
-    // 🔹 vider le panier après succès
+    /*/ 🔹 vider le panier après succès
     cart.items = []
-    cart.saveToLocalStorage()
+    cart.saveToLocalStorage()*/
 
     alert("Votre commande a bien été enregistrée ✅")
 

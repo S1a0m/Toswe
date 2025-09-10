@@ -46,7 +46,7 @@
       />
 
       <!-- Bulle animée -->
-      <transition name="fade-slide">
+      <!--<transition name="fade-slide">
         <div
           v-if="showBubble"
           class="chat-bubble absolute left-12 top-1/2 -translate-y-1/2 bg-[#7D260F] shadow-md rounded-2xl px-4 py-2 text-sm text-white w-[220px] leading-snug"
@@ -54,7 +54,7 @@
           Vous recherchez un produit en particulier ?<br />
           <span class="font-semibold">Je peux vous aider.</span>
         </div>
-      </transition>
+      </transition>-->
     </div>
   </aside>
 </template>

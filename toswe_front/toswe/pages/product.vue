@@ -10,7 +10,7 @@
   />
 
   <span 
-    @click="goToShop" 
+    @click="goToShopDetails(sellerProducts[0]?.seller_id)" 
     class="block w-fit mx-auto my-6 px-4 py-2 text-center text-[#7D260F] font-medium 
           border border-[#7D260F]/30 rounded-xl 
           hover:bg-[#7D260F]/10 hover:text-[#5b1c0b] 
@@ -33,9 +33,9 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import { goToShop } from '@/utils/navigations'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useNavigation } from '@/composables/useNavigation'
 
 // 🔹 Gestion des produits du vendeur
 const sellerId = ref(null)
@@ -55,6 +55,8 @@ watch(sellerId, async (id) => {
     console.error("Erreur chargement produits du vendeur:", err)
   }
 })
+
+const { goToShopDetails } = useNavigation()
 
 // 🔹 Gestion des produits similaires
 const route = useRoute()

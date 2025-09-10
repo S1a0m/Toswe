@@ -1,4 +1,6 @@
 # signals.py
+from pyexpat.errors import messages
+
 import qrcode
 from io import BytesIO
 from django.core.files import File
@@ -6,12 +8,14 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
 from django.core import signing
+from django.template.defaultfilters import title
+
 from .models import Product
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from products.models import Order
-#from users.models import Notification
+from users.models import Notification, SellerProfile
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from toswe.utils import generate_order_pdf
@@ -48,15 +52,30 @@ def order_created_notification(sender, instance, created, **kwargs):
         instance.pdf.save(filename, pdf_file, save=True)
 
         # Notification (si tu en as besoin)
-        #Notification.objects.create(
-            #user=instance.user,
-            #message=f"Votre commande #{instance.id} a été créée."
-        #)
+        Notification.objects.create(
+            user=instance.user,
+            title=f"Commande #{instance.id}",
+            message=f"Votre commande #{instance.id} a été bien recu. On vous repond dans les 20 minutes",
+        )
 
         # WebSocket si nécessaire
-        #channel_layer = get_channel_layer()
-        #async_to_sync(channel_layer.group_send)(
-           # "notifications",
-           # {"type": "send_notification", "message": f"Nouvelle commande #{instance.id}"}
-        #)
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+           "notifications",
+           {"type": "send_notification", "message": f"Nouvelle commande #{instance.id}"}
+        )
 
+@receiver(post_save, sender=SellerProfile)
+def become_seller_notification(sender, instance, created, **kwargs):
+    if created:
+        notif = Notification.objects.create(
+            user=instance.user,
+            title="Demande pour devenir vendeur",
+            messages="Nous avons recu votre demande. Nous vous ferons un retour dans les 24 heures"
+        )
+
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "notifications",
+            {"type": "send_notification", "message": f"Votre commande demande est en cours d'analyse."}
+        )

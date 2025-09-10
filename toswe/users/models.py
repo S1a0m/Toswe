@@ -54,11 +54,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
 
-    # is_authenticated = models.BooleanField(default=False)
-
     is_seller = models.BooleanField(default=False)
 
-    # is_superuser = models.BooleanField(default=False)
 
     objects = CustomUserManager()
     USERNAME_FIELD = "phone"
@@ -72,7 +69,8 @@ class SellerProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="seller_profile")
     shop_name = models.CharField(default='', max_length=100, null=True, blank=True)
     logo = models.ImageField(upload_to="logo", null=True, blank=True)
-    loyal_customers = models.ManyToManyField(CustomUser, related_name="loyal_customers", blank=True)
+    subscribers = models.ManyToManyField(CustomUser, related_name="subscriptions")
+
     categories = models.ManyToManyField(Category, related_name="categories", blank=True)
 
     slogan = models.CharField(max_length=255, default="")
@@ -84,6 +82,8 @@ class SellerProfile(models.Model):
     is_brand = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)  # Registre de commerce verifie
     is_premium = models.BooleanField(default=False)
+
+    show_on_market = models.BooleanField(default=False)
 
     rating = models.FloatField(default=0)
 
