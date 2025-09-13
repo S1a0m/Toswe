@@ -1,7 +1,6 @@
 <template>
   <Swiper
     :modules="[Autoplay]"
-    :loop="true"
     :speed="4000"
     :space-between="20"
     grabCursor
@@ -25,6 +24,12 @@
         :total-subscribers="seller.total_subscribers"
       />
     </SwiperSlide>
+    <NuxtLink
+      to="/sellers"
+      class="absolute top-1/2 right-4 -translate-y-1/2 bg-white bg-opacity-70 hover:bg-opacity-100 text-gray-800 font-semibold py-2 px-4 rounded-full shadow-lg transition duration-300"
+    >
+      Voir tous les vendeurs
+    </NuxtLink>
   </Swiper>
 </template>
 

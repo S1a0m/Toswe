@@ -1,57 +1,63 @@
 <template>
   <div
-    class="flex flex-col items-center text-center 
-           bg-white/90 backdrop-blur-md
-           rounded-3xl shadow-lg border border-gray-200 
-           overflow-hidden w-full max-w-sm 
-           hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+    class="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-lg 
+           group cursor-pointer transition-all duration-500 hover:shadow-2xl"
   >
-    <!-- Image / Logo -->
-    <div class="w-full h-44 flex items-center justify-center bg-gray-50">
+    <!-- Image en fond -->
+    <div class="relative w-full h-56">
       <img
         :src="imageSrc"
         :alt="shopName"
-        class="w-full h-full object-contain p-4"
+        class="w-full h-full object-cover"
       />
+      <!-- Overlay dégradé sombre pour lisibilité -->
+      <div
+        class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent"
+      ></div>
     </div>
 
-    <!-- Contenu -->
-    <div class="p-6 w-full">
-      <!-- Nom -->
-      <h3 class="font-semibold text-lg sm:text-xl text-gray-900 truncate">
+    <!-- Contenu surimposé -->
+    <div
+      class="absolute bottom-0 left-0 right-0 p-5 text-white 
+             transition-all duration-500 group-hover:translate-y-[-15%]"
+    >
+      <!-- Nom boutique -->
+      <h3 class="font-semibold text-lg sm:text-xl truncate">
         {{ shopName }}
       </h3>
 
       <!-- Abonnés -->
-      <p class="text-sm text-gray-600 mt-1">
-        <span class="font-semibold text-[#7D260F]">{{ totalSubscribers }}</span> abonnés
+      <p class="text-sm opacity-90 mt-1">
+        <span class="font-semibold text-[#FFB347]">{{ totalSubscribers }}</span>
+        abonnés
       </p>
 
-      <!-- Boutons -->
-      <div class="flex gap-3 mt-5 justify-center">
+      <!-- Actions (visibles au hover) -->
+      <div
+        class="flex gap-3 mt-4 opacity-0 translate-y-5 
+               group-hover:opacity-100 group-hover:translate-y-0 
+               transition-all duration-500"
+      >
         <!-- Bouton favoris -->
         <button
-          class="flex items-center justify-center w-11 h-11 
-                 rounded-full border border-[#7D260F] text-[#7D260F] bg-white
-                 shadow-sm hover:bg-[#7D260F]/10 hover:shadow-md 
-                 transition-all duration-300 active:scale-95 
-                 focus:outline-none focus:ring-2 focus:ring-[#7D260F]/40"
-          @click="toggleSubscribe"
+          class="flex items-center justify-center w-11 h-11 rounded-full 
+                 bg-white/20 backdrop-blur-md border border-white/30 
+                 text-white hover:bg-white/30 transition active:scale-95"
+          @click.stop="toggleSubscribe"
           aria-label="S'abonner"
         >
           <Icon
-            :name="isSubscribed ? 'uil:heart-alt' : 'uil:heart'"
+            :name="isSubscribed ? 'uil:heart' : 'uil:heart-alt'"
             class="text-lg"
           />
         </button>
 
         <!-- Bouton visiter -->
         <button
-          class="px-5 py-2.5 bg-[#7D260F] text-white text-sm sm:text-base font-medium 
-                 rounded-full shadow-sm hover:shadow-md hover:bg-[#661f0c] 
-                 transition-all duration-300 active:scale-95 
-                 focus:outline-none focus:ring-2 focus:ring-[#7D260F]/40 flex items-center gap-1"
-          @click="goToShopDetails(sellerId)"
+          class="flex-1 px-5 py-2.5 bg-[#7D260F] text-white text-sm sm:text-base 
+                 font-medium rounded-full shadow-md 
+                 hover:bg-[#661f0c] transition active:scale-95"
+          @click.stop="goToShopDetails(sellerId)"
         >
           Visiter
         </button>
@@ -62,7 +68,7 @@
 
 <script setup>
 import { useAuthStore } from "@/stores/auth"
-import { useNavigation } from '@/composables/useNavigation'
+import { useNavigation } from "@/composables/useNavigation"
 import { ref } from "vue"
 
 const props = defineProps({
@@ -91,7 +97,6 @@ const toggleSubscribe = async () => {
         headers: { Authorization: `Bearer ${auth.accessToken}` }
       }
     )
-
     isSubscribed.value = res.subscribed
     totalSubscribers.value += res.subscribed ? 1 : -1
   } catch (err) {

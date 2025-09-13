@@ -1,3 +1,4 @@
+<!-- pages/shop.vue -->
 <template>
   <div class="min-h-screen">
     <!-- Header -->
@@ -17,7 +18,8 @@
       </div>
     </div>
 
-    <main class="max-w-6xl mx-auto px-4 py-6">
+    <!-- Boutique publique -->
+    <main class="max-w-6xl mx-auto px-4 py-6" v-if="!isOwner">
       <!-- À propos -->
       <section v-if="shop?.about" class="mb-8">
         <h2 class="font-semibold text-lg mb-2">À propos</h2>
@@ -31,34 +33,6 @@
         >
           {{ showMore ? 'Voir moins' : 'Voir plus' }}
         </button>
-      </section>
-
-      <!-- Publicités -->
-      <section v-if="ads?.length" class="mb-8">
-        <h2 class="font-semibold text-lg mb-3">Promotions</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <article
-            v-for="a in ads"
-            :key="a.id"
-            class="rounded-xl border bg-white overflow-hidden"
-          >
-            <div class="aspect-[16/9] bg-gray-50">
-              <img
-                :src="a.poster || '/placeholder-banner.png'"
-                class="size-full object-cover"
-              />
-            </div>
-            <div class="flex justify-between items-center">
-              <div class="p-3">
-                <h3 class="text-sm font-medium truncate">
-                  {{ a.product_name || 'Promotion' }}
-                </h3>
-                <p class="text-xs text-gray-600 line-clamp-2 mt-1">{{ a.message }}</p>
-              </div>
-              <Icon name="mdi:arrow-right-circle" class="w-6 h-6 text-gray-400 m-3 cursor-pointer hover:text-gray-600" @click="goToProductDetails(a.product)" />
-            </div>
-          </article>
-        </div>
       </section>
 
       <!-- Produits -->
@@ -84,6 +58,7 @@
             :rating="product.total_rating.average"
             :badge="product.status"
             :is-sponsored="product.is_sponsored"
+            :seller-id="product.seller_id"
           />
         </div>
 
@@ -102,6 +77,14 @@
       </section>
     </main>
 
+    <!-- Vue propriétaire -->
+    <div v-else class="max-w-6xl mx-auto px-4 py-6">
+      <TwMyShop
+        :products="products"
+        :seller-id="sellerId"
+      />
+    </div>
+
     <TwMenuSide />
     <TwCart />
     <TwPopupAd />
@@ -114,21 +97,20 @@ import { useRoute } from 'vue-router'
 import { useNavigation } from '@/composables/useNavigation'
 
 const { goToProductDetails } = useNavigation()
-
 const auth = useAuthStore()
 const route = useRoute()
 const showMore = ref(false)
 
-// Récupération de l'en-tête boutique
-const { data: shopHeader, pending, error } = await useAsyncData('shopHeader', () =>
+// En-tête boutique
+const { data: shopHeader, pending } = await useAsyncData('shopHeader', () =>
   $fetch(`http://127.0.0.1:8000/api/user/${route.query.id}/shop_header/`, {
     headers: {
-      Authorization: `Bearer ${auth.accessToken}` // seulement si auth requise
+      Authorization: `Bearer ${auth.accessToken}`
     }
   })
 )
 
-// Produits du vendeur
+// Produits
 const products = ref([])
 async function fetchSellerProducts() {
   try {
@@ -136,27 +118,15 @@ async function fetchSellerProducts() {
     const data = await $fetch(
       `http://127.0.0.1:8000/api/product/${shopHeader.value.seller_essential.id}/seller_products/`
     )
-    products.value = data?.results || data || []
+    products.value = data?.results || []
   } catch (err) {
     console.error('Erreur chargement produits du vendeur:', err)
   }
 }
+
+const sellerId = shopHeader.value.seller_essential.id
 watch(shopHeader, fetchSellerProducts, { immediate: true })
 
-// Publicités (promotions)
-const ads = ref([])
-async function fetchSellerAds() {
-  try {
-    if (!shopHeader.value?.seller_essential?.id) return
-    const data = await $fetch(
-      `http://127.0.0.1:8000/api/promotion/seller/${shopHeader.value.seller_essential.id}/`
-    )
-    ads.value = data?.results || data || []
-  } catch (err) {
-    console.error('Erreur chargement publicités du vendeur:', err)
-  }
-}
-watch(shopHeader, fetchSellerAds, { immediate: true })
 
 // Shop normalisé
 const shop = computed(() =>
@@ -176,13 +146,13 @@ const shop = computed(() =>
     : null
 )
 
-// Vérifie si c'est la boutique du user
+// Propriétaire ?
 const isOwner = computed(() => !!shop.value && auth?.user?.id === shop.value?.owner_id)
 
 function openContact() {
-  // TODO : modal/contact
+  // TODO
 }
 function toggleFollow() {
-  // TODO : follow/unfollow
+  // TODO
 }
 </script>

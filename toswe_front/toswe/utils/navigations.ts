@@ -38,7 +38,7 @@ export function goToStats() {
 }
 
 export function goToAddProduct() {
-    return navigateTo({ path: "/add" })
+    return navigateTo({ path: "/products/add" })
 }
 
 export function goToAdCreate() {

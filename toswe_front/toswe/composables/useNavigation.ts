@@ -1,4 +1,5 @@
 import { useInteractionsStore } from '@/stores/interactions'
+import { useAuthStore } from '@/stores/auth'
 
 export function useNavigation() {
 
@@ -14,8 +15,16 @@ export function useNavigation() {
         return navigateTo({ path: "/shop", query: { id: shopId } })
     }
 
+    function goToMyShop() {
+        const auth = useAuthStore()
+        if (auth.user && auth.user.is_seller) {
+            return navigateTo({ path: "/shop", query: { id: auth.user.id } })
+        }
+    }
+
     return {
         goToProductDetails,
-        goToShopDetails
+        goToShopDetails,
+        goToMyShop
     }
 }

@@ -31,7 +31,7 @@ function closePopup() {
 onMounted(async () => {
   await fetchAds()
   if (ads.value.length) {
-    intervalId = setInterval(showNextAd, 15000) // toutes les 15s
+    intervalId = setInterval(showNextAd, 60000) // toutes les 15s
     showNextAd()
   }
 })
@@ -45,36 +45,58 @@ onUnmounted(() => {
   <transition name="fade">
     <div
       v-if="visible && ads.length"
-      class="fixed bottom-6 right-6 z-50 rounded-2xl shadow-2xl w-80 p-4 border border-white/20 backdrop-blur-lg"
-      style="background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05));"
+      class="fixed bottom-6 right-6 z-50 w-80 h-64 rounded-2xl shadow-2xl border border-white/20 overflow-hidden group"
     >
+      <!-- Image full background -->
+      <img
+        v-if="ads[currentAdIndex]"
+        :src="ads[currentAdIndex].image"
+        :alt="ads[currentAdIndex].title"
+        class="absolute inset-0 w-full h-full object-cover"
+      />
+
+      <!-- Overlay sombre lisible -->
+      <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent"></div>
+
+      <!-- Bouton Close -->
       <button
         @click="closePopup"
-        class="absolute top-2 right-2 text-black/80 hover:text-black"
+        class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-black/40 text-white transition-all duration-300 hover:bg-black hover:scale-110 hover:rotate-90 z-20"
       >
         <Icon name="uil:times" class="w-5 h-5" />
       </button>
 
-      <div v-if="ads[currentAdIndex]" class="flex flex-col items-center text-center">
-        <img
-          :src="ads[currentAdIndex].image"
-          :alt="ads[currentAdIndex].title"
-          class="w-full h-40 object-cover rounded-xl mb-4 border border-white/20 shadow-md"
-        />
-        <h3 class="text-lg font-bold text-black drop-shadow mb-2">
+      <!-- Contenu pub -->
+      <div
+        v-if="ads[currentAdIndex]"
+        class="relative z-10 flex flex-col justify-end h-full p-4 text-left"
+      >
+        <h3 class="text-lg font-bold text-white drop-shadow mb-1 line-clamp-1">
           {{ ads[currentAdIndex].title }}
         </h3>
-        <p class="text-sm text-black/80 mb-4">
+        <p class="text-sm text-white/80 line-clamp-2">
           {{ ads[currentAdIndex].description }}
         </p>
 
+        <!-- Bouton visible seulement au hover -->
         <button
-          class="bg-[#7D260F]/90 text-white px-5 py-2 rounded-lg font-semibold hover:bg-[#5b1c0b]/90 transition-all shadow-lg"
+          class="mt-3 bg-[#7D260F]/90 text-white px-4 py-2 rounded-lg font-medium shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-[#5b1c0b]/90 hover:shadow-xl hover:scale-105"
           @click="goToProductDetails(ads[currentAdIndex].product)"
         >
-          Voir les offres
+          Visitez la boutique
         </button>
       </div>
     </div>
   </transition>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.4s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

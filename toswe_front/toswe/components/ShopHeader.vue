@@ -55,7 +55,7 @@
 
           <div class="inline-flex items-center gap-1">
             <span class="font-medium">{{ totalSubscribers }}</span>
-            <span>abonnés</span>
+            <span>abonné(s)</span>
           </div>
 
           <div v-if="shop.products_count" class="w-px h-4 bg-gray-300" />
@@ -79,13 +79,13 @@
         >
           {{ isSubscribed ? "Se désabonner" : "S'abonner" }}
         </button>
-        <NuxtLink
+        <span
           v-else
-          to="/dashboard/shop"
           class="px-4 py-2 rounded-xl border border-[#e6d9d3] text-gray-700 hover:bg-[#fdf8f5] transition"
         >
-          Gérer ma boutique
-        </NuxtLink>
+          <NuxtLink to="/stats" v-if="auth.user.is_premium">Voir mes statistiques</NuxtLink>
+          <NuxtLink to="/premium" v-else>Devenir vendeur premium</NuxtLink>
+        </span>
       </div>
     </div>
   </header>

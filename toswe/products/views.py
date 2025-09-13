@@ -1,13 +1,16 @@
 from django.core import signing
 from django.db.models import Q, Count, Case, When, Value, BooleanField, IntegerField
 from rest_framework import viewsets, status
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.decorators import action, permission_classes
 from django.utils.timezone import now
 
 from users.models import CustomUser, UserInteractionEvent, Notification, SellerProfile
-from products.models import Product, Cart, Order, Delivery, Payment, CartItem, Ad, ProductPromotion
+from products.models import Product, Cart, Order, Delivery, Payment, CartItem, Ad, Promotion
 from users.serializers import *
 
 from products.serializers import *
@@ -35,16 +38,33 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductDetailsSerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [AllowAny]
+    #permission_classes = [AllowAny]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_permissions(self):
+        """
+        Définit dynamiquement les permissions selon l’action.
+        """
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAuthenticated()]
+        elif self.action in ['list', 'retrieve']:
+            return [IsAuthenticatedOrReadOnly()]
+        return [AllowAny()]  # fallback explicite
 
     def get_serializer_class(self):
         if self.action in ['suggestions', 'similar']:
             return ProductSerializer
         elif self.action == 'retrieve':
             return ProductDetailsSerializer
+        elif self.action in ['create', 'update', 'partial_update']:
+            return ProductCreateSerializer
         elif self.action == 'announcements':
             return AnnouncementsProductsSerializer
         return super().get_serializer_class()
+
+    def perform_create(self, serializer):
+        # serializer.create() s'occupe du seller depuis request context, donc juste save avec context injecté automatiquement
+        serializer.save()
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def suggestions(self, request):
@@ -70,57 +90,54 @@ class ProductViewSet(viewsets.ModelViewSet):
                 .values_list("product__category", flat=True)[:3]
             )
 
-        print(f"Top categories IDs: {top_categories}")
-
-        # Étape 2 : Base de la requête
         products = Product.objects.all()
 
         if category_param != "tout":
             products = products.filter(category__name__iexact=category_param)
-            print("Products filtrés par param :", list(products.values("id", "name", "category__name")))
 
-        # Étape 3 : Priorisation par statut
+        # Étape 2 : priorisation par pub/promo/popularité
         now = timezone.now()
+
+        sponsored_ids = Ad.objects.filter(
+            ad_type="sponsored", is_active=True, ended_at__gte=now
+        ).values_list("product_id", flat=True)
+
+        promo_ids = Promotion.objects.filter(
+            ended_at__gte=now
+        ).values_list("product_id", flat=True)
+
         popular_ids = (
-            CartItem.objects
-            .values("product")
+            CartItem.objects.values("product")
             .annotate(count=Count("id"))
-            .filter(count__gte=10)  # seuil popularité
+            .filter(count__gte=10)
             .values_list("product", flat=True)
         )
-        print("Popular product IDs :", list(popular_ids))
 
         products = products.annotate(
             priority=(
-                # boost catégories préférées
-                    Case(When(category__in=top_categories, then=Value(5)), default=Value(0),
-                         output_field=IntegerField()) +
-                    # sponsorisés > promos > populaires > nouveaux
-                    Case(When(is_sponsored=True, then=Value(4)), default=Value(0), output_field=IntegerField()) +
-                    Case(When(is_promoted=True, then=Value(3)), default=Value(0), output_field=IntegerField()) +
-                    Case(When(id__in=popular_ids, then=Value(2)), default=Value(0), output_field=IntegerField()) +
-                    Case(
-                        When(created_at__gte=now - timedelta(days=30), then=Value(1)),
-                        default=Value(0),
-                        output_field=IntegerField()
-                    )
+                Case(When(category__in=top_categories, then=Value(5)), default=Value(0),
+                     output_field=IntegerField()) +
+                Case(When(id__in=sponsored_ids, then=Value(4)), default=Value(0),
+                     output_field=IntegerField()) +
+                Case(When(id__in=promo_ids, then=Value(3)), default=Value(0),
+                     output_field=IntegerField()) +
+                Case(When(id__in=popular_ids, then=Value(2)), default=Value(0),
+                     output_field=IntegerField()) +
+                Case(When(created_at__gte=now - timedelta(days=30), then=Value(1)),
+                     default=Value(0), output_field=IntegerField())
             )
         ).order_by("-priority", "-created_at")
 
-        print("Products après priorisation :", list(products.values("id", "name", "priority", "category__name")))
-
-        # Étape 4 : Fallback si aucun produit
+        # Étape 3 : fallback
         if not products.exists():
             products = Product.objects.all().order_by("-created_at")
-            print("Fallback : aucun produit priorisé trouvé → retour aux récents")
 
-        # 🚀 Utiliser la pagination DRF
+        # Pagination
         page = self.paginate_queryset(products)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        # Si pas de pagination définie → retour normal
         serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
 
@@ -129,8 +146,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         """
         Produits similaires :
         - Basés sur la catégorie du produit cible.
-        - Priorité : sponsorisés, promos, populaires, nouveaux, puis autres.
-        - Si utilisateur connecté → booste les produits avec lesquels il a déjà interagi.
+        - Priorité : sponsorisés, promos, populaires, nouveaux, puis interactions.
         """
         try:
             target_product = Product.objects.get(pk=pk)
@@ -140,21 +156,23 @@ class ProductViewSet(viewsets.ModelViewSet):
         user = request.user if request.user and request.user.is_authenticated else None
         now = timezone.now()
 
-        # Base : même catégorie que le produit cible
-        products = Product.objects.filter(
-            category=target_product.category
-        ).exclude(id=target_product.id)
+        products = Product.objects.filter(category=target_product.category).exclude(id=target_product.id)
 
-        # Popularité
+        sponsored_ids = Ad.objects.filter(
+            ad_type="sponsored", is_active=True, ended_at__gte=now
+        ).values_list("product_id", flat=True)
+
+        promo_ids = Promotion.objects.filter(
+            ended_at__gte=now
+        ).values_list("product_id", flat=True)
+
         popular_ids = (
-            CartItem.objects
-            .values("product")
+            CartItem.objects.values("product")
             .annotate(count=Count("id"))
             .filter(count__gte=10)
             .values_list("product", flat=True)
         )
 
-        # Si utilisateur connecté → on booste ses interactions
         user_interacted = []
         if user:
             user_interacted = list(
@@ -165,14 +183,16 @@ class ProductViewSet(viewsets.ModelViewSet):
             )
 
         products = products.annotate(
-            priority=Count("id", filter=Q(is_sponsored=True)) * 4 +
-                     Count("id", filter=Q(is_promoted=True)) * 3 +
-                     Count("id", filter=Q(id__in=popular_ids)) * 2 +
-                     Count("id", filter=Q(created_at__gte=now - timedelta(days=30))) * 1 +
-                     Count("id", filter=Q(id__in=user_interacted)) * 5
-        ).order_by("-priority", "-created_at")
-
-        products = products.distinct()[:10]
+            priority=(
+                Case(When(id__in=sponsored_ids, then=Value(4)), default=Value(0), output_field=IntegerField()) +
+                Case(When(id__in=promo_ids, then=Value(3)), default=Value(0), output_field=IntegerField()) +
+                Case(When(id__in=popular_ids, then=Value(2)), default=Value(0), output_field=IntegerField()) +
+                Case(When(created_at__gte=now - timedelta(days=30), then=Value(1)),
+                     default=Value(0), output_field=IntegerField()) +
+                Case(When(id__in=user_interacted, then=Value(5)), default=Value(0),
+                     output_field=IntegerField())
+            )
+        ).order_by("-priority", "-created_at").distinct()[:10]
 
         serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
@@ -350,10 +370,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-class ProductPromotionViewSet(viewsets.ModelViewSet):
-    queryset = ProductPromotion.objects.all().select_related("product", "product__seller")
-    serializer_class = ProductPromotionSerializer
+class PromotionViewSet(viewsets.ModelViewSet):
+    queryset = Promotion.objects.all().select_related("product", "product__seller")
+    serializer_class = PromotionSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+    authentication_classes = [JWTAuthentication]
 
     def perform_create(self, serializer):
         """
@@ -387,32 +408,36 @@ class ProductPromotionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-
-
 class AdViewSet(viewsets.ModelViewSet):
-    # queryset = Ad.objects.all()
     serializer_class = AdSerializer
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly]  # Seuls vendeurs connectés
 
     def get_queryset(self):
-        qs = (
-            Ad.objects.filter(is_active=True)
-            .select_related("product", "product__seller")  # ⚡ accès direct produit & vendeur
-            .annotate(
-                premium_first=Case(
-                    When(product__seller__is_premium=True, then=Value(1)),
-                    default=Value(0),
-                    output_field=BooleanField(),
-                )
-            )
-            .order_by("-premium_first", "-created_at")
-        )
-        return qs
+        """
+        Par défaut → uniquement les annonces génériques actives.
+        """
+        return Ad.objects.filter(is_active=True, ad_type="generic").select_related("product", "product__seller")
 
     def perform_create(self, serializer):
-        # Ici tu peux lier l’annonce à l’utilisateur si tu veux plus tard
+        user = self.request.user
+        seller = getattr(user, "seller", None)
+        if not seller:
+            raise PermissionDenied("Seuls les vendeurs peuvent créer une publicité.")
         serializer.save()
+
+    @action(detail=False, methods=["get"], url_path="seller/(?P<seller_id>[^/.]+)")
+    def by_seller(self, request, seller_id=None):
+        """ Retourne toutes les pubs d’un vendeur donné : - Si c’est le vendeur lui-même → TOUTES ses pubs (actives/inactives, expirées ou pas) - Si c’est un autre utilisateur ou anonyme → uniquement ses pubs actives et non expirées """
+        qs = self.get_queryset().filter(product__seller__id=seller_id)
+        # Si ce n’est pas le vendeur connecté → filtrer sur les promos actives
+        if request.user.is_authenticated:
+            if not qs.filter(product__seller__user=request.user).exists():
+                qs = qs.filter(ended_at__gte=now())
+            pass
+        else:
+            qs = qs.filter(ended_at__gte=now())
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
 
 class CartViewSet(viewsets.ModelViewSet):
     serializer_class = CartSerializer

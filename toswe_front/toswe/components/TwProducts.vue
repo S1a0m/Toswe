@@ -1,6 +1,6 @@
 <template>
   <section class="max-w-6xl px-4 md:px-8 py-10 mx-auto">
-    <h2 class="text-2xl font-bold text-[#7D260F] mb-2 font-[Kenia]" v-if="title">
+    <h2 class="text-xl font-bold text-[#7D260F] mb-2 font-[Kumbh_Sans]" v-if="title">
       {{ title }}
     </h2>
 
@@ -18,6 +18,7 @@
         :rating="product.total_rating.average"
         :badge="product.status"
         :is-sponsored="product.is_sponsored"
+        :seller-id="product.seller_id"
       />
     </div>
   </section>

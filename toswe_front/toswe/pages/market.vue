@@ -11,7 +11,7 @@
   />
 
   <div class="max-w-6xl mx-auto my-10 px-4 md:px-8">
-    <h2 class="text-2xl font-bold text-[#7D260F] mb-10 font-[Kenia]">
+    <h2 class="text-xl font-bold text-[#7D260F] mb-2 font-[Kumbh_Sans]">
       Visitez la boutique de nos vendeurs
     </h2>
     <TwSellersMix />
@@ -38,7 +38,7 @@
   </div>
 
   <div class="max-w-6xl mx-auto my-10 px-4 md:px-8">
-    <h2 class="text-2xl font-bold text-[#7D260F] mb-10 font-[Kenia]">
+    <h2 class="text-xl font-bold text-[#7D260F] mb-2 font-[Kumbh_Sans]">
       Les produits de ces marques pourraient vous intéresser
     </h2>
     <TwBrands />

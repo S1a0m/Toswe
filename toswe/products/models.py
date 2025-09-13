@@ -15,27 +15,36 @@ class Category(models.Model):
 
 class Product(models.Model):
     STATUS_CHOICES = [
-        ('new', 'New'),
-        ('promo', 'Promo'),
-        ('popular', 'Popular'),
+        ("new", "New"),
+        ("popular", "Popular"),
     ]
+
     name = models.CharField(max_length=255)
     description = models.TextField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    # quantity_stock = models.PositiveIntegerField()
-    is_sponsored = models.BooleanField(default=False)
-    is_promoted = models.BooleanField(default=False)
+    price = models.PositiveIntegerField()
+
+    seller = models.ForeignKey("users.SellerProfile", on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="new")
+
+    is_online = models.BooleanField(default=True)
+
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
-
-    seller = models.ForeignKey('users.SellerProfile', on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-
-    created_at = models.DateTimeField(default=datetime.now)
-
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='new')
 
     def __str__(self):
         return self.name
+
+    @property
+    def active_promotions(self):
+        """Retourne les promotions encore valides"""
+        return self.promotions.filter(ended_at__gte=timezone.now())
+
+    @property
+    def active_ads(self):
+        """Retourne les publicités actives (sponsorisées ou non)"""
+        return self.ads.filter(is_active=True, ended_at__gte=timezone.now())
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
@@ -52,15 +61,29 @@ class ProductVideo(models.Model):
     def __str__(self):
         return f"Video de {self.product.name}"
 
-class ProductPromotion(models.Model):
+class Promotion(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='promotions')
-    poster = models.ImageField(upload_to='promotions/', blank=True, null=True)
-    message = models.TextField()
+    discount_percent = models.PositiveIntegerField(null=True, blank=True)
+    discount_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     created_at = models.DateTimeField(default=datetime.now)
-    ended_at = models.DateTimeField(default=datetime.now)
+    ended_at = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        # Si le vendeur renseigne seulement le pourcentage → calcul du prix réduit
+        if self.discount_percent and not self.discount_price:
+            self.discount_price = self.product.price * (1 - (self.discount_percent / 100))
+
+        # Si le vendeur renseigne un prix → on peut recalculer le pourcentage
+        elif self.discount_price and not self.discount_percent:
+            self.discount_percent = round(
+                100 - (self.discount_price * 100 / self.product.price)
+            )
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.product.seller.shop_name
+        return f"Promo de {self.product.name} ({self.discount_percent}% off)"
+
 
 class Cart(models.Model):
     user = models.ForeignKey('users.CustomUser', on_delete=models.CASCADE)
@@ -114,19 +137,32 @@ class OrderItem(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
 class Ad(models.Model):
-    title = models.CharField(max_length=255, default='')
+    AD_TYPE_CHOICES = [
+        ("generic", "Annonce Générale"),
+        ("sponsored", "Sponsorisation Produit"),
+    ]
+
+    title = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    product = models.ForeignKey("Product", related_name="ads", on_delete=models.CASCADE, blank=True, null=True)
-    image = models.ImageField(upload_to='ads/', blank=True, null=True)
+    product = models.ForeignKey(
+        Product, related_name="ads", on_delete=models.CASCADE, blank=True, null=True
+    )
+    image = models.ImageField(upload_to="ads/", blank=True, null=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    ad_type = models.CharField(max_length=20, choices=AD_TYPE_CHOICES, default="generic")
     is_active = models.BooleanField(default=False)
-    created_at = models.DateTimeField(default=timezone.now)
+
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-created_at"]
 
     def __str__(self):
-        return self.title
+        return f"{self.get_ad_type_display()} ({self.id})"
+
 
 # models.py
 class Payment(models.Model):

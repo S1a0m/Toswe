@@ -1,6 +1,5 @@
 <template>
   <TwAdCreate />
-  <TwMenuSide />
 </template>
 
 <script setup>

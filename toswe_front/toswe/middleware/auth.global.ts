@@ -15,6 +15,6 @@ export default defineNuxtRouteMiddleware((to) => {
   ]
 
   if (!auth.accessToken && !publicRoutes.includes(to.path)) {
-    return navigateTo('/auth')
+    return navigateTo('/market')
   }
 })

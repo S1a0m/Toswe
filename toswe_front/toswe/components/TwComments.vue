@@ -1,14 +1,19 @@
 <template>
-  <section class="max-w-6xl mx-auto mt-5 px-4">
+  <section class="max-w-6xl mx-auto mt-10 px-4">
     <!-- Titre -->
-    <h3 class="text-xl font-bold text-[#7D260F] mb-6">Commentaires ({{ feedbacks.results.length }})</h3>
+    <div class="flex items-center gap-2 mb-6">
+      <Icon name="mdi:comment-text-outline" class="w-6 h-6 text-[#7D260F]" />
+      <h3 class="text-xl font-bold text-[#7D260F]">
+        Commentaires ({{ feedbacks.results.length }})
+      </h3>
+    </div>
 
-    <!-- Liste des commentaires -->
+    <!-- Liste -->
     <div
       class="relative transition-all duration-500 ease-in-out"
       :class="expanded ? 'max-h-full' : 'max-h-40 overflow-hidden'"
     >
-      <div class="space-y-4 mb-8">
+      <div class="space-y-4 mb-6">
         <TwComment
           v-for="(feedback, index) in feedbacks.results"
           :key="index"
@@ -20,14 +25,14 @@
         />
       </div>
 
-      <!-- Gradient pour cacher le bas si pas expand -->
+      <!-- Dégradé -->
       <div
         v-if="!expanded && feedbacks.results.length > 1"
         class="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-white to-transparent"
       ></div>
     </div>
 
-    <!-- Bouton toggle -->
+    <!-- Toggle -->
     <button
       v-if="feedbacks.results.length > 1"
       @click="expanded = !expanded"
@@ -36,47 +41,48 @@
       {{ expanded ? 'Réduire' : 'Afficher plus' }}
     </button>
 
-    <p v-if="feedbacks.results.length === 0 && auth.isAuthenticated" class="text-gray-500">Soyez le premier à laisser un commentaire !</p>
-    <!-- Message si non connecté -->
-    <!-- Message incitatif si non connecté -->
+    <!-- Message si vide -->
+    <p v-if="feedbacks.results.length === 0 && auth.isAuthenticated" class="text-gray-500">
+      Soyez le premier à laisser un commentaire !
+    </p>
+
+    <!-- Si non connecté -->
     <div
       v-if="!auth.isAuthenticated"
-      class="bg-[#FFF5F2] border border-[#F3D0C3] rounded-lg p-4 mt-6 text-center"
+      class="bg-[#FFF5F2] border border-[#F3D0C3] rounded-xl p-5 mt-6 text-center shadow-sm"
     >
       <p class="text-gray-700 text-sm md:text-base mb-3">
         💬 Vous avez quelque chose à dire ?  
-        <span class="font-semibold text-[#7D260F]">Connectez-vous</span> pour partager votre avis et rejoindre la discussion !
+        <span class="font-semibold text-[#7D260F]">Connectez-vous</span> pour rejoindre la discussion !
       </p>
       <button
         @click="goToAuth"
         class="bg-[#7D260F] text-white px-5 py-2 rounded-lg font-medium shadow-md hover:bg-[#5c1c07] transition-colors duration-300"
       >
-        🔑 Se connecter maintenant
+        🔑 Se connecter
       </button>
     </div>
-
-
 
     <!-- Formulaire -->
     <form
       v-if="auth.isAuthenticated"
       @submit.prevent="addComment"
-      class="bg-white p-4 border border-gray-200 rounded-lg shadow-sm space-y-4 mt-6"
+      class="bg-white p-5 border border-gray-200 rounded-xl shadow-sm space-y-4 mt-6"
     >
-      <!-- Choix de la note -->
+      <!-- Note -->
       <div class="flex items-center space-x-2">
         <span class="font-medium text-sm">Votre note :</span>
         <Icon
           v-for="n in 5"
           :key="n"
-          name="uil:star"
+          :name="n <= newRating ? 'mdi:star' : 'mdi:star-outline'"
           class="w-6 h-6 cursor-pointer transition-colors duration-200"
           :class="n <= newRating ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'"
           @click="newRating = n"
         />
       </div>
 
-      <!-- Champ texte -->
+      <!-- Texte -->
       <textarea
         v-model="newComment"
         placeholder="Écrivez votre commentaire..."
@@ -94,6 +100,7 @@
     </form>
   </section>
 </template>
+
 
 <script setup>
 import { useAuthStore } from '@/stores/auth'

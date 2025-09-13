@@ -9,7 +9,6 @@
       <h2 class="text-lg font-semibold text-gray-600 mb-3">Compte </h2>
       <TwSettingsItem icon="uil:user" label="Profil" @click="profilPopup.showPopup()"/>
       <TwSettingsItem icon="uil:check-circle" label="Vérifier votre compte"  v-if="!auth.isVerified && auth.isSeller" @click="verifyPopup.showPopup()"/>
-      <TwSettingsItem icon="uil:star" label="Devenir vendeur premium" v-if="auth.isSeller && auth.isPremiumSeller" @click="goToPremium"/>
       <TwSettingsItem icon="uil:signout" label="Se déconnecter" @click="auth.logout"/>
       <TwSettingsItem icon="uil:trash" label="Supprimer le compte" danger />
     </div>
@@ -18,7 +17,7 @@
     <div class="mb-8">
       <h2 class="text-lg font-semibold text-gray-600 mb-3">Vente</h2>
       <TwSettingsItem icon="uil:briefcase" label="Devenir vendeur" v-if="!auth.isSeller" @click="becomeSellerPopup.showPopup()"/>
-      <TwSettingsItem icon="uil:star" label="Devenir vendeur premium" v-if="auth.isSeller && !auth.isPremiumSeller"/>
+      <TwSettingsItem icon="uil:star" label="Devenir vendeur premium" v-if="auth.isSeller && !auth.isPremiumSeller" @click="goToPremium"/>
       <TwSettingsItem icon="uil:chart" label="Voir mes statistiques vendeur" v-if="auth.isPremiumSeller" @click="goToStats"/>
     </div>
 

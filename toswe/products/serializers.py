@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
 from django.db.models import Avg, Count
@@ -37,10 +38,21 @@ class ProductSerializer(serializers.ModelSerializer):
     short_description = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
     seller_id = serializers.SerializerMethodField()
+    is_sponsored = serializers.SerializerMethodField()  # 🔹 calculé dynamiquement
 
     class Meta:
         model = Product
-        fields = ["id", "seller_id", "name", "price", "main_image", "short_description", "total_rating", "status", "is_sponsored"]
+        fields = [
+            "id",
+            "seller_id",
+            "name",
+            "price",
+            "main_image",
+            "short_description",
+            "total_rating",
+            "status",
+            "is_sponsored",
+        ]
 
     def get_main_image(self, obj):
         main_img = obj.images.filter(is_main_image=True).first()
@@ -55,79 +67,282 @@ class ProductSerializer(serializers.ModelSerializer):
         stats = obj.feedback_set.aggregate(avg=Avg("rating"), count=Count("id"))
         return {
             "average": round(stats["avg"], 1) if stats["avg"] else 0,
-            "count": stats["count"]
+            "count": stats["count"],
         }
 
     def get_short_description(self, obj):
-        max_length = 80  # nombre max de caractères
-        if len(obj.description) > max_length:
-            return obj.description[:max_length] + "..."
-        return obj.description
+        max_length = 80
+        return obj.description[:max_length] + "..." if len(obj.description) > max_length else obj.description
 
     def get_status(self, obj):
-        """Calcule dynamiquement le statut du produit"""
         now = timezone.now()
 
-        # 1. Promo (⚠️ à adapter selon ton modèle de promo)
-        if hasattr(obj, "promotion") and obj.promotion.is_active:
+        # 1. Vérifier s’il a une promo active
+        promo = obj.promotions.filter(ended_at__gte=now).first()
+        if promo:
             return "promo"
 
-        # 2. Popularité (beaucoup d’ajouts au panier)
+        # 2. Vérifier popularité (ex: nb d’items au panier)
         cart_count = CartItem.objects.filter(product=obj).count()
-        if cart_count >= 10:  # seuil à ajuster
+        if cart_count >= 10:  # seuil ajustable
             return "popular"
 
         # 3. Produit récent
         if obj.created_at >= now - timedelta(days=30):
             return "new"
 
-        # 4. Par défaut, renvoyer celui en base
         return obj.status
+
+    def get_is_sponsored(self, obj):
+        """Un produit est sponsorisé si une pub active existe"""
+        now = timezone.now()
+        return obj.ads.filter(ad_type="sponsored", is_active=True, ended_at__gte=now).exists()
 
 # serializers.py
 from rest_framework import serializers
-from .models import ProductPromotion
+from .models import Promotion
 
-class ProductPromotionSerializer(serializers.ModelSerializer):
+class PromotionSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source="product.name", read_only=True)
     seller_name = serializers.CharField(source="product.seller.shop_name", read_only=True)
 
     class Meta:
-        model = ProductPromotion
+        model = Promotion
         fields = [
             "id",
             "product",
             "product_name",
             "seller_name",
-            "poster",
-            "message",
+            "discount_percent",
+            "discount_price",
             "created_at",
             "ended_at",
         ]
 
 
-class AdSerializer(serializers.ModelSerializer):
 
+class AdSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ad
-        fields = ["id", "title", "description", "image", "is_active", "created_at", "updated_at", "product"]
+        fields = [
+            "id",
+            "title",
+            "description",
+            "image",
+            "ad_type",
+            "is_active",
+            "created_at",
+            "updated_at",
+            "ended_at",
+            "product",
+            "amount",
+        ]
+
+    def validate(self, data):
+        user = self.context["request"].user
+        seller = getattr(user, "seller", None)
+
+        if not seller:
+            raise serializers.ValidationError("Seuls les vendeurs peuvent créer une publicité.")
+
+        ad_type = data.get("ad_type")
+
+        # Règle 1 : annonces génériques → seulement premium
+        if ad_type == "generic":
+            if not seller.is_premium:
+                raise serializers.ValidationError(
+                    "Seuls les vendeurs premium peuvent créer une annonce générale."
+                )
+            if not data.get("title") or not data.get("description"):
+                raise serializers.ValidationError(
+                    "Titre et description sont obligatoires pour une annonce générale."
+                )
+
+        # Règle 2 : sponsorisation produit → max 2 / mois pour non-premium
+        elif ad_type == "sponsored":
+            if not data.get("product"):
+                raise serializers.ValidationError("Un produit doit être lié à la sponsorisation.")
+
+            if not seller.is_premium:
+                from django.utils.timezone import now
+                month_start = now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                count_ads = Ad.objects.filter(
+                    ad_type="sponsored",
+                    product__seller=seller,
+                    created_at__gte=month_start,
+                ).count()
+                if count_ads >= 2:
+                    raise serializers.ValidationError(
+                        "Vous avez atteint la limite de 2 sponsorisations pour ce mois."
+                    )
+
+            # Supprimer champs inutiles (pas de title, image, description pour sponsorisation)
+            data["title"] = None
+            data["description"] = None
+            data["image"] = None
+
+        return data
+
+
 
 
 class ProductDetailsSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
     videos = ProductVideoSerializer(many=True, read_only=True)
     total_rating = serializers.SerializerMethodField()
+    seller_id = serializers.SerializerMethodField()
+    is_sponsored = serializers.SerializerMethodField()
+    promotion = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = ["id", "seller", "name", "price", "total_rating", "description", "images", "videos", "is_sponsored"]
+        fields = [
+            "id",
+            "seller_id",
+            "seller",
+            "name",
+            "price",
+            "total_rating",
+            "description",
+            "images",
+            "videos",
+            "is_online",
+            "is_sponsored",
+            "promotion",
+        ]
 
     def get_total_rating(self, obj):
         stats = obj.feedback_set.aggregate(avg=Avg("rating"), count=Count("id"))
         return {
             "average": round(stats["avg"], 1) if stats["avg"] else 0,
-            "count": stats["count"]
+            "count": stats["count"],
         }
+
+    def get_seller_id(self, obj):
+        return obj.seller.user.id
+
+    def get_is_sponsored(self, obj):
+        now = timezone.now()
+        return obj.ads.filter(ad_type="sponsored", is_active=True, ended_at__gte=now).exists()
+
+    def get_promotion(self, obj):
+        """
+        Retourne la promo active du produit (s’il y en a une).
+        """
+        now = timezone.now()
+        promo = obj.promotions.filter(ended_at__gte=now).first()
+        if promo:
+            return {
+                "id": promo.id,
+                "discount_percent": promo.discount_percent,
+                "discount_price": promo.discount_price,
+                "ended_at": promo.ended_at,
+            }
+        return None
+
+
+class ProductCreateSerializer(serializers.ModelSerializer):
+    images = serializers.ListField(
+        child=serializers.ImageField(), write_only=True, required=False
+    )
+    videos = serializers.ListField(
+        child=serializers.FileField(), write_only=True, required=False
+    )
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(), required=False, allow_null=True
+    )
+
+    class Meta:
+        model = Product
+        fields = [
+            "id",
+            "name",
+            "description",
+            "price",
+            "category",
+            "images",
+            "is_online",
+            "videos",
+            "status",
+        ]
+        read_only_fields = ["id"]
+
+    def validate_price(self, value):
+        if value is None or value < 0:
+            raise serializers.ValidationError("Le prix doit être un entier positif.")
+        return value
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+
+        if not user or not user.is_authenticated:
+            raise serializers.ValidationError("Utilisateur non authentifié.")
+
+        seller_profile = getattr(user, "seller_profile", None)
+        if not seller_profile:
+            raise serializers.ValidationError("Impossible : utilisateur non vendeur.")
+
+        # Vérification du quota de produits
+        current_count = seller_profile.product_set.count()
+        if seller_profile.is_premium:
+            if current_count >= 500:
+                raise serializers.ValidationError("Limite de 500 produits atteinte pour les vendeurs premium.")
+        else:
+            if current_count >= 20:
+                raise serializers.ValidationError("Limite de 20 produits atteinte pour les vendeurs non premium.")
+
+            # Vérification restriction vidéos
+            if "videos" in attrs and attrs["videos"]:
+                raise serializers.ValidationError("Les vendeurs non premium ne peuvent pas ajouter de vidéos.")
+
+        return attrs
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        images = validated_data.pop("images", [])
+        videos = validated_data.pop("videos", [])
+
+        seller_profile = getattr(request.user, "seller_profile", None)
+        if not seller_profile:
+            raise serializers.ValidationError("Impossible : utilisateur non vendeur.")
+
+        with transaction.atomic():
+            product = Product.objects.create(seller=seller_profile, **validated_data)
+
+            # Images
+            for idx, f in enumerate(images):
+                ProductImage.objects.create(
+                    product=product,
+                    image=f,
+                    is_main_image=(idx == 0)
+                )
+
+            # Vidéos (si premium uniquement → déjà validé dans `validate`)
+            for f in videos:
+                ProductVideo.objects.create(product=product, video=f)
+
+        return product
+
+
+
+
+class AdDetailsSerializer(serializers.ModelSerializer):
+    product = ProductDetailsSerializer(read_only=True)  # ⚡ on sérialise le produit lié
+
+    class Meta:
+        model = Ad
+        fields = [
+            "id",
+            "title",
+            "description",
+            "image",
+            "is_active",
+            "created_at",
+            "updated_at",
+            "product",
+        ]
+
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:

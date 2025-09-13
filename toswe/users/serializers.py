@@ -10,7 +10,7 @@ class UserConnexionSerializer(serializers.ModelSerializer):
         fields = ['id', 'phone', 'session_mdp', 'is_authenticated', 'is_seller']
 
 class BrandSerializer(serializers.ModelSerializer):
-    rating = serializers.FloatField()
+    rating = serializers.SerializerMethodField()
     seller_id = serializers.SerializerMethodField()
     class Meta:
         model = SellerProfile
@@ -20,11 +20,12 @@ class BrandSerializer(serializers.ModelSerializer):
         # Récupérer tous les produits du vendeur
         products = obj.product_set.all()
 
-        # Calculer la moyenne des ratings liés à ces produits
-        avg_rating = Feedback.objects.filter(product__in=products).aggregate(avg=Avg("rating"))["avg"]
+        # Agréger la moyenne et le nombre d'avis
+        stats = Feedback.objects.filter(product__in=products).aggregate(
+            avg=Avg("rating"), count=Count("id")
+        )
 
-        # Si aucun rating, renvoyer 0
-        return round(avg_rating, 1) if avg_rating else 0.0
+        return round(stats["avg"], 1) if stats["avg"] else 0
 
     def get_seller_id(self, obj):
         return obj.user.id
