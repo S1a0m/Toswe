@@ -115,11 +115,12 @@ class UserLog(models.Model):
 
 
 class SellerStatistics(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="stats")
+    seller = models.OneToOneField(SellerProfile, on_delete=models.CASCADE, related_name="stats", blank=True, null=True)
+    total_views = models.PositiveIntegerField(default=0)
     total_products = models.PositiveIntegerField(default=0)
     total_orders = models.PositiveIntegerField(default=0)
     total_income = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
-    total_loyal_customers = models.PositiveIntegerField(default=0)
+    total_subscribers = models.PositiveIntegerField(default=0)
     average_order_value = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
 
     last_sale_date = models.DateTimeField(null=True, blank=True)
@@ -127,7 +128,7 @@ class SellerStatistics(models.Model):
     best_selling_product_id = models.PositiveIntegerField(null=True, blank=True)
 
     def __str__(self):
-        return f"Stats for Seller {self.user.racine_id}"
+        return f"Stats for Seller {self.seller.user.username}"
 
 
 class UserInteractionEvent(models.Model):
@@ -149,7 +150,7 @@ class Notification(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     message = models.TextField()
-    type = models.CharField(max_length=50)  # 'order', 'promo', 'system'
+    # type = models.CharField(max_length=50)  # 'order', 'promo', 'system'
     detail_link = models.URLField(null=True, blank=True)
     is_read = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)

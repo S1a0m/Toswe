@@ -14,30 +14,30 @@
     </div>
 
     <!-- Vente -->
-    <div class="mb-8">
+    <div class="mb-8" v-if="!auth.isSeller || (auth.isSeller && !auth.isPremiumSeller)">
       <h2 class="text-lg font-semibold text-gray-600 mb-3">Vente</h2>
       <TwSettingsItem icon="uil:briefcase" label="Devenir vendeur" v-if="!auth.isSeller" @click="becomeSellerPopup.showPopup()"/>
       <TwSettingsItem icon="uil:star" label="Devenir vendeur premium" v-if="auth.isSeller && !auth.isPremiumSeller" @click="goToPremium"/>
-      <TwSettingsItem icon="uil:chart" label="Voir mes statistiques vendeur" v-if="auth.isPremiumSeller" @click="goToStats"/>
+      <!--<TwSettingsItem icon="uil:chart" label="Voir mes statistiques vendeur" v-if="auth.isPremiumSeller" @click="goToStats"/>-->
     </div>
 
     <!-- Publicité -->
     <div class="mb-8" v-if="auth.isPremiumSeller">
       <h2 class="text-lg font-semibold text-gray-600 mb-3">Publicité</h2>
       <TwSettingsItem icon="uil:megaphone" label="Créer une campagne publicitaire" @click="goToAdCreate"/>
-      <TwSettingsItem icon="uil:chart" label="Voir mes performances publicitaires" @click="goToPerformances"/>
+      <!--<TwSettingsItem icon="uil:chart" label="Voir mes performances publicitaires" @click="goToPerformances"/>-->
     </div>
 
     <!-- Préférences -->
     <div>
       <h2 class="text-lg font-semibold text-gray-600 mb-3">Préférences</h2>
       <TwSettingsItem icon="uil:shopping-cart" label="Préférences produits" @click="preferencesPopup.showPopup()"/>
-      <TwSettingsToggle
+      <!--<TwSettingsToggle
         v-if="auth.isPremiumSeller"
         icon="uil:lock"
         label="Toujours payer avant livraison"
         v-model="auth.mustPayBeforeDelivery"
-      />
+      />-->
       <TwSettingsItem v-if="auth.isSeller" icon="uil:share-alt" label="Partager le lien de ma boutique"/>
     </div>
   </section>

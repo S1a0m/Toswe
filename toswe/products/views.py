@@ -1,8 +1,9 @@
 from django.core import signing
-from django.db.models import Q, Count, Case, When, Value, BooleanField, IntegerField
+from django.db.models import Q, Count, Case, When, Value, BooleanField, IntegerField, Prefetch
 from rest_framework import viewsets, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -10,7 +11,7 @@ from rest_framework.decorators import action, permission_classes
 from django.utils.timezone import now
 
 from users.models import CustomUser, UserInteractionEvent, Notification, SellerProfile
-from products.models import Product, Cart, Order, Delivery, Payment, CartItem, Ad, Promotion
+from products.models import Product, Cart, Order, Delivery, Payment, CartItem, Ad, Promotion, OrderItem
 from users.serializers import *
 
 from products.serializers import *
@@ -23,7 +24,7 @@ from users.authentication import JWTAuthentication
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from .models import Category
-from .serializers import CategorySerializer
+from .serializers import CategorySerializer, OrderListSerializer, OrderSerializer
 from .spbi_model import predict_top_k
 
 
@@ -410,34 +411,39 @@ class PromotionViewSet(viewsets.ModelViewSet):
 
 class AdViewSet(viewsets.ModelViewSet):
     serializer_class = AdSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]  # Seuls vendeurs connectés
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        """
-        Par défaut → uniquement les annonces génériques actives.
-        """
-        return Ad.objects.filter(is_active=True, ad_type="generic").select_related("product", "product__seller")
+        return Ad.objects.select_related("product", "product__seller", "seller")
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset().filter(is_active=True, ad_type="generic")
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         user = self.request.user
-        seller = getattr(user, "seller", None)
+        seller = getattr(user, "seller_profile", None)
         if not seller:
             raise PermissionDenied("Seuls les vendeurs peuvent créer une publicité.")
-        serializer.save()
+        serializer.save(seller=seller)
 
-    @action(detail=False, methods=["get"], url_path="seller/(?P<seller_id>[^/.]+)")
-    def by_seller(self, request, seller_id=None):
-        """ Retourne toutes les pubs d’un vendeur donné : - Si c’est le vendeur lui-même → TOUTES ses pubs (actives/inactives, expirées ou pas) - Si c’est un autre utilisateur ou anonyme → uniquement ses pubs actives et non expirées """
-        qs = self.get_queryset().filter(product__seller__id=seller_id)
-        # Si ce n’est pas le vendeur connecté → filtrer sur les promos actives
-        if request.user.is_authenticated:
-            if not qs.filter(product__seller__user=request.user).exists():
-                qs = qs.filter(ended_at__gte=now())
-            pass
-        else:
-            qs = qs.filter(ended_at__gte=now())
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
+    def by_seller(self, request):
+        """
+        Retourne uniquement les pubs "generic" en cours du vendeur connecté.
+        """
+        seller = getattr(request.user, "seller_profile", None)
+        if not seller:
+            return Response([], status=200)  # pas vendeur → pas de pubs
+
+        qs = self.get_queryset().filter(
+            seller=seller,
+            ended_at__gte=now()
+        )
         serializer = self.get_serializer(qs, many=True)
         return Response(serializer.data)
+
 
 class CartViewSet(viewsets.ModelViewSet):
     serializer_class = CartSerializer
@@ -477,16 +483,74 @@ class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
         if self.action == "create":
             return [AllowAny()]
         return [IsAuthenticated()]
 
+    def get_serializer_class(self):
+        if self.action in ["list", "as_seller"]:
+            return OrderListSerializer
+        elif self.action == "retrieve":
+            return OrderSerializer
+        else:
+            return OrderSerializer
+
     def get_queryset(self):
+        """
+        Par défaut → commandes du client connecté.
+        """
         if self.request.user.is_authenticated:
-            return Order.objects.filter(user=self.request.user)
+            return Order.objects.filter(user=self.request.user).prefetch_related("items__product")
         return Order.objects.none()
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Permet à :
+        - l’acheteur de voir sa commande
+        - le vendeur des produits inclus de voir la commande
+        """
+        instance = get_object_or_404(Order, pk=kwargs["pk"])
+
+        user = request.user
+        if instance.user == user:
+            # cas acheteur
+            pass
+        elif user.is_seller and hasattr(user, "seller_profile"):
+            # cas vendeur
+            seller_profile = user.seller_profile
+            if not instance.items.filter(product__seller=seller_profile).exists():
+                return Response({"detail": "Vous n’avez pas accès à cette commande."}, status=403)
+        else:
+            return Response({"detail": "Vous n’avez pas accès à cette commande."}, status=403)
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"])
+    def as_seller(self, request):
+        """
+        Liste toutes les commandes contenant au moins un produit du vendeur connecté.
+        """
+        user = request.user
+        if not user.is_authenticated or not user.is_seller:
+            return Response({"detail": "Accès réservé aux vendeurs."}, status=403)
+
+        seller_profile = getattr(user, "seller_profile", None)
+        if not seller_profile:
+            return Response({"detail": "Pas de profil vendeur trouvé."}, status=404)
+
+        qs = Order.objects.filter(
+            items__product__seller=seller_profile
+        ).prefetch_related(
+            Prefetch("items", queryset=OrderItem.objects.select_related("product"))
+        ).distinct()
+
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
+
 
 
 class DeliveryViewSet(viewsets.ModelViewSet):

@@ -4,55 +4,51 @@
       Notifications
     </h2>
 
-    <div class="flex flex-col gap-4">
+    <div v-if="!notifications.length" class="text-center py-20">
+      <p  class="text-gray-500">Aucune notification pour le moment.</p>
+    </div>
+
+    <div class="flex flex-col gap-4" v-else>
       <TwNotification
         v-for="(notif, index) in notifications"
         :key="index"
         :title="notif.title"
         :message="notif.message"
-        :time="notif.time"
+        :time="notif.sent_date"
+        @click="notif.detail_link"
       />
     </div>
   </section>
 </template>
 
 <script setup>
-const notifications = [
-  {
-    title: "Alerte commande",
-    message:
-      "Votre commande a été bien reçue. Vous serez livré dans quelques heures.",
-    time: "17:01"
-  },
-  {
-    title: "Nouvelle promotion",
-    message: "Profitez de 20% de réduction sur vos articles préférés.",
-    time: "15:45"
-  },
-  {
-    title: "Nouvelle promotion",
-    message: "Profitez de 20% de réduction sur vos articles préférés.",
-    time: "15:45"
-  },
-  {
-    title: "Nouvelle promotion",
-    message: "Profitez de 20% de réduction sur vos articles préférés.",
-    time: "15:45"
-  },
-  {
-    title: "Nouvelle promotion",
-    message: "Profitez de 20% de réduction sur vos articles préférés.",
-    time: "15:45"
-  },
-  {
-    title: "Nouvelle promotion",
-    message: "Profitez de 20% de réduction sur vos articles préférés.",
-    time: "15:45"
-  },
-  {
-    title: "Nouvelle promotion",
-    message: "Profitez de 20% de réduction sur vos articles préférés.",
-    time: "15:45"
+import { useAuthStore } from '@/stores/auth'
+const notifications = ref([])
+
+const auth = useAuthStore()
+
+async function fetchNotifications() {
+  try {
+    const response = await $fetch('http://127.0.0.1:8000/api/notification/',
+      { method: 'GET',
+        headers: {
+          Authorization: `Bearer ${auth.accessToken}`
+       },
+       credentials: 'include'
+      }
+    ) /*/ Remplacez par votre endpoint API
+    if (!response.ok) {
+      throw new Error('Erreur lors de la récupération des notifications')
+    }*/
+    notifications.value = response.results || response || []
+
+    console.log('Notifications récupérées :', notifications.value)
+  } catch (error) {
+    console.error(error)
   }
-]
+}
+
+onMounted(() => {
+  fetchNotifications()
+})
 </script>

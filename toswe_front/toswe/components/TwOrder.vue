@@ -1,12 +1,11 @@
 <template>
   <div
-    @click="$emit('click')"
     class="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer"
   >
     <!-- Infos commande -->
     <div>
       <p class="text-sm text-gray-500">Commande #{{ order.id }}</p>
-      <p class="text-sm text-gray-400">{{ order.date }}</p>
+      <p class="text-sm text-gray-400">{{ order.created_at }}</p>
       <p
         class="text-xs font-medium mt-1 px-2 py-1 rounded-full inline-block"
         :class="statusClasses[order.status] || statusClasses.default"
@@ -17,7 +16,7 @@
 
     <!-- Montant -->
     <div class="text-right">
-      <p class="text-base font-bold text-gray-900">{{ order.total }} FCFA</p>
+      <p class="text-base font-bold text-gray-900">{{ order.total }} fcfa</p>
       <Icon name="uil:angle-right" class="text-gray-400 text-lg" />
     </div>
   </div>

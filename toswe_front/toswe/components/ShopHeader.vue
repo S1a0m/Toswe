@@ -80,11 +80,14 @@
           {{ isSubscribed ? "Se désabonner" : "S'abonner" }}
         </button>
         <span
-          v-else
+          v-else v-if="!auth.user.is_premium"
           class="px-4 py-2 rounded-xl border border-[#e6d9d3] text-gray-700 hover:bg-[#fdf8f5] transition"
         >
-          <NuxtLink to="/stats" v-if="auth.user.is_premium">Voir mes statistiques</NuxtLink>
-          <NuxtLink to="/premium" v-else>Devenir vendeur premium</NuxtLink>
+          <!--<NuxtLink to="/stats" v-if="auth.user.is_premium">Voir mes statistiques</NuxtLink>-->
+          <NuxtLink to="/premium">Devenir vendeur premium</NuxtLink>
+        </span>
+        <span title="Partager le lien de ma boutique" class="flex items-center justify-center gap-1 px-4 py-2 rounded-xl border border-[#e6d9d3] text-gray-700 hover:bg-[#fdf8f5] transition" v-if="isOwner">
+          <Icon name="uil:share-alt" /> 
         </span>
       </div>
     </div>

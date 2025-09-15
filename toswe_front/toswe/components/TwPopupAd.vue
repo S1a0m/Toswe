@@ -12,7 +12,7 @@ let intervalId = null
 async function fetchAds() {
   try {
     const data = await $fetch("http://127.0.0.1:8000/api/ad/")
-    ads.value = data.results || []
+    ads.value = data || []
   } catch (err) {
     console.error("Erreur chargement ads:", err)
   }
@@ -31,7 +31,7 @@ function closePopup() {
 onMounted(async () => {
   await fetchAds()
   if (ads.value.length) {
-    intervalId = setInterval(showNextAd, 60000) // toutes les 15s
+    intervalId = setInterval(showNextAd, 15000) // toutes les 15s
     showNextAd()
   }
 })

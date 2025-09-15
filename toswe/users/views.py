@@ -1,3 +1,5 @@
+from django.db.models import Sum, F
+from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 import requests
@@ -6,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 
 from users.models import CustomUser, Notification, UserInteractionEvent
-from products.models import Product, Cart, Order, Delivery, Payment
+from products.models import Product, Cart, Order, Delivery, Payment, OrderItem
 from .serializers import *
 from toswe.payments import PaymentGateway
 from toswe.utils import verify_token
@@ -104,6 +106,7 @@ class UserViewSet(viewsets.ModelViewSet):
             slogan = ""
             about = ""
             shop_name = ""
+            logo = None
             if user.is_seller and hasattr(user, "seller_profile"):
                 is_brand = user.seller_profile.is_brand
                 is_premium = user.seller_profile.is_premium
@@ -111,6 +114,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 slogan = user.seller_profile.slogan
                 about = user.seller_profile.about
                 shop_name = user.seller_profile.shop_name
+                logo = user.seller_profile.logo.url if user.seller_profile.logo else None
 
             response = Response({
                 "access": access_token,
@@ -127,6 +131,7 @@ class UserViewSet(viewsets.ModelViewSet):
                     "shop_name": shop_name,
                     "slogan": slogan,
                     "about": about,
+                    "logo": logo,
                 }
             })
 
@@ -168,6 +173,7 @@ class UserViewSet(viewsets.ModelViewSet):
         slogan = ""
         about = ""
         shop_name = ""
+        logo = None
         if user.is_seller and hasattr(user, "seller_profile"):
             is_brand = user.seller_profile.is_brand
             is_premium = user.seller_profile.is_premium
@@ -175,10 +181,11 @@ class UserViewSet(viewsets.ModelViewSet):
             slogan = user.seller_profile.slogan
             about = user.seller_profile.about
             shop_name = user.seller_profile.shop_name
+            logo = user.seller_profile.logo.url if user.seller_profile.logo else None
 
         return Response({"id": user.id, "username": user.username, "address": user.address, "phone": user.phone,
                      "is_seller": user.is_seller, "is_premium": is_premium, "is_brand": is_brand,
-                     "is_verified": is_verified, "shop_name": shop_name, "slogan": slogan, "about": about, })
+                     "is_verified": is_verified, "shop_name": shop_name, "slogan": slogan, "about": about, "logo": logo})
 
     @action(detail=False, methods=["post"])
     def update_me(self, request):
@@ -204,6 +211,7 @@ class UserViewSet(viewsets.ModelViewSet):
         shop_name = ""
         slogan = ""
         about = ""
+        logo = ""
 
         seller_profile = None
         if user.is_seller and hasattr(user, "seller_profile"):
@@ -211,10 +219,12 @@ class UserViewSet(viewsets.ModelViewSet):
             shop_name = data.get("shop_name", seller_profile.shop_name)
             slogan = data.get("slogan", seller_profile.slogan)
             about = data.get("about", seller_profile.about)
+            logo = data.get("logo", seller_profile.logo).url if seller_profile.logo else None
 
             seller_profile.shop_name = shop_name
             seller_profile.slogan = slogan
             seller_profile.about = about
+            seller_profile.logo = logo
 
             is_brand = seller_profile.is_brand
             is_premium = seller_profile.is_premium
@@ -237,6 +247,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 "shop_name": shop_name,
                 "slogan": slogan,
                 "about": about,
+                "logo": logo,
 
         }, status=status.HTTP_200_OK)
 
@@ -399,13 +410,72 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response({'status': 'Vendeur premium activé avec succès !'})
 
 
-    @action(detail=True, methods=['get'])
-    def seller_stats(self, request, pk=None):
-        user = self.get_object()
-        if not user.is_seller:
-            return Response({'status': 'vendeur non reconnu'}, status=401)
-        serializer = SellerStatisticsSerializer(user)
-        return Response(serializer.data)
+
+class SellerProfileViewSet(viewsets.ModelViewSet):
+    queryset = SellerProfile.objects.all()
+    serializer_class = SellerProfileSerializer
+
+    @action(detail=False, methods=["get"])
+    def my_stats(self, request):
+        user = request.user
+        if not user.is_authenticated or not hasattr(user, "seller_profile"):
+            return Response({"detail": "Vous n’êtes pas un vendeur."}, status=403)
+
+        seller = user.seller_profile
+
+        # Produits actifs
+        total_products = Product.objects.filter(seller=seller, is_online=True).count()
+
+        # Commandes et revenus des 30 derniers jours
+        from django.utils.timezone import now
+        from datetime import timedelta
+        one_month_ago = now() - timedelta(days=30)
+
+        agg = OrderItem.objects.filter(
+            order__created_at__gte=one_month_ago,
+            product__seller=seller
+        ).aggregate(
+            sales_30d=Count("id"),
+            revenue_30d=Sum(F("quantity") * F("product__price"))
+        )
+
+        sales_30d = agg["sales_30d"] or 0
+        revenue_30d = agg["revenue_30d"] or 0
+
+        total_subscribers = seller.subscribers.count() if hasattr(seller, "subscribers") else 0
+
+        data = {
+            "products_active": total_products,
+            "sales_30d": sales_30d,
+            "revenue_30d": revenue_30d,
+            "loycs": total_subscribers,
+        }
+        return Response(data)
+
+    @action(detail=False, methods=["get"])
+    def my_subscribers(self, request):
+        user = request.user
+        if not user.is_authenticated or not hasattr(user, "seller_profile"):
+            return Response({"detail": "Vous n’êtes pas un vendeur."}, status=403)
+
+        seller = user.seller_profile
+
+        subscribers = seller.subscribers.all() if hasattr(seller, "subscribers") else []
+
+        data = []
+        for sub in subscribers:
+            orders_count = Order.objects.filter(
+                user=sub,
+                items__product__seller=seller
+            ).distinct().count()
+            data.append({
+                "id": sub.id,
+                "username": sub.username,
+                "phone": sub.phone,
+                "orders_count": orders_count,
+            })
+
+        return Response(data)
 
 
 class RefreshTokenView(APIView):
@@ -454,5 +524,12 @@ class NotificationViewSet(viewsets.ModelViewSet):
         notification = self.get_object()
         notification.is_deleted = True
         notification.save()
-        return Response({"detail": "Notification supprimée (virtuellement)."})
+        return Response({"detail": "Notification supprimée."})
+
+    @action(detail=False, methods=["post"])
+    def read(self, request, pk=None):
+        notification = self.get_object()
+        notification.is_read = True
+        notification.save()
+        return Response({"detail": "Notification read."})
 

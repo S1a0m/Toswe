@@ -142,6 +142,7 @@ class Ad(models.Model):
         ("sponsored", "Sponsorisation Produit"),
     ]
 
+    seller = models.ForeignKey('users.SellerProfile', on_delete=models.CASCADE, blank=True, null=True)
     title = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     product = models.ForeignKey(

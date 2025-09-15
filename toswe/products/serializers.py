@@ -140,7 +140,10 @@ class AdSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         user = self.context["request"].user
-        seller = getattr(user, "seller", None)
+        # seller = getattr(user, "seller_profile", None)
+        seller = user.seller_profile
+        print("Vendeur:?", user)
+        print("Seller:?", user.seller_profile, seller)
 
         if not seller:
             raise serializers.ValidationError("Seuls les vendeurs peuvent créer une publicité.")
@@ -426,6 +429,7 @@ class CartSerializer(serializers.ModelSerializer):
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
+    main_image = serializers.SerializerMethodField()
     product_id = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(),
         source="product",
@@ -434,19 +438,36 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItem
-        fields = ["id", "product", "product_id", "quantity", "price"]
+        fields = ["id", "product", "product_id", "quantity", "price", "main_image"]
+
+    def get_main_image(self, obj):
+        main_img = obj.product.images.filter(is_main_image=True).first()
+        return main_img.image.url if main_img else None
+
+class OrderListSerializer(serializers.ModelSerializer):
+    total = serializers.SerializerMethodField()
+    class Meta:
+        model = Order
+        fields = ["id", "user", "status", "created_at", "total"]
+
+    def get_total(self, obj):
+        return sum(item.price * item.quantity for item in obj.items.all())
 
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
+    total = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
         fields = [
             "id", "user", "phone_number", "contact_method", "address",
-            "status", "created_at", "items"
+            "status", "created_at", "total", "items", "pdf"
         ]
         read_only_fields = ["id", "user", "status", "created_at"]
+
+    def get_total(self, obj):
+        return sum(item.price * item.quantity for item in obj.items.all())
 
     def create(self, validated_data):
         items_data = validated_data.pop("items", [])

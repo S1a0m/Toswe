@@ -33,6 +33,6 @@
 const props = defineProps({
   title: { type: String, default: "Notification" },
   message: { type: String, default: "Contenu de la notification" },
-  time: { type: String, default: "17:01" }
+  time: { type: String, default: "17:01" },
 })
 </script>

@@ -1,6 +1,6 @@
 from django.db.models import Avg, Count
 from rest_framework import serializers
-from users.models import CustomUser, Notification, SellerProfile
+from users.models import CustomUser, Notification, SellerProfile, SellerStatistics
 from products.models import Product, Order, Delivery, Payment, Feedback
 
 
@@ -120,27 +120,114 @@ class BecomeSellerSerializer(serializers.ModelSerializer):
 class UserNotificationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
-        fields = ['id', 'title', 'message', 'is_read', 'sent_date']
+        fields = ['id', 'title', 'message', 'is_read', 'sent_date', 'detail_link']
+
+
+class UserLiteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ("id", "username", "phone")
 
 
 class SellerStatisticsSerializer(serializers.ModelSerializer):
+    # champs calculés/agrégés
     total_products = serializers.SerializerMethodField()
     total_orders = serializers.SerializerMethodField()
-    total_feedbacks = serializers.SerializerMethodField()
 
     class Meta:
-        model = CustomUser
-        fields = ['id', 'racine_id', 'is_seller', 'is_premium',
-                  'total_products', 'total_orders', 'total_feedbacks']
+        model = SellerStatistics
+        fields = [
+            "id",
+            "total_products",
+            "total_orders",
+            "total_subscribers",
+            "total_income",
+            "average_order_value",
+            "last_sale_date",
+            "best_selling_product_name",
+            "best_selling_product_id",
+        ]
+        read_only_fields = fields
 
     def get_total_products(self, obj):
-        return Product.objects.filter(seller=obj).count()
+        # obj.seller est un SellerProfile
+        return Product.objects.filter(seller=obj.seller).count()
 
     def get_total_orders(self, obj):
-        return Order.objects.filter(product__seller=obj).count()
+        # suppose que Order a un FK vers Product: Order.product
+        return Order.objects.filter(product__seller=obj.seller).count()
 
-    def get_total_feedbacks(self, obj):
-        return Feedback.objects.filter(user=obj).count()
+
+class SellerProfileSerializer(serializers.ModelSerializer):
+    user = UserLiteSerializer(read_only=True)
+    logo = serializers.SerializerMethodField()
+    categories = serializers.SerializerMethodField()
+    subscribers_count = serializers.SerializerMethodField()
+    products_count = serializers.SerializerMethodField()
+    stats = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SellerProfile
+        fields = [
+            "id",
+            "user",
+            "shop_name",
+            "slogan",
+            "about",
+            "logo",
+            "is_brand",
+            "is_verified",
+            "is_premium",
+            "show_on_market",
+            "rating",
+            "categories",
+            "subscribers_count",
+            "products_count",
+            "stats",
+        ]
+        read_only_fields = [
+            "id",
+            "user",
+            "logo",
+            "subscribers_count",
+            "products_count",
+            "stats",
+        ]
+
+    def get_logo(self, obj):
+        """
+        Retourne une URL absolue si possible (préserve la compatibilité avec le front).
+        Evite d'exposer le FileField brut qui pourrait causer le UnicodeDecodeError.
+        """
+        if not obj.logo:
+            return None
+        request = self.context.get("request")
+        try:
+            url = obj.logo.url
+        except Exception:
+            return None
+        if request:
+            return request.build_absolute_uri(url)
+        # fallback: renvoyer l'url relative
+        return url
+
+    def get_categories(self, obj):
+        # renvoie liste de noms (ou tuples id/name si tu préfères)
+        return [c.name for c in obj.categories.all()]
+
+    def get_subscribers_count(self, obj):
+        return obj.subscribers.count()
+
+    def get_products_count(self, obj):
+        return Product.objects.filter(seller=obj).count()
+
+    def get_stats(self, obj):
+        # si un SellerStatistics est lié, sérialise-le, sinon None
+        stats = getattr(obj, "stats", None)
+        if stats:
+            return SellerStatisticsSerializer(stats, context=self.context).data
+        return None
+
 
 
 

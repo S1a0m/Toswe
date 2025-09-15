@@ -1,6 +1,6 @@
 <template>
   <section
-    class="bg-white rounded-2xl shadow-md p-6 space-y-6 max-w-4xl mx-auto transition hover:shadow-lg"
+    class="bg-white rounded-2xl shadow-md p-6 space-y-6 max-w-6xl mx-auto transition hover:shadow-lg"
   >
     <!-- Header -->
     <div class="flex justify-between items-start border-b pb-4">
@@ -8,7 +8,7 @@
         <h2 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
           <span class="text-gray-400">Commande #{{ order.id }}</span>
         </h2>
-        <p class="text-sm text-gray-500">{{ order.date }}</p>
+        <p class="text-sm text-gray-500">{{ order.created_at }}</p>
         <span
           class="mt-1 px-3 py-1 text-xs font-medium rounded-full"
           :class="statusClasses[order.status] || statusClasses.default"
@@ -22,12 +22,12 @@
     <!-- Produits -->
     <div class="space-y-4">
       <div
-        v-for="(product, index) in order.products"
+        v-for="(product, index) in order.items"
         :key="index"
         class="flex items-center gap-4 border-b pb-4 last:border-none"
       >
         <img
-          :src="product.image"
+          :src="product.main_image"
           :alt="product.name"
           class="w-16 h-16 object-cover rounded-lg shadow-sm"
         />
@@ -48,7 +48,7 @@
       <button
         class="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
       >
-        Télécharger la facture
+        <a :href="order.pdf" target="_blank">Télécharger la facture</a>
       </button>
       <button
         v-if="order.status === 'En attente'"

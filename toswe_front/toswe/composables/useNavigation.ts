@@ -22,9 +22,14 @@ export function useNavigation() {
         }
     }
 
+    function goToOrderDetails(orderId: number) {
+        return navigateTo({ path: "/order", query: { id: orderId } })
+    }
+
     return {
         goToProductDetails,
         goToShopDetails,
-        goToMyShop
+        goToMyShop,
+        goToOrderDetails
     }
 }

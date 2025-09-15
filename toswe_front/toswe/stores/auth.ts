@@ -15,6 +15,7 @@ interface User {
   about: string
   username: string
   shop_name: string
+  logo: string | null
 }
 
 
@@ -37,6 +38,7 @@ export const useAuthStore = defineStore("auth", {
     getShopName: (state) => state.user?.shop_name ?? '',
     getPhone: (state) => state.user?.phone ?? '',
     getAddress: (state) => state.user?.address ?? '',
+    getLogo: (state) => state.user?.logo ?? '',
   },
 
   actions: {
@@ -102,7 +104,7 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
-    async updateUser(username: string, phone: string, address: string, shop_name: string, about: string, slogan: string){
+    async updateUser(username: string, phone: string, address: string, shop_name: string, about: string, slogan: string, logo: File | null) {
       if (!this.accessToken) return
       try {
         const user = await $fetch<any>("http://127.0.0.1:8000/api/user/update_me/", {

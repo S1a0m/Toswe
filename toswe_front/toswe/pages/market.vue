@@ -44,8 +44,7 @@
     <TwBrands />
   </div>
 
-  <TwPopupAd
-  />
+  <TwPopupAd />
 </template>
 
 <script setup>

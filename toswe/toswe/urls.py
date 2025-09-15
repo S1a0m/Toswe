@@ -11,13 +11,14 @@ from django.conf.urls.static import static
 # )
 
 from products.views import ProductViewSet, CartViewSet, OrderViewSet, DeliveryViewSet, PaymentViewSet, FeedbackViewSet, CategoryViewSet, AdViewSet, PromotionViewSet
-from users.views import UserViewSet, NotificationViewSet, RefreshTokenView
+from users.views import UserViewSet, NotificationViewSet, RefreshTokenView, SellerProfileViewSet
 
 router = routers.SimpleRouter()
 
 router.register(r'user', UserViewSet, basename='user')
 router.register(r'feedback', FeedbackViewSet, basename='feedback')
 router.register(r'notification', NotificationViewSet, basename='notification')
+router.register(r'seller', SellerProfileViewSet, basename='seller')
 
 router.register(r'category', CategoryViewSet, basename='category')
 router.register(r'product', ProductViewSet, basename='product')

@@ -1,3 +1,4 @@
+<!-- components/TwOrders.vue -->
 <template>
   <section class="px-4 md:px-8 py-12 max-w-6xl mx-auto">
     <h2 class="text-2xl font-bold text-[#7D260F] mb-6 font-[Kenia]">
@@ -9,13 +10,15 @@
         v-for="order in orders"
         :key="order.id"
         :order="order"
-        @click="$emit('select', order)"
+        @click="goToOrderDetails(order.id)"
       />
     </div>
   </section>
 </template>
 
 <script setup>
+import { useNavigation } from '@/composables/useNavigation';
+
 defineProps({
   orders: {
     type: Array,
@@ -23,5 +26,5 @@ defineProps({
   }
 })
 
-defineEmits(['select'])
+const { goToOrderDetails } = useNavigation();
 </script>

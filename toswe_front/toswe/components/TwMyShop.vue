@@ -132,11 +132,11 @@
         <!-- Paramètres -->
         <div v-else>
           <h3 class="font-semibold text-lg mb-4">Paramètres de la boutique</h3>
-          <form class="grid gap-4 max-w-xl" @submit.prevent="saveSettings">
+          <form class="grid gap-4 max-w-xl" @submit.prevent="updateUser">
             <div>
               <label class="block text-sm font-medium mb-1">Nom de la boutique</label>
               <input
-                v-model="form.name"
+                v-model="shopName"
                 type="text"
                 class="w-full rounded-xl border border-[#e6d9d3] px-3 py-2 bg-white/70"
               />
@@ -144,7 +144,7 @@
             <div>
               <label class="block text-sm font-medium mb-1">Slogan</label>
               <input
-                v-model="form.slogan"
+                v-model="slogan"
                 type="text"
                 class="w-full rounded-xl border border-[#e6d9d3] px-3 py-2 bg-white/70"
               />
@@ -152,7 +152,7 @@
             <div>
               <label class="block text-sm font-medium mb-1">À propos</label>
               <textarea
-                v-model="form.about"
+                v-model="about"
                 rows="4"
                 class="w-full rounded-xl border border-[#e6d9d3] px-3 py-2 bg-white/70"
               ></textarea>
@@ -206,19 +206,61 @@ const active = ref('products')
 const adsList = ref([])
 async function fetchSellerAds() {
   try {
-    const data = await $fetch(`http://127.0.0.1:8000/api/ad/seller/${props.sellerId}/`)
+    const data = await $fetch(`http://127.0.0.1:8000/api/ad/by_seller/`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${auth.accessToken}`,
+      },
+      credentials: 'include',
+    })
     adsList.value = data?.results || data || []
   } catch (err) {
     console.error('Erreur chargement publicités du vendeur:', err)
   }
 }
-onMounted(fetchSellerAds)
 
 const max_products = computed(() => (auth.user?.is_premium ? 1000 : 20))
 
+
+
 // Données simulées
 const stats = ref({ sales_30d: 23, revenue_30d: 450000, loycs: 32, products_active: 12 })
-const loycs = ref([{ id: 2, username: 'Koffi', orders_count: 5 }])
+async function fetchMyStats() {
+  try {
+    const data = await $fetch("http://127.0.0.1:8000/api/seller/my_stats/", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${auth.accessToken}`,
+      },
+    })
+    stats.value = data
+  } catch (err) {
+    console.error("Erreur chargement stats vendeur:", err)
+  }
+}
+
+const loycs = ref([])
+async function fetchMyLoycs() {
+  try {
+    const data = await $fetch("http://127.0.0.1:8000/api/seller/my_subscribers/", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${auth.accessToken}`,
+      },
+    })
+    loycs.value = data
+  } catch (err) {
+    console.error("Erreur chargement abonnés:", err)
+  }
+}
+
+onMounted(() => {
+  fetchSellerAds()
+  fetchMyStats()
+  fetchMyLoycs()
+})
+
 
 const form = reactive({
   name: '',
@@ -227,7 +269,14 @@ const form = reactive({
 })
 
 const logoFile = ref(null)
-const logoPreview = ref(null)
+function buildLogoUrl(path) {
+  if (!path) return null
+  if (path.startsWith('http')) return path // déjà une URL absolue
+  return `http://127.0.0.1:8000${path.startsWith('/') ? path : '/' + path}`
+}
+
+const logoPreview = ref(buildLogoUrl(auth.getLogo))
+
 function onLogo(e) {
   const f = e.target.files?.[0]
   if (!f) {
@@ -241,6 +290,25 @@ function onLogo(e) {
     logoPreview.value = reader.result
   }
   reader.readAsDataURL(f)
+}
+
+const shopName = ref(auth.getShopName)
+const about = ref(auth.getAbout)
+const slogan = ref(auth.getSlogan)
+const address = ref(auth.getAddress)
+const phone = ref(auth.getPhone)
+const username = ref(auth.getUsername)
+
+const updateUser = async () => {
+  await auth.updateUser(
+    username.value,
+    phone.value,
+    address.value,
+    shopName.value,
+    about.value,
+    slogan.value,
+    logoFile.value
+  )
 }
 
 async function saveSettings() {
