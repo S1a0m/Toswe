@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from "vue"
 import { useNavigation } from '@/composables/useNavigation'
 
-const { goToProductDetails } = useNavigation()
+const { goToShopDetails } = useNavigation()
 
 const ads = ref([])
 const currentAdIndex = ref(0)
@@ -45,7 +45,7 @@ onUnmounted(() => {
   <transition name="fade">
     <div
       v-if="visible && ads.length"
-      class="fixed bottom-6 right-6 z-50 w-80 h-64 rounded-2xl shadow-2xl border border-white/20 overflow-hidden group"
+      class="fixed bottom-22 right-6 z-50 w-80 h-64 rounded-2xl shadow-2xl border border-white/20 overflow-hidden group"
     >
       <!-- Image full background -->
       <img
@@ -78,10 +78,14 @@ onUnmounted(() => {
           {{ ads[currentAdIndex].description }}
         </p>
 
-        <!-- Bouton visible seulement au hover -->
+        <!-- ✅ Bouton visible par défaut sur mobile/tablette, hover sur desktop -->
         <button
-          class="mt-3 bg-[#7D260F]/90 text-white px-4 py-2 rounded-lg font-medium shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-[#5b1c0b]/90 hover:shadow-xl hover:scale-105"
-          @click="goToProductDetails(ads[currentAdIndex].product)"
+          class="mt-3 bg-[#7D260F]/90 text-white px-4 py-2 rounded-lg font-medium shadow-md 
+                 opacity-100 
+                 lg:opacity-0 lg:group-hover:opacity-100 
+                 transition-all duration-300 
+                 hover:bg-[#5b1c0b]/90 hover:shadow-xl hover:scale-105"
+          @click="goToShopDetails(ads[currentAdIndex].seller_id)"
         >
           Visitez la boutique
         </button>
@@ -89,6 +93,7 @@ onUnmounted(() => {
     </div>
   </transition>
 </template>
+
 
 <style scoped>
 .fade-enter-active,

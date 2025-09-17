@@ -1,4 +1,4 @@
-from django.db.models import Sum, F
+from django.db.models import Sum, F, When, Case, IntegerField
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
@@ -264,26 +264,51 @@ class UserViewSet(viewsets.ModelViewSet):
             )
         return Response({"status": "ok"}, status=201)
 
-    @action(detail=False, methods=["get"], permission_classes=[AllowAny])
+    @action(detail=False, methods=["get"])
     def sellers(self, request):
         """
-        Récupère la liste des vendeurs.
-        Les vendeurs premium apparaissent en premier,
-        suivis des marques, puis des vendeurs classiques.
+        Liste complète des vendeurs (auth requis).
+        Tri : Premium > Marques > Autres
+        Puis par nombre d'abonnés décroissant.
         """
-        sellers = SellerProfile.objects.filter(show_on_market = True)
-
-        # Tri personnalisé
-        sellers = sellers.order_by(
-            # Premium en premier
-            models.Case(
-                models.When(is_premium=True, then=0),
-                models.When(is_brand=True, then=1),
-                default=2,
-                output_field=models.IntegerField(),
+        sellers = (
+                SellerProfile.objects.filter(show_on_market=True)
+                .annotate(subscriber_count=Count("subscribers"))
+                .order_by(
+                    Case(
+                        When(is_premium=True, then=0),
+                        When(is_brand=True, then=1),
+                        When(is_verified=True, then=2),
+                        default=2,
+                        output_field=IntegerField(),
+                    ),
+                    "-subscriber_count",
+                )
             )
-        )
+        serializer = SellerListSerializer(sellers, many=True, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
+    # 2. Top 5 (public)
+    @action(detail=False, methods=["get"], permission_classes=[AllowAny], url_path="top-sellers")
+    def top_sellers(self, request):
+        """
+        Top 5 vendeurs (accessible à tous).
+        Même tri que `sellers`, mais limité aux 5 premiers.
+        """
+        sellers = (
+            SellerProfile.objects.filter(show_on_market=True)
+            .annotate(subscriber_count=Count("subscribers"))
+            .order_by(
+                    Case(
+                        When(is_premium=True, then=0),
+                        When(is_brand=True, then=1),
+                        When(is_verified=True, then=2),
+                        default=2,
+                        output_field=IntegerField(),
+                    ),
+                    "-subscriber_count",
+                )[:5]
+        )
         serializer = SellerListSerializer(sellers, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -307,7 +332,7 @@ class UserViewSet(viewsets.ModelViewSet):
         d'abord premium puis non premium.
         """
         # Récupérer tous les profils vendeur
-        sellers = SellerProfile.objects.filter(is_brand=True, show_on_market=True).order_by("-is_premium", "shop_name")
+        sellers = SellerProfile.objects.filter(is_brand=True, show_on_market=True).order_by("-is_premium", "shop_name")[:5]
 
         serializer = BrandSerializer(sellers, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -346,11 +371,11 @@ class UserViewSet(viewsets.ModelViewSet):
             "is_verified": seller_profile.is_verified
         }, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], url_path="subscribe")
-    def subscribe(self, request, pk=None):
-        """Un utilisateur s'abonne ou se désabonne d’un vendeur"""
+    @action(detail=True, methods=["get"], url_path="is-subscribed")
+    def is_subscribed(self, request, pk=None):
+        """Vérifie si l'utilisateur courant est abonné à ce vendeur"""
         seller_user = self.get_object()
-        # print("Utilisateur subscribe:", seller_user)
+
         if not hasattr(seller_user, "seller_profile"):
             return Response({"detail": "Cet utilisateur n’est pas un vendeur."}, status=400)
 
@@ -358,15 +383,37 @@ class UserViewSet(viewsets.ModelViewSet):
         client = request.user
 
         if client == seller_user:
-            return Response({"detail": "Vous ne pouvez pas vous abonner à vous-même."}, status=400)
+            return Response({"subscribed": False, "detail": "Un vendeur ne peut pas être abonné à lui-même."})
 
         subscribed = seller_profile.subscribers.filter(id=client.id).exists()
-        if subscribed:
+        return Response({"subscribed": subscribed})
+
+    @action(detail=True, methods=["post"], url_path="subscribe")
+    def subscribe(self, request, pk=None):
+        """Toggle abonnement (abonner/désabonner) et renvoie l'état final"""
+        seller_user = self.get_object()
+
+        if not hasattr(seller_user, "seller_profile"):
+            return Response({"detail": "Cet utilisateur n’est pas un vendeur."}, status=400)
+
+        seller_profile = seller_user.seller_profile
+        client = request.user
+
+        if client == seller_user:
+            return Response(
+                {"subscribed": False, "detail": "Un vendeur ne peut pas s’abonner à lui-même."},
+                status=400
+            )
+
+        # Toggle abonnement
+        if seller_profile.subscribers.filter(id=client.id).exists():
             seller_profile.subscribers.remove(client)
-            return Response({"subscribed": False, "detail": "Désabonnement effectué ✅"})
+            subscribed = False
         else:
             seller_profile.subscribers.add(client)
-            return Response({"subscribed": True, "detail": "Abonnement réussi 🎉"})
+            subscribed = True
+
+        return Response({"subscribed": subscribed})
 
     @action(detail=False, methods=["post"])
     def become_seller(self, request):

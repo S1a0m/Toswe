@@ -55,7 +55,7 @@ async function fetchOrders() {
       headers: { Authorization: `Bearer ${auth.accessToken}` },
       credentials: "include"
     })
-    orders.value = data || []
+    orders.value = data.results || []
   } catch (err) {
     console.error("Erreur commandes client:", err)
   }

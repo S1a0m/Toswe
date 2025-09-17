@@ -204,7 +204,6 @@
 
   </header>
 
-  <div class="mb-19"></div>
   <TwPopupContacts ref="contactsPopup" />
 </template>
 

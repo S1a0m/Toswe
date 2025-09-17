@@ -1,3 +1,4 @@
+<!-- components/TwPopupPayment.vue -->
 <template>
   <div v-if="visible" class="fixed inset-0 z-8000 flex items-center justify-center bg-black/50">
     <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative animate-fadeIn">
@@ -155,7 +156,7 @@ function confirmPayment() {
     }
     emit("pay", {
       paymentType: "order",
-      method: contactMethod.value,
+      contactMethod: contactMethod.value,
       phoneNumber: phoneNumber.value,
       address: address.value,
     })

@@ -84,12 +84,8 @@
             <section v-else-if="step === 2" class="space-y-4">
               <h2 class="text-lg font-semibold">Description</h2>
               <div class="text-sm text-gray-600">Rédige une description claire — <span class="font-medium">{{ descriptionTextLength }}</span>/1000</div>
-              <QuillEditor
-                v-model:content="description"
-                content-type="html"
-                theme="snow"
-                class="min-h-[220px] bg-white rounded-md"
-              />
+              <TwTipTapEditor v-model="description" placeholder="Décris ton produit ici…" />
+
               <p v-if="errors.description" class="text-xs text-red-500">{{ errors.description }}</p>
             </section>
 
@@ -221,8 +217,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { QuillEditor } from '@vueup/vue-quill'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 

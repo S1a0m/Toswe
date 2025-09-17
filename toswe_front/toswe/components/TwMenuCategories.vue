@@ -5,9 +5,9 @@
     <div class="max-w-6xl mx-auto px-4 flex items-center gap-4 py-3">
       <!-- Icône Filtre -->
       <button
-        class="p-2 rounded-full bg-[#f8ebe8] text-[#7D260F] hover:bg-[#7D260F] hover:text-white transition-colors shadow-sm"
+        class="p-2 rounded-full bg-[#f8ebe8] text-[#7D260F] hover:bg-[#7D260F] hover:text-white transition-colors shadow-sm flex items-center justify-center"
       >
-        <Icon name="tabler:filter" size="22" />
+        <Icon name="uil:filter" size="22" />
       </button>
 
       <!-- Liste catégories -->

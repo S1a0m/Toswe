@@ -29,10 +29,10 @@
     </div>
 
     <!-- Préférences -->
-    <div>
+    <div v-if="auth.isSeller">
       <h2 class="text-lg font-semibold text-gray-600 mb-3">Préférences</h2>
-      <TwSettingsItem icon="uil:shopping-cart" label="Préférences produits" @click="preferencesPopup.showPopup()"/>
-      <!--<TwSettingsToggle
+      <!--<TwSettingsItem icon="uil:shopping-cart" label="Préférences produits" @click="preferencesPopup.showPopup()"/>
+      <TwSettingsToggle
         v-if="auth.isPremiumSeller"
         icon="uil:lock"
         label="Toujours payer avant livraison"

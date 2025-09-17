@@ -122,10 +122,12 @@ class PromotionSerializer(serializers.ModelSerializer):
 
 
 class AdSerializer(serializers.ModelSerializer):
+    seller_id = serializers.SerializerMethodField()
     class Meta:
         model = Ad
         fields = [
             "id",
+            "seller_id",
             "title",
             "description",
             "image",
@@ -185,6 +187,9 @@ class AdSerializer(serializers.ModelSerializer):
             data["image"] = None
 
         return data
+
+    def get_seller_id(self, obj):
+        return obj.seller.user.id
 
 
 
@@ -484,13 +489,35 @@ class OrderSerializer(serializers.ModelSerializer):
                 price=product.price
             )
 
+        # Génération du PDF
         from toswe.utils import generate_order_pdf
         pdf_content = generate_order_pdf(order)
         order.pdf.save(f"order_{order.id}.pdf", pdf_content)
         order.save()
 
-        return order
+        # 🔔 Envoi des notifications ICI (après ajout des items)
+        from users.models import Notification, SellerProfile
+        seller_ids = list(order.items.values_list("product__seller_id", flat=True).distinct())
+        sellers = SellerProfile.objects.filter(id__in=seller_ids)
 
+        for seller in sellers:
+            notif = Notification.objects.create(
+                user=seller.user,
+                message=f"Nouvelle commande contenant vos produits (commande #{order.id})."
+            )
+            from asgiref.sync import async_to_sync
+            from channels.layers import get_channel_layer
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"user_{seller.user.id}",
+                {
+                    "type": "send_notification",
+                    "message": notif.message,
+                    "timestamp": str(notif.created_at),
+                }
+            )
+
+        return order
 
 
 # === LIVRAISON ===

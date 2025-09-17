@@ -95,10 +95,19 @@
       </div>
     </div>
   </transition>
+
+  <!-- Toast -->
+  <TwToast
+    v-if="toast.visible"
+    :message="toast.message"
+    :type="toast.type"
+  />
 </template>
 
 <script setup>
 import { useAuthStore } from '@/stores/auth'
+import TwToast from '@/components/TwToast.vue'
+
 const auth = useAuthStore()
 const visible = ref(false)
 
@@ -113,6 +122,21 @@ const address = ref(auth.getAddress)
 const phone = ref(auth.getPhone)
 const username = ref(auth.getUsername)
 
+const toast = reactive({
+  visible: false,
+  message: "",
+  type: "success",
+})
+
+const showToast = (msg, type = "success") => {
+  toast.message = msg
+  toast.type = type
+  toast.visible = true
+  setTimeout(() => {
+    toast.visible = false
+  }, 3000)
+}
+
 const updateUser = async () => {
   await auth.updateUser(
     username.value,
@@ -122,8 +146,9 @@ const updateUser = async () => {
     about.value,
     slogan.value
   )
+  closePopup()
+  showToast("Profil mis à jour avec succès ✅", "success")
 }
-
 </script>
 
 <style scoped>

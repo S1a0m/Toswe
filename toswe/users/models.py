@@ -69,7 +69,7 @@ class SellerProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="seller_profile")
     shop_name = models.CharField(default='', max_length=100, null=True, blank=True)
     logo = models.ImageField(upload_to="logo", null=True, blank=True)
-    subscribers = models.ManyToManyField(CustomUser, related_name="subscriptions")
+    subscribers = models.ManyToManyField(CustomUser, related_name="subscriptions", blank=True)
 
     categories = models.ManyToManyField(Category, related_name="categories", blank=True)
 
@@ -147,14 +147,14 @@ class UserInteractionEvent(models.Model):
 
 
 class Notification(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, blank=True, null=True)
     title = models.CharField(max_length=255)
     message = models.TextField()
     # type = models.CharField(max_length=50)  # 'order', 'promo', 'system'
     detail_link = models.URLField(null=True, blank=True)
     is_read = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
-    sent_date = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title

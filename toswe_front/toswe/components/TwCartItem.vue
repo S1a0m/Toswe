@@ -1,38 +1,40 @@
 <template>
-  <div class="flex items-center gap-4 p-4 border-b border-gray-200">
+  <div
+    class="flex items-center gap-4 p-4 bg-white rounded-2xl shadow hover:shadow-xl transition-shadow duration-300 border border-gray-100"
+  >
     <!-- Image produit -->
     <img
-      :src="props.imageSrc"
+      :src="`http://127.0.0.1:8000${props.imageSrc}/`"
       :alt="props.productName"
       @click="goToProductDetails(props.product_id)"
-      class="w-16 h-16 object-cover rounded cursor-pointer"
+      class="w-20 h-20 object-cover rounded-2xl cursor-pointer border border-gray-200"
     />
 
     <!-- Infos produit -->
     <div class="flex-1 cursor-pointer" @click="goToProductDetails(props.product_id)">
-      <h3 class="text-base font-semibold text-gray-900">{{ props.productName }}</h3>
-      <p class="text-sm text-gray-500">{{ props.price.toLocaleString() }} fcfa</p>
+      <h3 class="text-base font-semibold text-gray-900 truncate">{{ props.productName }}</h3>
+      <p class="text-sm text-gray-500 mt-1">{{ props.price.toLocaleString() }} fcfa</p>
     </div>
 
     <!-- Quantité -->
     <div class="flex items-center gap-2">
       <button
-        class="px-2 py-1 border rounded text-gray-600 hover:bg-gray-100"
-        @click="number--"
+        class="w-8 h-8 flex items-center justify-center border rounded-lg text-gray-600 hover:bg-gray-100 transition"
+        @click="decrement"
       >-</button>
-      <span class="w-6 text-center">{{ number }}</span>
+      <span class="w-6 text-center font-medium">{{ number }}</span>
       <button
-        class="px-2 py-1 border rounded text-gray-600 hover:bg-gray-100"
-        @click="number++"
+        class="w-8 h-8 flex items-center justify-center border rounded-lg text-gray-600 hover:bg-gray-100 transition"
+        @click="increment"
       >+</button>
     </div>
 
     <!-- Supprimer -->
     <button
-      class="ml-4 text-red-500 hover:text-red-700"
+      class="ml-4 text-red-500 hover:text-red-700 transition"
       @click="cart.removeFromCart(props.product_id)"
     >
-      <Icon name="uil:trash" class="w-5 h-5" />
+      <Icon name="uil:trash-alt" class="w-5 h-5" />
     </button>
   </div>
 </template>
@@ -50,13 +52,15 @@ const props = defineProps({
   productName: { type: String, required: true },
   price: { type: Number, required: true },
   quantity: { type: Number, required: true }
-})
+}) 
+
+console.log("Image Source:", props.imageSrc); // Debugging line to check image source
 
 const cart = useCartStore()
-
+ 
 const number = ref(props.quantity)
 
 watch(number, (newVal) => {
-  cart.updateQuantity(props.id, Number(newVal))
+  cart.updateQuantity(props.product_id, Number(newVal))
 })
 </script>

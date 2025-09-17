@@ -88,10 +88,18 @@
       </div>
     </div>
   </transition>
+
+  <!-- Toast -->
+  <TwToast
+    v-if="toast.visible"
+    :message="toast.message"
+    :type="toast.type"
+  />
 </template>
 
 <script setup>
 import { useAuthStore } from '@/stores/auth'
+import TwToast from '@/components/TwToast.vue'
 const auth = useAuthStore()
 const { $apiFetch } = useNuxtApp()
 
@@ -102,7 +110,6 @@ defineExpose({ showPopup })
 
 // Champs du formulaire
 const shopName = ref("")
-// const address = ref(auth.getAddress || "")
 const about = ref("")
 const slogan = ref("")
 const selectedCategories = ref([])
@@ -110,20 +117,9 @@ const logoFile = ref(null)
 const logoPreview = ref(null)
 
 // Catégories disponibles
-const { data: categories, pending, error } = await useAsyncData('categories', () =>
+const { data: categories } = await useAsyncData('categories', () =>
   $fetch('http://127.0.0.1:8000/api/category/')
 )
-/*const categories = [
-  'Accessoires',
-  'Agroalimentaire',
-  'Artisanat',
-  'Céréales',
-  'Cosmétiques',
-  'Cuisines & Ustensiles',
-  'Fruits',
-  'Marques',
-  'Vêtements',
-]*/
 
 // Gestion du fichier
 function onFileChange(e) {
@@ -134,6 +130,22 @@ function onFileChange(e) {
   }
 }
 
+// Toast
+const toast = reactive({
+  visible: false,
+  message: "",
+  type: "success",
+})
+
+const showToast = (msg, type = "success") => {
+  toast.message = msg
+  toast.type = type
+  toast.visible = true
+  setTimeout(() => {
+    toast.visible = false
+  }, 3000)
+}
+
 // Soumission formulaire
 async function submitForm() {
   if (!auth.accessToken) return
@@ -142,22 +154,22 @@ async function submitForm() {
   formData.append("shop_name", shopName.value)
   formData.append("about", about.value)
   formData.append("slogan", slogan.value)
-  //formData.append("address", address.value) // depuis ton store
-  formData.append("categories", selectedCategories.value.join(",")) // backend reçoit string CSV
+  formData.append("categories", selectedCategories.value.join(","))
   if (logoFile.value) {
     formData.append("logo", logoFile.value)
   }
 
   try {
-    const json = await $apiFetch("http://127.0.0.1:8000/api/user/become_seller/", {
+    await $apiFetch("http://127.0.0.1:8000/api/user/become_seller/", {
       method: "POST",
       body: formData,
     })
-    console.log("Seller profile created:", json)
     auth.user.is_seller = true
     closePopup()
+    showToast("Votre demande de vendeur a été envoyée 🚀", "success")
   } catch (err) {
     console.error("Erreur création vendeur:", err)
+    showToast("Erreur lors de l'envoi de la demande ❌", "error")
   }
 }
 </script>

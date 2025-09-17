@@ -89,14 +89,66 @@
         :key="index"
         :src="value.image"
         :alt="`Image produit ${index + 1}`"
-        class="w-64 md:w-full rounded-lg object-cover flex-shrink-0 cursor-zoom-in transition-transform duration-300 hover:scale-105 hover:shadow-lg"
+        class="w-64 md:w-full rounded-lg object-cover flex-shrink-0 max-h-70 cursor-zoom-in transition-transform duration-300 hover:scale-105 hover:shadow-lg"
         @click="openLightbox(index)"
       />
+      <!-- Vidéos -->
+        <div
+          v-for="(value, index) in product.videos"
+          :key="`vid-${value.id}`"
+          class="relative w-64 md:w-full min-h-70 rounded-lg overflow-hidden cursor-pointer group"
+          @click="openVideo(value.video)"
+        >
+          <!-- Thumbnail vidéo (affiche la première frame ou fond noir si pas dispo) -->
+          <video
+            :src="value.video"
+            class="w-full h-full object-cover pointer-events-none"
+            preload="metadata"
+            muted
+          ></video>
+
+          <!-- Overlay sombre -->
+          <div class="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition"></div>
+
+          <!-- Icône Play -->
+          <div class="absolute inset-0 flex items-center justify-center">
+            <Icon name="mdi:play-circle" class="text-white w-16 h-16 drop-shadow-lg" />
+          </div>
+        </div>
+
+        <!-- Lightbox Vidéo -->
+      <Teleport to="body">
+        <transition name="fade">
+          <div
+            v-if="videoOpen"
+            class="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center"
+            @click.self="closeVideo"
+          >
+            <button
+              class="absolute top-4 right-4 rounded-full bg-white/20 hover:bg-white/30 text-white p-2"
+              aria-label="Fermer"
+              @click="closeVideo"
+            >
+              ✕
+            </button>
+
+            <video
+              :src="currentVideo"
+              controls
+              autoplay
+              class="max-w-[92vw] max-h-[90vh] rounded-lg shadow-2xl"
+            ></video>
+          </div>
+        </transition>
+      </Teleport>
+          <!-- Icône Play au centre -->
+          
     </div>
 
     <!-- Description -->
-    <p class="text-gray-700 leading-relaxed text-base mb-6">
-      {{ product.description }}
+    <p class="text-gray-700 leading-relaxed text-base mb-6" v-html="DOMPurify.sanitize(product.description, {
+      ALLOWED_TAGS: ['b', 'i', 'strong', 'em', 'br']
+    })">
     </p>
 
     <!-- ✅ Bouton Ajouter uniquement si ce n'est PAS le propriétaire -->
@@ -165,6 +217,8 @@ import { useCartStore } from '@/stores/cart'
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+
+import DOMPurify from 'dompurify'
 
 const route = useRoute()
 const cart = useCartStore()
@@ -255,6 +309,23 @@ function onKey(e) {
   if (e.key === 'ArrowRight') return next()
   if (e.key === 'ArrowLeft') return prev()
 }
+
+// script setup
+const videoOpen = ref(false)
+const currentVideo = ref(null)
+
+function openVideo(src) {
+  currentVideo.value = src
+  videoOpen.value = true
+  document.body.style.overflow = "hidden"
+}
+
+function closeVideo() {
+  videoOpen.value = false
+  currentVideo.value = null
+  document.body.style.overflow = ""
+}
+
 onMounted(() => window.addEventListener('keydown', onKey))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>

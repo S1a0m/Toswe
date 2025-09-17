@@ -37,7 +37,7 @@ class SellerListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SellerProfile
-        fields = ['id', 'seller_user_id', 'shop_name', 'logo', 'total_subscribers']
+        fields = ['id', 'seller_user_id', 'shop_name', 'logo', 'total_subscribers', 'is_verified', 'is_brand']
 
     def get_seller_user_id(self, obj):
         return obj.user.id
@@ -120,7 +120,7 @@ class BecomeSellerSerializer(serializers.ModelSerializer):
 class UserNotificationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
-        fields = ['id', 'title', 'message', 'is_read', 'sent_date', 'detail_link']
+        fields = ['id', 'title', 'message', 'is_read', 'created_at', 'detail_link']
 
 
 class UserLiteSerializer(serializers.ModelSerializer):
@@ -203,7 +203,7 @@ class SellerProfileSerializer(serializers.ModelSerializer):
             return None
         request = self.context.get("request")
         try:
-            url = obj.logo.url
+            url = obj.logo.url # request.build_absolute_uri(obj.logo.url)
         except Exception:
             return None
         if request:

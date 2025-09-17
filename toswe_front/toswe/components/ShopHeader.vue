@@ -83,10 +83,13 @@
           v-else v-if="!auth.user.is_premium"
           class="px-4 py-2 rounded-xl border border-[#e6d9d3] text-gray-700 hover:bg-[#fdf8f5] transition"
         >
-          <!--<NuxtLink to="/stats" v-if="auth.user.is_premium">Voir mes statistiques</NuxtLink>-->
           <NuxtLink to="/premium">Devenir vendeur premium</NuxtLink>
         </span>
-        <span title="Partager le lien de ma boutique" class="flex items-center justify-center gap-1 px-4 py-2 rounded-xl border border-[#e6d9d3] text-gray-700 hover:bg-[#fdf8f5] transition" v-if="isOwner">
+        <span
+          title="Partager le lien de ma boutique"
+          class="flex items-center justify-center gap-1 px-4 py-2 rounded-xl border border-[#e6d9d3] text-gray-700 hover:bg-[#fdf8f5] transition"
+          v-if="isOwner"
+        >
           <Icon name="uil:share-alt" /> 
         </span>
       </div>
@@ -96,6 +99,7 @@
 
 <script setup>
 import { useAuthStore } from '@/stores/auth'
+import { onMounted, ref } from 'vue'
 
 const props = defineProps({
   shop: { type: Object, required: true },
@@ -106,7 +110,24 @@ const auth = useAuthStore()
 
 // état abonnements
 const totalSubscribers = ref(props.shop.loyal_customers_count || 0)
-const isSubscribed = ref(false) // on peut l’initialiser via API si besoin
+const isSubscribed = ref(false)
+
+onMounted(async () => {
+  if (auth.isAuthenticated && !props.isOwner) {
+    try {
+      const res = await $fetch(
+        `http://127.0.0.1:8000/api/user/${props.shop.seller_user_id}/is-subscribed/`,
+        {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${auth.accessToken}` }
+        }
+      )
+      isSubscribed.value = res.subscribed
+    } catch (err) {
+      console.warn('Impossible de récupérer le statut abonnement', err)
+    }
+  }
+})
 
 const toggleSubscribe = async () => {
   if (!auth.isAuthenticated) {

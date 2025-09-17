@@ -1,4 +1,4 @@
-<!--<TwProduct />-->
+<!-- TwProduct.vue -->
 <template>
   <div
     class="relative group w-full max-w-xs rounded-2xl overflow-hidden shadow-md 
@@ -36,7 +36,7 @@
 
       <!-- ✅ Boutons CRUD (uniquement si propriétaire) -->
       <div
-        v-if="isOwner"
+        v-if="isOwner && route.path !== '/market'"
         class="absolute top-3 right-3 flex flex-col gap-2 z-20"
       >
         <button
@@ -64,7 +64,7 @@
         {{ productName }}
       </h3>
 
-      <p class="text-xs opacity-90 line-clamp-2">{{ description }}</p>
+      <p class="text-xs opacity-90 line-clamp-2" v-html="contentSanitized"></p>
 
       <!-- Étoiles -->
       <div class="flex items-center gap-1 mt-1">
@@ -84,10 +84,12 @@
         <span class="text-xs opacity-80">({{ rating.toFixed(1) }})</span>
       </div>
 
-      <!-- Prix + bouton Panier -->
+      <!-- ✅ Prix + bouton Panier -->
       <div
-        class="flex items-center justify-between mt-3 opacity-0 translate-y-5 
-               group-hover:opacity-100 group-hover:translate-y-0 
+        class="flex items-center justify-between mt-3 
+               opacity-100 translate-y-0 
+               lg:opacity-0 lg:translate-y-5 
+               lg:group-hover:opacity-100 lg:group-hover:translate-y-0 
                transition-all duration-500"
       >
         <span class="text-sm font-semibold text-yellow-300">{{ price }} FCFA</span>
@@ -107,12 +109,19 @@
   </div>
 </template>
 
+
 <script setup>
 import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import { useInteractionsStore } from '@/stores/interactions'
 import { useNavigation } from '@/composables/useNavigation'
+import { useRoute } from 'vue-router'
+
+import DOMPurify from 'dompurify'
+
+
+const route = useRoute()
 
 const { goToProductDetails } = useNavigation()
 const auth = useAuthStore()
@@ -167,4 +176,9 @@ function deleteProduct() {
     console.log('Supprimer produit', props.id)
   }
 }
+
+const contentSanitized = DOMPurify.sanitize(props.description, {
+  ALLOWED_TAGS: ['b', 'i', 'strong', 'em', 'br']
+})
+
 </script>

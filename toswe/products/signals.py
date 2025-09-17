@@ -43,39 +43,17 @@ def generate_qr_code(sender, instance, created, **kwargs):
         instance.save(update_fields=['qr_code'])
 
 
-@receiver(post_save, sender=Order)
-def order_created_notification(sender, instance, created, **kwargs):
-    if created:
-        # Génération du PDF
-        pdf_file = generate_order_pdf(instance)
-        filename = f"order_{instance.id}.pdf"
-        instance.pdf.save(filename, pdf_file, save=True)
-
-        # Notification (si tu en as besoin)
-        Notification.objects.create(
-            user=instance.user,
-            title=f"Commande #{instance.id}",
-            message=f"Votre commande #{instance.id} a été bien recu. On vous repond dans les 20 minutes",
-        )
-
-        # WebSocket si nécessaire
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-           "notifications",
-           {"type": "send_notification", "message": f"Nouvelle commande #{instance.id}"}
-        )
-
 @receiver(post_save, sender=SellerProfile)
 def become_seller_notification(sender, instance, created, **kwargs):
     if created:
         notif = Notification.objects.create(
             user=instance.user,
             title="Demande pour devenir vendeur",
-            messages="Nous avons recu votre demande. Nous vous ferons un retour dans les 24 heures"
+            message="Nous avons recu votre demande. Nous vous ferons un retour dans les 24 heures"
         )
 
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             "notifications",
-            {"type": "send_notification", "message": f"Votre commande demande est en cours d'analyse."}
+            {"type": "send_notification", "message": f"Votre demande est en cours d'analyse."}
         )

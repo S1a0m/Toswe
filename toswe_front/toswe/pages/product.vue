@@ -5,7 +5,7 @@
   <!-- Produits du vendeur -->
   <TwProducts 
     v-if="sellerProducts.length" 
-    title="Produits du même vendeur" 
+    title="Du même vendeur" 
     :products="sellerProducts"
   />
 

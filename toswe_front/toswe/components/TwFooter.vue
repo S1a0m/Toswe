@@ -28,14 +28,14 @@
               >Conditions d'utilisation</a
             >
           </li>
-          <li>
+          <!--<li>
             <a
               href="#features-section"
               class="text-gray-400 hover:underline"
               >Fonctionnalités</a
             >
           </li>
-          <!--<li
+          <li
               v-if="canInstall"
               @click="install">
             <a href="#telechargement" class="text-gray-400 hover:underline"

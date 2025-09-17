@@ -1,7 +1,9 @@
+<!-- layouts/default.vue -->
 <template>
-  <TwHeader></TwHeader>
+  <TwHeader />
+  <div class="mb-19"></div>
     <div class="min-h-screen">
       <slot></slot>
     </div>
-  <TwFooter></TwFooter>
+  <TwFooter />
 </template>

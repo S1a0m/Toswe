@@ -11,6 +11,7 @@
       1280: { slidesPerView: 4 }   // Très grands écrans : 4 cartes
     }"
   >
+    <!-- Slides vendeurs -->
     <SwiperSlide
       v-for="(seller, index) in sellers"
       :key="index"
@@ -22,16 +23,30 @@
         :image-src="seller.logo"
         :shop-name="seller.shop_name"
         :total-subscribers="seller.total_subscribers"
+        :is-verified="seller.is_verified"
+        :is-brand="seller.is_brand"
       />
     </SwiperSlide>
-    <NuxtLink
-      to="/sellers"
-      class="absolute top-1/2 right-4 -translate-y-1/2 bg-white bg-opacity-70 hover:bg-opacity-100 text-gray-800 font-semibold py-2 px-4 rounded-full shadow-lg transition duration-300"
-    >
-      Voir tous les vendeurs
-    </NuxtLink>
+
+    <!-- Slide spécial "Voir plus" -->
+    <SwiperSlide class="flex justify-center">
+      <NuxtLink
+        to="/sellers"
+        class="flex flex-col items-center justify-center h-56 border-2 border-dashed border-[#7D260F]/40 hover:border-[#7D260F]  group bg-white 
+        relative w-full max-w-sm rounded-3xl overflow-hidden shadow-lg 
+           group cursor-pointer transition-all duration-500 hover:shadow-2xl"
+      >
+        <div class="flex items-center justify-center w-16 h-16 rounded-full bg-[#7D260F]/10 group-hover:bg-[#7D260F]/20 transition">
+          <Icon name="mdi:arrow-right-bold-circle" class="w-10 h-10 text-[#7D260F]" />
+        </div>
+        <p class="mt-4 font-semibold text-[#7D260F] group-hover:underline">
+          Voir tous les vendeurs
+        </p>
+      </NuxtLink>
+    </SwiperSlide>
   </Swiper>
 </template>
+
 
 
 <script setup>
@@ -52,6 +67,6 @@ import 'swiper/css/autoplay'
 // const imageUrl = new URL('@/assets/images/img1.png', import.meta.url).href
 
 const { data: sellers, pending, error } = await useAsyncData('sellers', () =>
-  $fetch('http://127.0.0.1:8000/api/user/sellers/')
+  $fetch('http://127.0.0.1:8000/api/user/top-sellers/')
 )
 </script>
