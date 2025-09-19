@@ -36,6 +36,7 @@
     <p class="mt-6 text-sm text-gray-70">
       Vous êtes un vendeur ? Allez dans les <span @click="goToSettings" class="cursor-pointer text-[#7D260F] hover:underline">paramètres</span> de votre compte pour lancer votre boutique !
     </p>
+  <TwMenuSide />
   </main>
 </template>
 
@@ -51,7 +52,7 @@ const auth = useAuthStore()
 
 const fetchSellers = async () => {
   try {
-    const res = await $fetch("http://127.0.0.1:8000/api/user/sellers/", {
+    const res = await $fetch("http://127.0.0.1:8000/api/seller/sellers/", {
       headers: {
         Authorization: `Bearer ${auth.accessToken}`,
       },

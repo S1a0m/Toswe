@@ -5,9 +5,13 @@ from products.models import Product, Order, Delivery, Payment, Feedback
 
 
 class UserConnexionSerializer(serializers.ModelSerializer):
+    is_seller = serializers.SerializerMethodField()
     class Meta:
         model = CustomUser
         fields = ['id', 'phone', 'session_mdp', 'is_authenticated', 'is_seller']
+
+    def get_is_gamer(self, obj):
+        return hasattr(obj, 'seller_profile')
 
 class BrandSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()

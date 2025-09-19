@@ -18,7 +18,7 @@ export function useNavigation() {
     function goToMyShop() {
         const auth = useAuthStore()
         if (auth.user && auth.user.is_seller) {
-            return navigateTo({ path: "/shop", query: { id: auth.user.id } })
+            return navigateTo({ path: "/shop", query: { id: auth.user.shop_id } })
         }
     }
 
@@ -26,10 +26,15 @@ export function useNavigation() {
         return navigateTo({ path: "/order", query: { id: orderId } })
     }
 
+    function goToProductEdit(productId: number) {
+        return navigateTo({ path: "/edit", query: { id: productId } })
+    }
+
     return {
         goToProductDetails,
         goToShopDetails,
         goToMyShop,
-        goToOrderDetails
+        goToOrderDetails,
+        goToProductEdit
     }
 }

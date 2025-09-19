@@ -19,7 +19,6 @@
     >
       <TwSellerMix
         :id="seller.id"
-        :seller-id="seller.seller_user_id"
         :image-src="seller.logo"
         :shop-name="seller.shop_name"
         :total-subscribers="seller.total_subscribers"
@@ -67,6 +66,6 @@ import 'swiper/css/autoplay'
 // const imageUrl = new URL('@/assets/images/img1.png', import.meta.url).href
 
 const { data: sellers, pending, error } = await useAsyncData('sellers', () =>
-  $fetch('http://127.0.0.1:8000/api/user/top-sellers/')
+  $fetch('http://127.0.0.1:8000/api/seller/top-sellers/')
 )
 </script>

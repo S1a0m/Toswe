@@ -195,6 +195,7 @@ class AdSerializer(serializers.ModelSerializer):
 
 
 class ProductDetailsSerializer(serializers.ModelSerializer):
+    category = serializers.SerializerMethodField()
     images = ProductImageSerializer(many=True, read_only=True)
     videos = ProductVideoSerializer(many=True, read_only=True)
     total_rating = serializers.SerializerMethodField()
@@ -208,6 +209,7 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             "id",
             "seller_id",
             "seller",
+            "category",
             "name",
             "price",
             "total_rating",
@@ -218,6 +220,9 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             "is_sponsored",
             "promotion",
         ]
+
+    def get_category(self, obj):
+        return obj.category.name
 
     def get_total_rating(self, obj):
         stats = obj.feedback_set.aggregate(avg=Avg("rating"), count=Count("id"))
@@ -448,6 +453,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
     def get_main_image(self, obj):
         main_img = obj.product.images.filter(is_main_image=True).first()
         return main_img.image.url if main_img else None
+    
+
 
 class OrderListSerializer(serializers.ModelSerializer):
     total = serializers.SerializerMethodField()
@@ -519,6 +526,30 @@ class OrderSerializer(serializers.ModelSerializer):
 
         return order
 
+class OrderForSellerSerializer(serializers.ModelSerializer):
+    items = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = [
+            "id",
+            "phone_number",
+            "contact_method",
+            "address",
+            "status",
+            "created_at",
+            "items",
+        ]
+
+    def get_items(self, obj):
+        """Retourne seulement les items appartenant au vendeur connecté"""
+        request = self.context.get("request")
+        seller_profile = getattr(request.user, "seller_profile", None)
+        if not seller_profile:
+            return []
+
+        seller_items = obj.items.filter(product__seller=seller_profile)
+        return OrderItemSerializer(seller_items, many=True).data
 
 # === LIVRAISON ===
 

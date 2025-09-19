@@ -74,7 +74,7 @@
           class="flex-1 px-5 py-2.5 bg-[#7D260F] text-white text-sm sm:text-base 
                  font-medium rounded-full shadow-md 
                  hover:bg-[#661f0c] transition active:scale-95"
-          @click.stop="goToShopDetails(sellerId)"
+          @click.stop="goToShopDetails(id)"
         >
           Visiter
         </button>
@@ -90,7 +90,6 @@ import { ref, onMounted } from "vue"
 
 const props = defineProps({
   id: { type: Number, required: true },
-  sellerId: { type: Number, required: true },
   imageSrc: { type: String, default: "/images/pagne.jpg" },
   shopName: { type: String, default: "Nom de la boutique" },
   totalSubscribers: { type: Number, default: 128 },
@@ -108,7 +107,7 @@ onMounted(async () => {
   if (auth.isAuthenticated) {
     try {
       const res = await $fetch(
-        `http://127.0.0.1:8000/api/user/${props.sellerId}/is-subscribed/`,
+        `http://127.0.0.1:8000/api/user/${props.id}/is-subscribed/`,
         {
           method: "GET",
           headers: { Authorization: `Bearer ${auth.accessToken}` }
@@ -128,7 +127,7 @@ const toggleSubscribe = async () => {
 
   try {
     const res = await $fetch(
-      `http://127.0.0.1:8000/api/user/${props.sellerId}/subscribe/`,
+      `http://127.0.0.1:8000/api/user/${props.id}/subscribe/`,
       {
         method: "POST",
         headers: { Authorization: `Bearer ${auth.accessToken}` }

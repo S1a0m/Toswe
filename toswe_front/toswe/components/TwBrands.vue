@@ -26,7 +26,7 @@
         :brand-name="brand.shop_name"
         :slogan="brand.slogan"
         :rating="brand.rating"
-        :seller-id="brand.seller_id"
+        :id="brand.id"
       />
     </SwiperSlide>
   </Swiper>
@@ -49,6 +49,6 @@ import TwBrand from '~/components/TwBrand.vue'
 
 // Récupération des marques
 const { data: brands, pending, error } = await useAsyncData('brands', () =>
-  $fetch('http://127.0.0.1:8000/api/user/brands/')
+  $fetch('http://127.0.0.1:8000/api/seller/brands/')
 )
 </script>

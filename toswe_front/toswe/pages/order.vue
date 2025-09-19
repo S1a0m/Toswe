@@ -27,7 +27,7 @@ console.log('Route query ID:', auth.accessToken)
 
 async function fetchOrder() {
   try {
-    const response = await $fetch(`http://127.0.0.1:8000/api/order/${route.query.id}/`,
+    const response = await $fetch(`http://127.0.0.1:8000/api/order/${route.query.id}/for_seller/`,
       { method: 'GET',
         headers: {
           Authorization: `Bearer ${auth.accessToken}`

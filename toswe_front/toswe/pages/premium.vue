@@ -1,7 +1,6 @@
 <!-- /pages/subscribe.vue -->
 <template>
   <TwPremium />
-  <TwMenuSide />
 </template>
 
 <script setup>

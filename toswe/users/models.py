@@ -54,7 +54,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
 
-    is_seller = models.BooleanField(default=False)
+    # is_seller = models.BooleanField(default=False)
 
 
     objects = CustomUserManager()
@@ -82,6 +82,7 @@ class SellerProfile(models.Model):
     is_brand = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)  # Registre de commerce verifie
     is_premium = models.BooleanField(default=False)
+    premium_expires_at = models.DateTimeField(null=True, blank=True)
 
     show_on_market = models.BooleanField(default=False)
 
@@ -91,6 +92,13 @@ class SellerProfile(models.Model):
 
     def __str__(self):
         return self.user.username
+    
+    def check_premium_status(self):
+        """Vérifie et met à jour automatiquement le statut premium"""
+        if self.is_premium and self.premium_expires_at and timezone.now() > self.premium_expires_at:
+            self.is_premium = False
+            self.premium_expires_at = None
+            self.save()
 
 
 class ProductsPreferences(models.Model):

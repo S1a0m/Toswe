@@ -86,7 +86,7 @@
           <!-- Lien boutique -->
           <span 
             v-if="auth.isSeller" 
-            @click="goToShop" 
+            @click="goToMyShop" 
             class="text-[#7D260F] hover:text-[#5E1D0B] font-medium transition-colors cursor-pointer"
           >
             Consulter ma boutique →
@@ -107,6 +107,9 @@
 <script setup>
 import { useAuthStore } from '@/stores/auth'
 import TwToast from '@/components/TwToast.vue'
+import { useNavigation } from '@/composables/useNavigation'
+
+const { goToMyShop } = useNavigation()
 
 const auth = useAuthStore()
 const visible = ref(false)

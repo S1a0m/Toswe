@@ -103,7 +103,7 @@ const showMore = ref(false)
 
 // En-tête boutique
 const { data: shopHeader, pending } = await useAsyncData('shopHeader', () =>
-  $fetch(`http://127.0.0.1:8000/api/user/${route.query.id}/shop_header/`, {
+  $fetch(`http://127.0.0.1:8000/api/seller/${route.query.id}/shop_header/`, {
     headers: {
       Authorization: `Bearer ${auth.accessToken}`
     }
@@ -132,6 +132,7 @@ watch(shopHeader, fetchSellerProducts, { immediate: true })
 const shop = computed(() =>
   shopHeader.value
     ? {
+        id: shopHeader.value.seller_essential?.id,
         is_verified: shopHeader.value.is_verified,
         slogan: shopHeader.value.slogan,
         about: shopHeader.value.about,

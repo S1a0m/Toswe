@@ -518,7 +518,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         if instance.user == user:
             # cas acheteur
             pass
-        elif user.is_seller and hasattr(user, "seller_profile"):
+        elif hasattr(user, "seller_profile"):
             # cas vendeur
             seller_profile = user.seller_profile
             if not instance.items.filter(product__seller=seller_profile).exists():
@@ -528,6 +528,29 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+    
+
+    @action(detail=True, methods=["get"])
+    def for_seller(self, request, pk=None):
+        """
+        Détail d'une commande mais limité aux produits du vendeur connecté.
+        """
+        user = request.user
+        if not hasattr(user, "seller_profile"):
+            return Response({"detail": "Accès réservé aux vendeurs."}, status=403)
+
+        order = get_object_or_404(Order, pk=pk)
+
+        # Vérifier que la commande contient bien au moins un produit de ce vendeur
+        if not order.items.filter(product__seller=user.seller_profile).exists():
+            return Response(
+                {"detail": "Aucun produit de cette commande ne vous appartient."},
+                status=403
+            )
+
+        serializer = OrderForSellerSerializer(order, context={"request": request})
+        return Response(serializer.data)
+
 
     @action(detail=False, methods=["get"])
     def as_seller(self, request):
@@ -535,7 +558,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         Liste toutes les commandes contenant au moins un produit du vendeur connecté.
         """
         user = request.user
-        if not user.is_authenticated or not user.is_seller:
+        if not user.is_authenticated or not hasattr(user, "seller_profile"):
             return Response({"detail": "Accès réservé aux vendeurs."}, status=403)
 
         seller_profile = getattr(user, "seller_profile", None)

@@ -220,10 +220,18 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 
+const props = defineProps({
+  mode: {
+    type: String,
+    required: true
+  }
+})
+
 type Category = { id: number; name: string }
 
 const auth = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 
 /* ----- Wizard state ----- */
 const step = ref(1)
@@ -272,6 +280,8 @@ const removeToast = (id: number) => {
   toasts.value = toasts.value.filter(t => t.id !== id)
 }
 
+const fectchProduct = ref({})
+
 /* ----- Fetch categories ----- */
 onMounted(async () => {
   try {
@@ -281,6 +291,31 @@ onMounted(async () => {
     console.error(err)
     pushToast('Impossible de charger les catégories')
   }
+
+  if (props.mode === "update") {
+  try {
+    const data = await $fetch(`http://127.0.0.1:8000/api/product/${route.query.id}/`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` }
+    })
+    fectchProduct.value = data
+    
+    // Pré-remplir les champs
+    name.value = data.name || ''
+    price.value = data.price || null
+    description.value = data.description || ''
+    category.value = data.category || null
+
+    // Images
+    imagePreviews.value = data.images?.map((img: any) => img.image) || []
+    // Pas besoin de pousser dans images (ce sont des URL, pas des File)
+    
+    // Vidéos
+    videoPreviews.value = data.videos?.map((vid: any) => vid.video) || []
+  } catch (err) {
+    console.error(err)
+  }
+}
+
 })
 
 /* ----- Helpers ----- */
@@ -441,7 +476,11 @@ const handleSubmit = async () => {
   try {
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest()
-      xhr.open('POST', 'http://127.0.0.1:8000/api/product/', true)
+      const url = props.mode === 'update'
+      ? `http://127.0.0.1:8000/api/product/${route.query.id}/`
+      : 'http://127.0.0.1:8000/api/product/'
+      
+      xhr.open(props.mode === 'update' ? 'PATCH' : 'POST', url, true)
 
       // Authorization si token présent
       if (auth?.accessToken) {

@@ -40,7 +40,7 @@
         class="absolute top-3 right-3 flex flex-col gap-2 z-20"
       >
         <button
-          @click.stop="editProduct"
+          @click="goToProductEdit(id)"
           class="p-2 flex items-center justify-center bg-white/90 rounded-full shadow hover:bg-yellow-100 transition border border-[#e6d9d3]"
         >
           <Icon name="mdi:pencil" size="18" class="text-yellow-600" />
@@ -51,6 +51,13 @@
         >
           <Icon name="mdi:trash-can" size="18" class="text-red-600" />
         </button>
+        <button
+        v-if="!isSponsored"
+          @click="showPopup = true"
+          class="p-2 flex items-center justify-center bg-white/90 rounded-full shadow hover:bg-blue-100 transition border border-[#e6d9d3]"
+        >
+          <Icon name="mdi:bullhorn" size="18" class="text-blue-600" />
+        </button> 
       </div>
     </div>
 
@@ -107,6 +114,15 @@
       </div>
     </div>
   </div>
+
+    <!-- Popup paiement -->
+    <TwPopupPayment
+      v-if="showPopup"
+      :visible="showPopup"
+      payment-type="sponsorship"
+      @close="showPopup = false"
+      @pay="handlePayment"
+    />
 </template>
 
 
@@ -120,10 +136,11 @@ import { useRoute } from 'vue-router'
 
 import DOMPurify from 'dompurify'
 
+const showPopup = ref(false)
 
 const route = useRoute()
 
-const { goToProductDetails } = useNavigation()
+const { goToProductDetails, goToProductEdit } = useNavigation()
 const auth = useAuthStore()
 const cart = useCartStore()
 const interactions = useInteractionsStore()
@@ -167,10 +184,31 @@ function handleAddClick() {
   setTimeout(() => { isAnimating.value = false }, 300)
 }
 
-// ✅ Fonctions CRUD (placeholders)
-function editProduct() {
-  console.log('Éditer produit', props.id)
+async function handlePayment(payload) {
+  try {
+    // payload = { paymentType: "premium", paymentMethod, userNumber }
+    const body = {
+      user_number: payload.userNumber,
+      payment_method: payload.paymentMethod
+    }
+
+    const response = await $fetch("http://127.0.0.1:8000/api/seller/become_premium/", {
+      method: "POST",
+      body,
+      headers: { Authorization: `Bearer ${auth.accessToken}` }
+    })
+
+    console.log("Réponse become_premium:", response)
+    alert("Félicitations 🎉 vous êtes passé Premium avec succès !")
+
+  } catch (error) {
+    console.error("Erreur lors du passage Premium :", error)
+    alert("Une erreur est survenue. Veuillez réessayer.")
+  } finally {
+    showPopup.value = false
+  }
 }
+
 function deleteProduct() {
   if (confirm('Supprimer ce produit ?')) {
     console.log('Supprimer produit', props.id)

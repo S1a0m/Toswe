@@ -79,6 +79,107 @@
         </div>
 
         <!-- Promotions -->
+        <div v-else-if="active === 'promotions' && auth.user?.is_premium">
+          <!--<div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-lg">Mes promotions</h3>
+          </div>-->
+
+          <!-- Formulaire création promo -->
+          <form
+            class="space-y-4 rounded-2xl border border-[#e6d9d3] bg-white/70 p-6 shadow-sm max-w-lg"
+            @submit.prevent="createPromotion"
+          >
+            <!-- Choix produit -->
+            <div>
+              <label class="block text-sm font-medium mb-1">Produit concerné</label>
+              <select
+                v-model="promoForm.productId"
+                class="w-full rounded-xl border border-[#e6d9d3] px-3 py-2 bg-white"
+              >
+                <option disabled value="">-- Sélectionnez un produit --</option>
+                <option v-for="p in props.products" :key="p.id" :value="p.id">
+                  {{ p.name }} ({{ money(p.price) }})
+                </option>
+              </select>
+            </div>
+
+            <!-- Pourcentage réduction -->
+            <div>
+              <label class="block text-sm font-medium mb-1">Pourcentage de réduction (%)</label>
+              <input
+                v-model.number="promoForm.discount"
+                type="number"
+                min="1"
+                max="90"
+                placeholder="Ex: 20"
+                class="w-full rounded-xl border border-[#e6d9d3] px-3 py-2 bg-white"
+              />
+            </div>
+
+            <!-- Durée promo -->
+            <div>
+              <label class="block text-sm font-medium mb-1">Durée (jours)</label>
+              <input
+                v-model.number="promoForm.days"
+                type="number"
+                min="1"
+                placeholder="Ex: 7"
+                class="w-full rounded-xl border border-[#e6d9d3] px-3 py-2 bg-white"
+              />
+            </div>
+
+            <!-- Prix calculé -->
+            <div v-if="selectedProduct">
+              <p class="text-gray-700">
+                Prix initial : <span class="font-medium">{{ money(selectedProduct.price) }}</span>
+              </p>
+              <p class="text-gray-700">
+                Réduction : -{{ promoForm.discount || 0 }}%
+              </p>
+              <p class="text-lg font-semibold text-[#7D260F]">
+                Nouveau prix : {{ money(discountedPrice) }}
+              </p>
+            </div>
+
+            <!-- Bouton -->
+            <div class="pt-2">
+              <button
+                type="submit"
+                class="px-4 py-2 rounded-xl bg-[#7D260F] text-white hover:bg-[#66200d] transition w-full"
+              >
+                Créer la promotion
+              </button>
+            </div>
+          </form>
+
+          <!-- Liste promos existantes 
+          <div class="mt-6">
+            <h4 class="font-semibold mb-2">Promotions actives</h4>
+            <div v-if="promotions?.length" class="grid md:grid-cols-2 gap-4">
+              <article
+                v-for="promo in promotions"
+                :key="promo.id"
+                class="rounded-2xl border border-[#e6d9d3] bg-white/70 p-4 shadow-sm"
+              >
+                <div class="font-medium">{{ promo.product_name }}</div>
+                <div class="text-sm text-gray-600">
+                  -{{ promo.discount }}% pendant {{ promo.days }} jours
+                </div>
+                <div class="text-[#7D260F] font-semibold">
+                  Nouveau prix : {{ money(promo.new_price) }}
+                </div>
+              </article>
+            </div>
+            <div
+              v-else
+              class="rounded-2xl border border-[#e6d9d3] bg-white/70 p-10 text-center text-gray-600"
+            >
+              Aucune promotion active.
+            </div>
+          </div>-->
+        </div>
+
+        <!-- Pubs -->
         <div v-else-if="active === 'ads' && auth.user?.is_premium">
 
           <!-- Publicités -->
@@ -196,10 +297,16 @@ const props = defineProps({
 const auth = useAuthStore()
 const tabs = [
   { key: 'products', label: 'Produits' },
-  { key: 'ads', label: 'Pubs' },
+  // { key: 'ads', label: 'Pubs' },
+  { key: 'promotions', label: 'Promotions' },
   { key: 'loycs', label: 'Abonnés' },
   { key: 'settings', label: 'Paramètres' }
 ]
+
+if (auth.user?.is_premium) {
+  tabs.splice(2, 0, { key: 'ads', label: 'Pubs' }) // insère après Produits
+}
+
 const active = ref('products')
 
 // Promotions & publicités
@@ -222,7 +329,57 @@ async function fetchSellerAds() {
 
 const max_products = computed(() => (auth.user?.is_premium ? 1000 : 20))
 
+// === Gestion Promotion ===
+const promoForm = reactive({
+  productId: "",
+  discount: 0,
+  days: 0,
+})
 
+const selectedProduct = computed(() =>
+  props.products.find((p) => p.id === promoForm.productId)
+)
+
+const discountedPrice = computed(() => {
+  if (!selectedProduct.value) return 0
+  const discount = promoForm.discount || 0
+  return Math.round(selectedProduct.value.price * (1 - discount / 100))
+})
+
+async function createPromotion() {
+  if (!promoForm.productId || !promoForm.discount || !promoForm.days) {
+    alert("Veuillez remplir tous les champs.")
+    return
+  }
+
+  try {
+    const res = await $fetch("http://127.0.0.1:8000/api/promotion/", {
+      method: "POST",
+      body: {
+        product: promoForm.productId,
+        discount_percent: promoForm.discount,
+        days: promoForm.days,
+      },
+      headers: {
+        Authorization: `Bearer ${auth.accessToken}`,
+      },
+    })
+    promotions.push({
+      id: res.id,
+      product_name: selectedProduct.value.name,
+      discount: promoForm.discount,
+      days: promoForm.days,
+      new_price: discountedPrice.value,
+    })
+    promoForm.productId = ""
+    promoForm.discount = 0
+    promoForm.days = 0
+    alert("Promotion créée avec succès ✅")
+  } catch (err) {
+    console.error("Erreur création promo:", err)
+    alert("Impossible de créer la promotion")
+  }
+}
 
 // Données simulées
 const stats = ref({ sales_30d: 23, revenue_30d: 450000, loycs: 32, products_active: 12 })

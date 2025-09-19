@@ -5,6 +5,7 @@ import { goToMarket } from "@/utils/navigations"
 
 interface User {
   id: number
+  shop_id: number
   phone: string
   address: string
   is_seller: boolean
@@ -125,7 +126,7 @@ export const useAuthStore = defineStore("auth", {
         formData.append('id_card', id_card)
         formData.append('commercial_register', commercial_register)
 
-        const res = await $fetch<{ detail: string }>("http://127.0.0.1:8000/api/user/verify_account/", {
+        const res = await $fetch<{ detail: string }>("http://127.0.0.1:8000/api/seller/verify_account/", {
           method: "POST",
           headers: { Authorization: `Bearer ${this.accessToken}` },
           body: formData

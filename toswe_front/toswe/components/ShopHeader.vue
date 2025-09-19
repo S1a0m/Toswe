@@ -116,7 +116,7 @@ onMounted(async () => {
   if (auth.isAuthenticated && !props.isOwner) {
     try {
       const res = await $fetch(
-        `http://127.0.0.1:8000/api/user/${props.shop.seller_user_id}/is-subscribed/`,
+        `http://127.0.0.1:8000/api/user/${props.shop.id}/is-subscribed/`,
         {
           method: 'GET',
           headers: { Authorization: `Bearer ${auth.accessToken}` }
@@ -136,7 +136,7 @@ const toggleSubscribe = async () => {
 
   try {
     const res = await $fetch(
-      `http://127.0.0.1:8000/api/user/${props.shop.seller_user_id}/subscribe/`,
+      `http://127.0.0.1:8000/api/user/${props.shop.id}/subscribe/`,
       {
         method: 'POST',
         headers: { Authorization: `Bearer ${auth.accessToken}` }

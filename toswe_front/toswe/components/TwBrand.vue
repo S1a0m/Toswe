@@ -32,7 +32,7 @@
     <!-- Overlay hover (Visitez) -->
     <div
       class="absolute inset-0 bg-black/70 flex items-center justify-center text-white text-lg font-semibold opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer"
-      @click="goToShopDetails(sellerId)"
+      @click="goToShopDetails(id)"
     >
       <Icon name="carbon:chevron-right" size="20" class="mr-2" /> Visitez
     </div>
@@ -47,7 +47,7 @@ const props = defineProps({
   brandName: { type: String, default: 'Nom de la marque' },
   slogan: { type: String, default: 'Votre slogan ici' },
   rating: { type: Number, default: 4.5 },
-  sellerId: { type: Number, required: true }
+  id: { type: Number, required: true }
 })
 
 const { goToShopDetails } = useNavigation()

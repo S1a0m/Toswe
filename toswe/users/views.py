@@ -103,28 +103,33 @@ class UserViewSet(viewsets.ModelViewSet):
             is_premium = False
             is_brand = False
             is_verified = False
+            is_seller = False
             slogan = ""
             about = ""
             shop_name = ""
             logo = None
-            if user.is_seller and hasattr(user, "seller_profile"):
+            shop_id = None
+            if hasattr(user, "seller_profile"):
                 is_brand = user.seller_profile.is_brand
                 is_premium = user.seller_profile.is_premium
                 is_verified = user.seller_profile.is_verified
                 slogan = user.seller_profile.slogan
                 about = user.seller_profile.about
                 shop_name = user.seller_profile.shop_name
+                shop_id = user.seller_profile.id
                 logo = user.seller_profile.logo.url if user.seller_profile.logo else None
+                is_seller = True
 
             response = Response({
                 "access": access_token,
                # "refresh": refresh_token,
                 "user": {
                     "id": user.id,
+                    "shop_id": shop_id,
                     "username": user.username,
                     "address": user.address,
                     "phone": user.phone,
-                    "is_seller": user.is_seller,
+                    "is_seller": is_seller,
                     "is_premium": is_premium,
                     "is_brand": is_brand,
                     "is_verified": is_verified,
@@ -170,21 +175,25 @@ class UserViewSet(viewsets.ModelViewSet):
         is_premium = False
         is_brand = False
         is_verified = False
+        is_seller = False
         slogan = ""
         about = ""
         shop_name = ""
         logo = None
-        if user.is_seller and hasattr(user, "seller_profile"):
+        shop_id = None
+        if hasattr(user, "seller_profile"):
             is_brand = user.seller_profile.is_brand
             is_premium = user.seller_profile.is_premium
             is_verified = user.seller_profile.is_verified
             slogan = user.seller_profile.slogan
             about = user.seller_profile.about
             shop_name = user.seller_profile.shop_name
+            shop_id = user.seller_profile.id
             logo = user.seller_profile.logo.url if user.seller_profile.logo else None
+            is_seller = True
 
-        return Response({"id": user.id, "username": user.username, "address": user.address, "phone": user.phone,
-                     "is_seller": user.is_seller, "is_premium": is_premium, "is_brand": is_brand,
+        return Response({"id": user.id, "shop_id": shop_id,"username": user.username, "address": user.address, "phone": user.phone,
+                     "is_seller": is_seller, "is_premium": is_premium, "is_brand": is_brand,
                      "is_verified": is_verified, "shop_name": shop_name, "slogan": slogan, "about": about, "logo": logo})
 
     @action(detail=False, methods=["post"])
@@ -208,13 +217,15 @@ class UserViewSet(viewsets.ModelViewSet):
         is_premium = False
         is_brand = False
         is_verified = False
+        is_seller = True
         shop_name = ""
         slogan = ""
         about = ""
         logo = ""
+        shop_id = None
 
         seller_profile = None
-        if user.is_seller and hasattr(user, "seller_profile"):
+        if hasattr(user, "seller_profile"):
             seller_profile = user.seller_profile
             shop_name = data.get("shop_name", seller_profile.shop_name)
             slogan = data.get("slogan", seller_profile.slogan)
@@ -230,6 +241,10 @@ class UserViewSet(viewsets.ModelViewSet):
             is_premium = seller_profile.is_premium
             is_verified = seller_profile.is_verified
 
+            shop_id = seller_profile.id
+
+            is_seller = True
+
             seller_profile.save()
 
         user.save()
@@ -237,10 +252,11 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(
             {
                 "id": user.id,
+                "shop_id": shop_id,
                 "username": user.username,
                 "address": user.address,
                 "phone": user.phone,
-                "is_seller": user.is_seller,
+                "is_seller": is_seller,
                 "is_premium": is_premium,
                 "is_brand": is_brand,
                 "is_verified": is_verified,
@@ -264,126 +280,16 @@ class UserViewSet(viewsets.ModelViewSet):
             )
         return Response({"status": "ok"}, status=201)
 
-    @action(detail=False, methods=["get"])
-    def sellers(self, request):
-        """
-        Liste complète des vendeurs (auth requis).
-        Tri : Premium > Marques > Autres
-        Puis par nombre d'abonnés décroissant.
-        """
-        sellers = (
-                SellerProfile.objects.filter(show_on_market=True)
-                .annotate(subscriber_count=Count("subscribers"))
-                .order_by(
-                    Case(
-                        When(is_premium=True, then=0),
-                        When(is_brand=True, then=1),
-                        When(is_verified=True, then=2),
-                        default=2,
-                        output_field=IntegerField(),
-                    ),
-                    "-subscriber_count",
-                )
-            )
-        serializer = SellerListSerializer(sellers, many=True, context={"request": request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    # 2. Top 5 (public)
-    @action(detail=False, methods=["get"], permission_classes=[AllowAny], url_path="top-sellers")
-    def top_sellers(self, request):
-        """
-        Top 5 vendeurs (accessible à tous).
-        Même tri que `sellers`, mais limité aux 5 premiers.
-        """
-        sellers = (
-            SellerProfile.objects.filter(show_on_market=True)
-            .annotate(subscriber_count=Count("subscribers"))
-            .order_by(
-                    Case(
-                        When(is_premium=True, then=0),
-                        When(is_brand=True, then=1),
-                        When(is_verified=True, then=2),
-                        default=2,
-                        output_field=IntegerField(),
-                    ),
-                    "-subscriber_count",
-                )[:5]
-        )
-        serializer = SellerListSerializer(sellers, many=True, context={"request": request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @action(detail=True, methods=["get"])#, permission_classes=[AllowAny])
-    def shop_header(self, request, pk=None):
-        """Retourne les infos du header d'une boutique"""
-        user = self.get_object()  # ← CustomUser
-        print("Utilisateur: ", user.username)
-        try:
-            seller_profile = user.seller_profile
-        except SellerProfile.DoesNotExist:
-            return Response({"detail": "Cet utilisateur n’est pas un vendeur."}, status=400)
-
-        serializer = ShopHeaderSerializer(seller_profile)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @action(detail=False, methods=["get"], permission_classes=[AllowAny])
-    def brands(self, request):
-        """
-        Retourner toutes les marques (SellerProfile),
-        d'abord premium puis non premium.
-        """
-        # Récupérer tous les profils vendeur
-        sellers = SellerProfile.objects.filter(is_brand=True, show_on_market=True).order_by("-is_premium", "shop_name")[:5]
-
-        serializer = BrandSerializer(sellers, many=True, context={"request": request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @action(detail=False, methods=["post"], url_path="verify_account")
-    def verify_account(self, request):
-        user = request.user
-
-        # if not user.is_authenticated:
-        #     return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
-
-        if not user.is_seller:
-            return Response({"error": "Only sellers can verify their account"}, status=status.HTTP_403_FORBIDDEN)
-
-        seller_profile = getattr(user, "seller_profile", None)
-        if not seller_profile:
-            return Response({"error": "Seller profile not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        id_card = request.FILES.get("id_card")
-        commercial_register = request.FILES.get("commercial_register")
-
-        if not id_card or not commercial_register:
-            return Response(
-                {"error": "Both ID card and commercial register are required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Sauvegarde des fichiers
-        seller_profile.id_card = id_card
-        seller_profile.commercial_register = commercial_register
-        seller_profile.is_verified = False  # toujours false → admin doit confirmer
-        seller_profile.save()
-
-        return Response({
-            "message": "Documents uploaded successfully. Verification pending.",
-            "is_verified": seller_profile.is_verified
-        }, status=status.HTTP_200_OK)
-
     @action(detail=True, methods=["get"], url_path="is-subscribed")
     def is_subscribed(self, request, pk=None):
         """Vérifie si l'utilisateur courant est abonné à ce vendeur"""
-        seller_user = self.get_object()
-
-        if not hasattr(seller_user, "seller_profile"):
-            return Response({"detail": "Cet utilisateur n’est pas un vendeur."}, status=400)
-
-        seller_profile = seller_user.seller_profile
+        try:
+            seller_profile = SellerProfile.objects.get(id=pk)
+        except SellerProfile.DoesNotExist:
+            return Response({"detail": "seller not found."}, status=status.HTTP_404_NOT_FOUND)
+        
         client = request.user
 
-        if client == seller_user:
-            return Response({"subscribed": False, "detail": "Un vendeur ne peut pas être abonné à lui-même."})
 
         subscribed = seller_profile.subscribers.filter(id=client.id).exists()
         return Response({"subscribed": subscribed})
@@ -391,19 +297,14 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="subscribe")
     def subscribe(self, request, pk=None):
         """Toggle abonnement (abonner/désabonner) et renvoie l'état final"""
-        seller_user = self.get_object()
+        try:
+            seller_profile = SellerProfile.objects.get(id=pk)
+        except SellerProfile.DoesNotExist:
+            return Response({"detail": "seller not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        if not hasattr(seller_user, "seller_profile"):
-            return Response({"detail": "Cet utilisateur n’est pas un vendeur."}, status=400)
-
-        seller_profile = seller_user.seller_profile
+        print("Vendeur ou client?", type(seller_profile))
+        
         client = request.user
-
-        if client == seller_user:
-            return Response(
-                {"subscribed": False, "detail": "Un vendeur ne peut pas s’abonner à lui-même."},
-                status=400
-            )
 
         # Toggle abonnement
         if seller_profile.subscribers.filter(id=client.id).exists():
@@ -424,43 +325,16 @@ class UserViewSet(viewsets.ModelViewSet):
             "message": "Votre profil vendeur a été créé/mis à jour avec succès.",
             "seller_profile": BecomeSellerSerializer(profile).data
         }, status=status.HTTP_201_CREATED)
+    
 
-    @action(detail=True, methods=['post'])
-    def become_premium(self, request, pk=None):
-        """Seuls les vendeurs peuvent devenir premium après paiement"""
-        user = self.get_object()
-        payment_method = request.data.get("payment_method")  # "Moov" ou "MTN"
-        user_number = request.data.get("user_number")
-
-        if not user.is_seller:
-            return Response({'status': 'Vous n\'êtes pas un vendeur.'}, status=401)
-
-        if not payment_method or not user_number:
-            return Response({'status': 'Informations incomplètes'}, status=400)
-
-        amount = 1000  # montant du premium (par exemple)
-
-        # Simulation de paiement
-        if payment_method.lower() == "moov":
-            success = PaymentGateway.pay_with_moov(user_number, amount)
-        elif payment_method.lower() == "mtn":
-            success = PaymentGateway.pay_with_mtn(user_number, amount)
-        else:
-            return Response({'status': 'Méthode de paiement invalide'}, status=400)
-
-        if not success:
-            return Response({'status': 'Échec du paiement'}, status=402)
-
-        # Paiement réussi
-        user.is_premium = True
-        user.save()
-        return Response({'status': 'Vendeur premium activé avec succès !'})
 
 
 
 class SellerProfileViewSet(viewsets.ModelViewSet):
     queryset = SellerProfile.objects.all()
     serializer_class = SellerProfileSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=["get"])
     def my_stats(self, request):
@@ -523,6 +397,154 @@ class SellerProfileViewSet(viewsets.ModelViewSet):
             })
 
         return Response(data)
+    
+    @action(detail=False, methods=['post'])
+    def become_premium(self, request):
+        user = request.user
+        seller_profile = getattr(user, "seller_profile", None)
+        if not seller_profile:
+            return Response({"error": "Seller profile not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        payment_method = request.data.get("payment_method")
+        user_number = request.data.get("user_number")
+
+        if not payment_method or not user_number:
+            return Response({'status': 'Informations incomplètes'}, status=400)
+
+        amount = 1000  # Montant premium (à ajuster)
+
+        # Simulation de paiement
+        if payment_method.lower() == "moov_user":
+            success = PaymentGateway.pay_with_moov(user_number, amount)
+        elif payment_method.lower() == "mtn_user":
+            success = PaymentGateway.pay_with_mtn(user_number, amount)
+        else:
+            return Response({'status': 'Méthode de paiement invalide'}, status=400)
+
+        if not success:
+            return Response({'status': 'Échec du paiement'}, status=402)
+
+        # ✅ Paiement réussi → activer premium pour 30 jours
+        seller_profile.is_premium = True
+        seller_profile.premium_expires_at = timezone.now() + timedelta(days=30)
+        seller_profile.save()
+
+        Notification.objects.create(
+            user=user,
+            title="Premium",
+            message="Votre compte est desormais premium. L'aventure pour vous vient de commencer."
+        )
+
+        return Response({
+            'status': 'Vendeur premium activé avec succès !',
+            'expires_at': seller_profile.premium_expires_at
+        })
+    
+
+    @action(detail=False, methods=["post"], url_path="verify_account")
+    def verify_account(self, request):
+        user = request.user
+
+        # if not user.is_authenticated:
+        #     return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        seller_profile = getattr(user, "seller_profile", None)
+        if not seller_profile:
+            return Response({"error": "Seller profile not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        id_card = request.FILES.get("id_card")
+        commercial_register = request.FILES.get("commercial_register")
+
+        if not id_card or not commercial_register:
+            return Response(
+                {"error": "Both ID card and commercial register are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Sauvegarde des fichiers
+        seller_profile.id_card = id_card
+        seller_profile.commercial_register = commercial_register
+        seller_profile.is_verified = False  # toujours false → admin doit confirmer
+        seller_profile.save()
+
+        Notification.objects.create(
+            user=user,
+            title="Demande de verification de compte",
+            message="Votre demande a ete bien recue. Nous vous repondrons dans quelques heures."
+        )
+
+        return Response({
+            "message": "Documents uploaded successfully. Verification pending.",
+            "is_verified": seller_profile.is_verified
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["get"])
+    def sellers(self, request):
+        """
+        Liste complète des vendeurs (auth requis).
+        Tri : Premium > Marques > Autres
+        Puis par nombre d'abonnés décroissant.
+        """
+        sellers = (
+                SellerProfile.objects.filter(show_on_market=True)
+                .annotate(subscriber_count=Count("subscribers"))
+                .order_by(
+                    Case(
+                        When(is_premium=True, then=0),
+                        When(is_brand=True, then=1),
+                        When(is_verified=True, then=2),
+                        default=2,
+                        output_field=IntegerField(),
+                    ),
+                    "-subscriber_count",
+                )
+            )
+        serializer = SellerListSerializer(sellers, many=True, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # 2. Top 5 (public)
+    @action(detail=False, methods=["get"], permission_classes=[AllowAny], url_path="top-sellers")
+    def top_sellers(self, request):
+        """
+        Top 5 vendeurs (accessible à tous).
+        Même tri que `sellers`, mais limité aux 5 premiers.
+        """
+        sellers = (
+            SellerProfile.objects.filter(show_on_market=True)
+            .annotate(subscriber_count=Count("subscribers"))
+            .order_by(
+                    Case(
+                        When(is_premium=True, then=0),
+                        When(is_brand=True, then=1),
+                        When(is_verified=True, then=2),
+                        default=2,
+                        output_field=IntegerField(),
+                    ),
+                    "-subscriber_count",
+                )[:5]
+        )
+        serializer = SellerListSerializer(sellers, many=True, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["get"], permission_classes=[AllowAny])
+    def shop_header(self, request, pk=None):
+        """Retourne les infos du header d'une boutique"""
+        seller_profile = self.get_object()  # ← Seller
+
+        serializer = ShopHeaderSerializer(seller_profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["get"], permission_classes=[AllowAny])
+    def brands(self, request):
+        """
+        Retourner toutes les marques (SellerProfile),
+        d'abord premium puis non premium.
+        """
+        # Récupérer tous les profils vendeur
+        sellers = SellerProfile.objects.filter(is_brand=True, show_on_market=True).order_by("-is_premium", "shop_name")[:5]
+
+        serializer = BrandSerializer(sellers, many=True, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class RefreshTokenView(APIView):

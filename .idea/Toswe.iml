@@ -6,7 +6,7 @@
       <excludeFolder url="file://$MODULE_DIR$/toswe_ai" />
       <excludeFolder url="file://$MODULE_DIR$/toswe_front" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.12 (Toswe)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.12" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
