@@ -31,9 +31,17 @@
         <div class="mt-6 text-right">
           <button
             @click="showPopup = true"
-            class="bg-gradient-to-r from-[#7D260F] to-[#A13B20] text-white px-8 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
+            :disabled="isLoading"
+            class="bg-gradient-to-r from-[#7D260F] to-[#A13B20] text-white px-8 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Passer la commande
+            <span v-if="!isLoading">Passer la commande</span>
+            <span v-else class="flex items-center justify-center gap-2">
+              <svg class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+              Traitement...
+            </span>
           </button>
         </div>
       </div>
@@ -73,18 +81,6 @@
   </section>
 </template>
 
-<style scoped>
-/* Animation plus douce pour le panier vide */
-@keyframes bounce-slow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-.animate-bounce-slow {
-  animation: bounce-slow 2s infinite;
-}
-</style>
-
 <script setup>
 import TwCartItem from './TwCartItem.vue'
 import { useCartStore } from "@/stores/cart"
@@ -97,13 +93,14 @@ definePageMeta({
 const cart = useCartStore()
 const auth = useAuthStore()
 const showPopup = ref(false)
+const isLoading = ref(false) // 🔹 état loading
 
 async function handlePayment(payload) {
+  isLoading.value = true
   try {
-    // Construire le body attendu par ton backend
     const orderData = {
       phone_number: payload.phoneNumber,
-      contact_method: payload.contactMethod, // "whatsapp" | "call"
+      contact_method: payload.contactMethod,
       address: payload.address,
       items: cart.items.map(item => ({
         product_id: item.product_id,
@@ -112,8 +109,6 @@ async function handlePayment(payload) {
       }))
     }
 
-    // Appel API
-    
     const response = await $fetch("http://127.0.0.1:8000/api/order/", {
       method: "POST",
       body: orderData,
@@ -122,22 +117,18 @@ async function handlePayment(payload) {
         : {},
     })
 
-    console.log("Commande créée :", response)
-
-    /*/ 🔹 vider le panier après succès
-    cart.items = []
-    cart.saveToLocalStorage()*/
-
-    alert("Votre commande a bien été enregistrée ✅")
+    alert("Votre commande a bien été enregistrée ✅", response.message)
 
   } catch (error) {
     console.error("Erreur lors de la commande :", error)
     alert("Une erreur est survenue. Veuillez réessayer.")
   } finally {
     showPopup.value = false
+    isLoading.value = false
   }
 }
 </script>
+
 
 <style scoped>
 @keyframes bounceSlow {

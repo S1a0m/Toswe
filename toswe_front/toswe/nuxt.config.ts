@@ -17,7 +17,7 @@ export default defineNuxtConfig({
     // '@vite-pwa/nuxt',
   ],
 
- // plugins: ["~/plugins/init-auth.client.ts"],
+ /*/ plugins: ["~/plugins/init-auth.client.ts"],
 
   runtimeConfig: {
     public: {
@@ -59,7 +59,6 @@ export default defineNuxtConfig({
       type: 'module'
     }
   },*/
-  ssr: true,
   app: {
     head: {
       link: [

@@ -4,7 +4,7 @@
   >
     <!-- Image produit -->
     <img
-      :src="`http://127.0.0.1:8000${props.imageSrc}/`"
+      :src="props.imageSrc"
       :alt="props.productName"
       @click="goToProductDetails(props.product_id)"
       class="w-20 h-20 object-cover rounded-2xl cursor-pointer border border-gray-200"
@@ -54,13 +54,27 @@ const props = defineProps({
   quantity: { type: Number, required: true }
 }) 
 
-console.log("Image Source:", props.imageSrc); // Debugging line to check image source
-
 const cart = useCartStore()
  
 const number = ref(props.quantity)
 
+// 🔼 Fonction d'incrémentation
+const increment = () => {
+  number.value++
+}
+
+// 🔽 Fonction de décrémentation (min 1)
+const decrement = () => {
+  if (number.value > 1) {
+    number.value--
+  }
+}
+
+console.log("IMAGE SRC:", props.imageSrc)
+
+// 🔄 Synchroniser avec le store
 watch(number, (newVal) => {
   cart.updateQuantity(props.product_id, Number(newVal))
 })
 </script>
+

@@ -26,6 +26,10 @@ export function useNavigation() {
         return navigateTo({ path: "/order", query: { id: orderId } })
     }
 
+    function goToMyOrderDetails(orderId: number) {
+        return navigateTo({ path: "/order", query: { id: orderId, mine: "yes" } })
+    }
+
     function goToProductEdit(productId: number) {
         return navigateTo({ path: "/edit", query: { id: productId } })
     }
@@ -35,6 +39,7 @@ export function useNavigation() {
         goToShopDetails,
         goToMyShop,
         goToOrderDetails,
+        goToMyOrderDetails,
         goToProductEdit
     }
 }

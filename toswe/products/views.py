@@ -59,8 +59,6 @@ class ProductViewSet(viewsets.ModelViewSet):
             return ProductDetailsSerializer
         elif self.action in ['create', 'update', 'partial_update']:
             return ProductCreateSerializer
-        elif self.action == 'announcements':
-            return AnnouncementsProductsSerializer
         return super().get_serializer_class()
 
     def perform_create(self, serializer):
@@ -243,23 +241,26 @@ class ProductViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-    @action(detail=False, methods=['get']) # , url_path='scan/(?P<signed_id>[^/.]+)', permission_classes=[AllowAny])
-    def scan_product(self, request, signed_id=None):
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def scan_product(self, request):
+        signed_id = request.query_params.get("signed_id")
+        print("SIGNED ID:", signed_id)
+        if not signed_id:
+            return Response({"error": "signed_id manquant"}, status=400)
         try:
             product_id = signing.loads(signed_id)
+            print("Product ID:", product_id)
             product = Product.objects.get(id=product_id)
-            serializer = self.get_serializer(product)
+
+            serializer = ProductSearchSerializer(
+                product, context={"request": request}
+            )
             return Response(serializer.data)
         except signing.BadSignature:
             return Response({"error": "QR code invalide"}, status=400)
         except Product.DoesNotExist:
             return Response({"error": "Produit introuvable"}, status=404)
 
-    @action(detail=False, methods=['get'])
-    def announcements(self, request):
-        products = Product.objects.filter(announcement_text__isnull=False)
-        serializer = self.get_serializer(products, many=True)
-        return Response(serializer.data)
 
     @action(detail=True, methods=['post']) # , url_path='sponsor')
     def sponsor_product(self, request, pk=None):
@@ -505,6 +506,22 @@ class OrderViewSet(viewsets.ModelViewSet):
         if self.request.user.is_authenticated:
             return Order.objects.filter(user=self.request.user).prefetch_related("items__product")
         return Order.objects.none()
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        order = serializer.save()  # ça crée l'order peu importe
+
+        if not request.user.is_authenticated:
+            # 🔹 Retourne juste un message, sans les détails de l'order
+            return Response(
+                {"message": "Commande enregistrée. Connectez-vous pour voir vos commandes."},
+                status=status.HTTP_200_OK
+            )
+
+        # 🔹 Sinon (authentifié) → comportement normal
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def retrieve(self, request, *args, **kwargs):
         """

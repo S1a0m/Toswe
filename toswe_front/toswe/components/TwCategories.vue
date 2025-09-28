@@ -17,7 +17,7 @@
       <!-- Catégories -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 place-items-center flex-1">
         <TwCategory
-          :image-src="imageUrl"
+          image-src="/images/img1.png"
           category-name="Agriculture & agroalimentaire"
         />
         <TwCategory

@@ -27,17 +27,18 @@ console.log('Route query ID:', auth.accessToken)
 
 async function fetchOrder() {
   try {
-    const response = await $fetch(`http://127.0.0.1:8000/api/order/${route.query.id}/for_seller/`,
+    const endpoint = route.query.mine === "yes"
+      ? `/api/order/${route.query.id}/`
+      : `/api/order/${route.query.id}/for_seller/`
+
+    const response = await $fetch(`http://127.0.0.1:8000${endpoint}`, // or http://127.0.0.1:8000/api/order/${route.query.id}/
       { method: 'GET',
         headers: {
           Authorization: `Bearer ${auth.accessToken}`
        },
        credentials: 'include'
       }
-    ) /*/ Remplacez par votre endpoint API
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des order')
-    }*/
+    ) 
     order.value = response || response || []
 
     console.log('order récupérées :', order.value)
@@ -49,20 +50,4 @@ async function fetchOrder() {
 onMounted(() => {
   fetchOrder()
 })
-/*const order = {
-  id: 101,
-  date: '10 août 2025',
-  status: 'En attente', // ou "Livrée", "Annulée"
-  total: 15000,
-  products: [
-    { name: 'Produit A', price: 5000, quantity: 1, image: '/images/img1.png' },
-    { name: 'Produit B', price: 2500, quantity: 4, image: '/images/img2.jpg' },
-    { name: 'Produit B', price: 2500, quantity: 4, image: '/images/img2.jpg' },
-    { name: 'Produit B', price: 2500, quantity: 4, image: '/images/img2.jpg' },
-    { name: 'Produit B', price: 2500, quantity: 4, image: '/images/img2.jpg' },
-    { name: 'Produit B', price: 2500, quantity: 4, image: '/images/img2.jpg' },
-    { name: 'Produit B', price: 2500, quantity: 4, image: '/images/img2.jpg' },
-    { name: 'Produit B', price: 2500, quantity: 4, image: '/images/img2.jpg' }
-  ]
-}*/
 </script>

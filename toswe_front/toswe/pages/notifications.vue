@@ -36,10 +36,7 @@ async function fetchNotifications() {
        },
        credentials: 'include'
       }
-    ) /*/ Remplacez par votre endpoint API
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des notifications')
-    }*/
+    ) 
     notifications.value = response.results || response || []
 
     console.log('Notifications récupérées :', notifications.value)

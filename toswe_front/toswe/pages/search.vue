@@ -19,28 +19,38 @@
         </button>
       </div>
 
-      <!-- Bouton importer image -->
-      <label
-        class="bg-white rounded-full shadow-md px-4 py-2 cursor-pointer flex items-center gap-2 hover:bg-gray-100"
+      <!-- Bouton importer image (indisponible) -->
+      <div
+        class="bg-gray-100 rounded-full shadow-md px-4 py-2 flex items-center gap-2 
+              opacity-60 cursor-not-allowed relative group"
       >
-        <Icon name="uil:image-upload" class="w-5 h-5" />
-        Importer
-        <input
-          type="file"
-          accept="image/*"
-          class="hidden"
-          @change="handleImageUpload"
-        />
-      </label>
+        <Icon name="uil:image-slash" class="w-5 h-5 text-gray-500" />
+        Indisponible
+        <!-- Message au survol -->
+        <span
+          class="absolute -bottom-10 left-1/2 -translate-x-1/2 text-xs bg-black text-white 
+                px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition"
+        >
+          Cette fonctionnalité n’est pas encore disponible
+        </span>
+      </div>
 
-      <!-- Bouton prendre photo -->
-      <button
-        class="bg-white rounded-full shadow-md px-4 py-2 flex items-center gap-2 hover:bg-gray-100"
-        @click="openCamera"
+      <!-- Bouton prendre photo (indisponible) -->
+      <div
+        class="bg-gray-100 rounded-full shadow-md px-4 py-2 flex items-center gap-2 
+              opacity-60 cursor-not-allowed relative group"
       >
-        <Icon name="uil:camera" class="w-5 h-5" />
-        Photo
-      </button>
+        <Icon name="uil:camera-slash" class="w-5 h-5 text-gray-500" />
+        Indisponible
+        <!-- Message au survol -->
+        <span
+          class="absolute -bottom-10 left-1/2 -translate-x-1/2 text-xs bg-black text-white 
+                px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition"
+        >
+          Cette fonctionnalité n’est pas encore disponible
+        </span>
+      </div>
+
     </div>
 
     <!-- Preview image scannée -->
@@ -64,7 +74,7 @@
       <!-- Résultats -->
       <div
         v-else
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+        class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6"
       >
           <TwProductMixSeller 
           v-for="(item, index) in results"

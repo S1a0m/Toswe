@@ -1,10 +1,11 @@
 <template>
   <section class="min-h-screen flex flex-col text-black">
     <TwMenuSide />
+
     <!-- Titre -->
     <header class="p-6 text-center">
-      <h1 class="text-3xl font-bold text-[#7D260F]">Scanner un produit</h1>
-      <p class="text-gray-600 mt-1">Importez une image ou scannez en direct avec votre caméra</p>
+      <h2 class="text-2xl font-bold text-[#7D260F] font-[Kenia] tracking-tight">Scanner un produit</h2>
+      <p class="text-gray-600 mt-1">Scannez directement ou importez le QR code</p>
     </header>
 
     <!-- Zone de prévisualisation -->
@@ -26,6 +27,11 @@
         class="rounded-xl shadow-lg w-full max-w-md border border-gray-200"
       />
 
+      <!-- Résultat produit -->
+      <div v-if="product" class="mt-6 p-4 bg-white rounded-xl shadow-md border w-full max-w-md">
+          <TwProductMixSeller :item="product" />
+      </div>
+
       <!-- Upload invisible -->
       <input
         type="file"
@@ -37,7 +43,7 @@
     </div>
 
     <!-- Boutons d’action -->
-    <footer class="sticky bottom-0 w-full border-t border-gray-200 p-4 flex gap-3">
+    <footer class="sticky bottom-0 w-full border-t border-gray-200 p-4 flex gap-3 bg-white">
       <button
         @click="toggleCamera"
         class="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 transition"
@@ -67,16 +73,18 @@
 </template>
 
 <script setup>
-definePageMeta({
-  layout: false,
-})
+import { useAuthStore } from '@/stores/auth'
+//definePageMeta({ layout: false })
 
 import { ref, onBeforeUnmount } from 'vue'
+import jsQR from 'jsqr' // 👉 installer: npm install jsqr
 
 const previewImage = ref(null)
 const fileInput = ref(null)
 const videoEl = ref(null)
 const cameraActive = ref(false)
+const product = ref(null)
+
 let stream = null
 let scanInterval = null
 
@@ -85,6 +93,7 @@ function handleImageUpload(event) {
   if (file) {
     previewImage.value = URL.createObjectURL(file)
     stopCamera()
+    scanFromImage(previewImage.value)
   }
 }
 
@@ -104,7 +113,7 @@ async function startCamera() {
 
     scanInterval = setInterval(() => {
       captureAndScan()
-    }, 2000)
+    }, 1500)
   } catch (err) {
     console.error('Impossible d’accéder à la caméra', err)
   }
@@ -130,7 +139,60 @@ function captureAndScan() {
   const ctx = canvas.getContext('2d')
   ctx.drawImage(videoEl.value, 0, 0, canvas.width, canvas.height)
   previewImage.value = canvas.toDataURL('image/png')
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  const code = jsQR(imageData.data, canvas.width, canvas.height)
+  if (code) {
+    fetchProduct(code.data)
+  }
 }
+
+function scanFromImage(src) {
+  const img = new Image()
+  img.src = src
+  img.onload = () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = img.width
+    canvas.height = img.height
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(img, 0, 0)
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    const code = jsQR(imageData.data, canvas.width, canvas.height)
+    if (code) {
+      fetchProduct(code.data)
+    } else {
+      console.warn("Aucun QR code détecté")
+    }
+  }
+}
+
+const auth = useAuthStore()
+
+async function fetchProduct(data) {
+  try {
+    // 🔹 extraction du signed_id
+    let signedId
+    try {
+      const url = new URL(data)
+      signedId = url.pathname.split("/").pop()
+    } catch {
+      signedId = data
+    }
+
+    // 🔹 appel API avec seulement le signed_id propre
+    const res = await $fetch(`http://127.0.0.1:8000/api/product/scan_product/?signed_id=${signedId}`,
+      { method: 'GET',
+        headers: {
+          Authorization: `Bearer ${auth.accessToken}`
+       },
+       credentials: 'include'
+      })
+    product.value = res
+  } catch (e) {
+    console.error("Erreur produit :", e)
+  }
+}
+
 
 onBeforeUnmount(() => {
   stopCamera()

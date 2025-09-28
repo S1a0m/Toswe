@@ -56,3 +56,7 @@ export function goToPerformances() {
 export function goToPremium() {
     return navigateTo({ path: "/premium" })
 }
+
+export function goToCGU() {
+    return navigateTo({ path: "/pc-cgu" })
+}

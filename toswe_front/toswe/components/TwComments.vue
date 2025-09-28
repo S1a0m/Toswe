@@ -4,7 +4,7 @@
     <div class="flex items-center gap-2 mb-6">
       <Icon name="mdi:comment-text-outline" class="w-6 h-6 text-[#7D260F]" />
       <h3 class="text-xl font-bold text-[#7D260F]">
-        Commentaires ({{ feedbacks.results.length }})
+        Commentaire(s) ({{ feedbacks.results.length }})
       </h3>
     </div>
 
@@ -47,21 +47,25 @@
     </p>
 
     <!-- Si non connecté -->
-    <div
-      v-if="!auth.isAuthenticated"
-      class="bg-[#FFF5F2] border border-[#F3D0C3] rounded-xl p-5 mt-6 text-center shadow-sm"
+     <div
+    v-if="!auth.isAuthenticated"
+    class="bg-[#FFF5F2] border border-[#F3D0C3] rounded-xl p-5 mt-6 text-center shadow-sm"
     >
-      <p class="text-gray-700 text-sm md:text-base mb-3">
-        💬 Vous avez quelque chose à dire ?  
-        <span class="font-semibold text-[#7D260F]">Connectez-vous</span> pour rejoindre la discussion !
+      <p class="text-gray-700 text-sm md:text-base mb-3 flex items-center justify-center gap-2">
+        <Icon name="uil:comment-alt-message" class="w-5 h-5 text-[#7D260F]" />
+        Vous avez quelque chose à dire ?  
+        <span class="font-semibold text-[#7D260F] ml-1">Connectez-vous</span> pour rejoindre la discussion !
       </p>
+
       <button
         @click="goToAuth"
-        class="bg-[#7D260F] text-white px-5 py-2 rounded-lg font-medium shadow-md hover:bg-[#5c1c07] transition-colors duration-300"
+        class="flex items-center justify-center gap-2 bg-[#7D260F] text-white px-5 py-2 rounded-lg font-medium shadow-md hover:bg-[#5c1c07] transition-colors duration-300 mx-auto"
       >
-        🔑 Se connecter
+        <Icon name="uil:key-skeleton" class="w-5 h-5" />
+        Se connecter
       </button>
     </div>
+
 
     <!-- Formulaire -->
     <form

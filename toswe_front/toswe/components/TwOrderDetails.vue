@@ -44,14 +44,14 @@
     </div>
 
     <!-- Actions -->
-    <div class="flex justify-end gap-3 pt-4 border-t">
+    <div class="flex justify-end gap-3 pt-4 border-t" v-if="mine">
       <button
         class="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
       >
         <a :href="order.pdf" target="_blank">Télécharger la facture</a>
       </button>
       <button
-        v-if="order.status === 'En attente'"
+        v-if="order.status === 'pending'"
         class="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
       >
         Annuler la commande
@@ -61,6 +61,10 @@
 </template>
 
 <script setup>
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+const mine = route.query.mine === 'yes'
 defineProps({
   order: {
     type: Object,

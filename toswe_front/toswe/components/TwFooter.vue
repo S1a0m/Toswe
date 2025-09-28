@@ -19,12 +19,12 @@
         <h4 class="text-white text-base mb-2 font-semibold">Liens utiles</h4>
         <ul class="list-none p-0 m-0 space-y-1">
           <li>
-            <a href="#" class="text-gray-400 hover:underline"
+            <a href="/pc-cgu#privacy" class="text-gray-400 hover:underline"
               >Politique de confidentialité</a
             >
           </li>
           <li>
-            <a href="#" class="text-gray-400 hover:underline"
+            <a href="/pc-cgu#terms" class="text-gray-400 hover:underline"
               >Conditions d'utilisation</a
             >
           </li>

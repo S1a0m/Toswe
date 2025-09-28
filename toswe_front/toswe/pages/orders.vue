@@ -1,7 +1,18 @@
 <template>
-  <div v-if="auth.isAuthenticated && !auth.isSeller">
-      <TwOrders :orders="orders.results" />
-  </div>
+  <section class="px-4 md:px-8 py-12 max-w-6xl mx-auto" v-if="auth.isAuthenticated && !auth.isSeller">
+    <h2 class="text-2xl font-bold text-[#7D260F] mb-6 font-[Kenia]">
+      Commandes
+    </h2>
+        <div v-if="orders.length" class="flex flex-col gap-4">
+          <TwOrder
+            v-for="order in orders"
+            :key="order.id"
+            :order="order"
+            @click="goToMyOrderDetails(order.id)"
+          />
+        </div>
+        <div v-else class="text-gray-500 text-center py-6">Aucune commande.</div>
+  </section>
   <section class="px-4 md:px-8 py-12 max-w-6xl mx-auto" v-if="auth.isSeller">
     <h2 class="text-2xl font-bold text-[#7D260F] mb-6 font-[Kenia]">
       Commandes
@@ -15,7 +26,7 @@
             v-for="order in orders"
             :key="order.id"
             :order="order"
-            @click="goToOrderDetails(order.id)"
+            @click="goToMyOrderDetails(order.id)"
           />
         </div>
         <div v-else class="text-gray-500 text-center py-6">Aucune commande.</div>
@@ -47,7 +58,7 @@ import TwOrder from '@/components/TwOrder.vue'
 const auth = useAuthStore()
 const orders = ref([])
 const sellerOrders = ref([])
-const { goToOrderDetails } = useNavigation()
+const { goToOrderDetails, goToMyOrderDetails } = useNavigation()
 
 async function fetchOrders() {
   try {

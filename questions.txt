@@ -1,0 +1,66 @@
+* Quels produits sont disponibles dans la catégorie X ?
+* Montre-moi les promos du moment.
+* Quels sont les produits sponsorisés ?
+* Ce produit est-il en stock ?
+* Quel est le prix de X ?
+* Quelle boutique vend X au meilleur prix ?
+* Donne-moi des alternatives à ce produit.
+
+* Comment passer une commande ?
+* Où en est ma commande #123 ?
+* Est-ce que je peux modifier ma commande ?
+* Quels sont les frais de livraison ?
+* Puis-je annuler une commande ?
+
+* Quand est-ce que ma commande sera livrée ?
+* Quels sont les modes de livraison disponibles ?
+* Puis-je être livré à Porto-Novo ?
+* Qui va livrer mon colis ?
+
+* Quels sont les modes de paiement disponibles ?
+* Est-ce que vous acceptez Mobile Money ?
+* Puis-je payer à la livraison ?
+* Mon paiement a échoué, que faire ?
+
+* Quelles sont les boutiques populaires ?
+* Quels vendeurs vendent dans la catégorie X ?
+* Quelles marques locales sont disponibles ?
+* Comment devenir vendeur sur Tôswè ?
+
+* Quels sont les produits en promotion ?
+* Comment sponsoriser mon produit ?
+* Quelle est la différence entre promo et sponsorisation ?
+
+* Comment créer un compte ?
+* Comment réinitialiser mon mot de passe ?
+* Comment contacter le support ?
+
+* Ce produit est-il disponible actuellement ?
+* Quels sont les nouveaux produits ?
+* Peux-tu me recommander des produits dans la catégorie **X** ?
+* Est-ce que vous avez le produit **Y** ?
+* Quels produits sont en promo/sponsorisés ?
+* Ce produit existe-t-il dans plusieurs tailles/couleurs ?
+
+* Quel est le meilleur produit pour \[besoin particulier] ?
+* Quel produit me conseilles-tu entre **X** et **Y** ?
+* Quelle marque est la plus fiable dans \[catégorie] ?
+* Quels sont les produits populaires/les plus vendus ?
+* Que puis-je acheter avec un budget de **Z** ?
+
+* Quelle boutique vend le produit **X** ?
+* Quelles sont les meilleures boutiques de \[catégorie] ?
+* Quelle boutique est la plus proche de moi (si tu actives la géoloc) ?
+* Est-ce que le vendeur **X** est vérifié ?
+
+* Où en est ma commande **#123** ?
+* Combien de temps prend la livraison ?
+* Quels modes de paiement sont acceptés ?
+* Puis-je annuler ou modifier ma commande ?
+
+* Comment utiliser ce produit ?
+* Est-ce que ce produit est compatible avec \[autre produit] ?
+* Quelle est la durée de vie de ce produit ?
+* Comment entretenir ce produit ?
+
+

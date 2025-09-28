@@ -18,7 +18,7 @@
     <!-- Image produit -->
     <div class="relative w-full h-48">
       <img
-        :src="`http://127.0.0.1:8000${imageSrc}/`"
+        :src="imageSrc"
         :alt="productName"
         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 cursor-pointer"
         @click="goToProductDetails(id)"
@@ -130,7 +130,6 @@
 import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
-import { useInteractionsStore } from '@/stores/interactions'
 import { useNavigation } from '@/composables/useNavigation'
 import { useRoute } from 'vue-router'
 
@@ -143,7 +142,6 @@ const route = useRoute()
 const { goToProductDetails, goToProductEdit } = useNavigation()
 const auth = useAuthStore()
 const cart = useCartStore()
-const interactions = useInteractionsStore()
 
 const props = defineProps({
   id: { type: Number, required: true },
@@ -159,9 +157,6 @@ const props = defineProps({
 
 const isOwner = computed(() => auth?.user?.id === props.sellerId)
 
-console.log('--- Debug Info ---')
-console.log('isOwner:', isOwner.value, 'auth.user.id:', auth?.user?.id, 'props.sellerId:', props.sellerId)
-
 const isAdded = ref(false)
 const isAnimating = ref(false)
 
@@ -171,6 +166,7 @@ const product = {
   name: props.productName,
   price: props.price
 }
+console.log("Image princiale:", props.imageSrc)
 
 function handleAddClick() {
   if (isAdded.value) {
@@ -178,7 +174,6 @@ function handleAddClick() {
     return
   }
   cart.addToCart(product)
-  interactions.addInteraction('add', props.id, 'product added to cart')
   isAdded.value = true
   isAnimating.value = true
   setTimeout(() => { isAnimating.value = false }, 300)
@@ -215,8 +210,13 @@ function deleteProduct() {
   }
 }
 
-const contentSanitized = DOMPurify.sanitize(props.description, {
-  ALLOWED_TAGS: ['b', 'i', 'strong', 'em', 'br']
+const contentSanitized = ref('')
+
+onMounted(() => {
+  contentSanitized.value = DOMPurify.sanitize(props.description, {
+    ALLOWED_TAGS: ['b', 'i', 'strong', 'em', 'br']
+  })
 })
+
 
 </script>

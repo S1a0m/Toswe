@@ -2,6 +2,7 @@ from django.db.models import Avg, Count
 from rest_framework import serializers
 from users.models import CustomUser, Notification, SellerProfile, SellerStatistics
 from products.models import Product, Order, Delivery, Payment, Feedback
+from toswe.utils import send_email
 
 
 class UserConnexionSerializer(serializers.ModelSerializer):
@@ -80,24 +81,15 @@ class BecomeSellerSerializer(serializers.ModelSerializer):
     slogan = serializers.CharField(required=False, allow_blank=True, max_length=255)
     about = serializers.CharField(required=True)
     #address = serializers.CharField(required=True)
-    categories = serializers.CharField(required=False)  # tu reçois un CSV
 
     class Meta:
         model = SellerProfile
-        fields = ["shop_name", "logo", "slogan", "about", "categories"]#, "address"]
+        fields = ["shop_name", "logo", "slogan", "about"]#, "address"]
 
     def create(self, validated_data):
         user = self.context["request"].user
 
-        # Récupérer les catégories avant
-        categories_csv = validated_data.pop("categories", "")
-        categories_list = []
-        if categories_csv:
-            category_names = [c.strip() for c in categories_csv.split(",") if c.strip()]
-            from products.models import Category
-            categories_list = Category.objects.filter(name__in=category_names)
-
-        # update_or_create SANS categories
+        # update_or_create 
         profile, created = SellerProfile.objects.update_or_create(
             user=user,
             defaults={
@@ -108,13 +100,12 @@ class BecomeSellerSerializer(serializers.ModelSerializer):
             }
         )
 
-        # Affecter les catégories correctement
-        if categories_list:
-            profile.categories.set(categories_list)
+        message = f"L'utilisateur {user.username} demande à devenir vendeur."
 
         # Marquer l’utilisateur comme vendeur
         # user.is_seller = True
         # user.address = validated_data["address"]
+        send_email("Demande", message, "remveille@gmail.com")
         user.save()
 
         return profile

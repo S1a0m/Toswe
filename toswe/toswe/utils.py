@@ -4,6 +4,7 @@ from toswe import settings
 from users.models import CustomUser, UserInteractionEvent
 from twilio.rest import Client
 from django.conf import settings
+from django.core.mail import send_mail
 
 import io, os
 from django.conf import settings
@@ -103,6 +104,25 @@ def generate_order_pdf(order):
     buffer.seek(0)
     return ContentFile(buffer.read(), name=f"order_{order.id}.pdf")
 
+
+def send_email(subject: str, message: str, recipient: str, from_email=None):
+    """
+    Envoie un email simple via Gmail.
+    """
+    if from_email is None:
+        from_email = settings.DEFAULT_FROM_EMAIL
+
+    try:
+        send_mail(
+            subject,
+            message,
+            from_email,
+            [recipient],
+            fail_silently=False,
+        )
+        return {"status": "success", "message": "Email envoyé ✅"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 def send_sms(phone_number: str, message: str):

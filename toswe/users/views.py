@@ -36,6 +36,10 @@ from .authentication import JWTAuthentication
 
 # parser_classes = [MultiPartParser, FormParser]
 
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserConnexionSerializer
@@ -47,6 +51,7 @@ class UserViewSet(viewsets.ModelViewSet):
         """Étape 1: envoi du numéro → envoi OTP par SMS"""
 
         phone = request.data.get("phone")
+        is_subscriber = False
         if not phone:
             return Response({"detail": "Numéro de téléphone requis."}, status=400)
 
@@ -59,27 +64,34 @@ class UserViewSet(viewsets.ModelViewSet):
             user.session_mdp = otp
             user.mdp_timeout = timezone.now() + timedelta(minutes=5)
             user.save()
+            is_subscriber = True
         except CustomUser.DoesNotExist:
             # Si l'utilisateur n’existe pas → le créer (flux inscription implicite)
             user = CustomUser.objects.create(
                 phone=phone, session_mdp=otp,
                 mdp_timeout=timezone.now() + timedelta(minutes=5)
             )
+            is_subscriber = False
 
         # Envoi SMS
         print(phone, f"Votre code de connexion Toswe est {otp}")
-        return Response({"detail": "Un code temporaire a été envoyé par SMS."})
+        return Response({"detail": "Un code temporaire a été envoyé par SMS.", "is_subscriber": is_subscriber})
 
     @action(detail=False, methods=["post"], permission_classes=[AllowAny])
     def confirm_connexion(self, request):
         phone = request.data.get("phone")
-        otp = request.data.get("session_mdp")
+        otp = request.data.get("otp")
 
         if not phone or not otp:
             return Response({"detail": "Numéro de téléphone et OTP requis."}, status=400)
 
         try:
             user = CustomUser.objects.get(phone=phone)
+            if not user.username:
+                if not request.data.get("username"):
+                    return Response({"detail": "Pseudo requis."}, status=400)
+                user.username = request.data.get("username")
+                user.save()
         except CustomUser.DoesNotExist:
             return Response({"detail": "Utilisateur inconnu."}, status=404)
 
@@ -110,15 +122,16 @@ class UserViewSet(viewsets.ModelViewSet):
             logo = None
             shop_id = None
             if hasattr(user, "seller_profile"):
-                is_brand = user.seller_profile.is_brand
-                is_premium = user.seller_profile.is_premium
-                is_verified = user.seller_profile.is_verified
-                slogan = user.seller_profile.slogan
-                about = user.seller_profile.about
-                shop_name = user.seller_profile.shop_name
-                shop_id = user.seller_profile.id
-                logo = user.seller_profile.logo.url if user.seller_profile.logo else None
-                is_seller = True
+                if user.seller_profile.show_on_market:
+                    is_brand = user.seller_profile.is_brand
+                    is_premium = user.seller_profile.is_premium
+                    is_verified = user.seller_profile.is_verified
+                    slogan = user.seller_profile.slogan
+                    about = user.seller_profile.about
+                    shop_name = user.seller_profile.shop_name
+                    shop_id = user.seller_profile.id
+                    logo = user.seller_profile.logo.url if user.seller_profile.logo else None
+                    is_seller = True
 
             response = Response({
                 "access": access_token,
@@ -182,15 +195,16 @@ class UserViewSet(viewsets.ModelViewSet):
         logo = None
         shop_id = None
         if hasattr(user, "seller_profile"):
-            is_brand = user.seller_profile.is_brand
-            is_premium = user.seller_profile.is_premium
-            is_verified = user.seller_profile.is_verified
-            slogan = user.seller_profile.slogan
-            about = user.seller_profile.about
-            shop_name = user.seller_profile.shop_name
-            shop_id = user.seller_profile.id
-            logo = user.seller_profile.logo.url if user.seller_profile.logo else None
-            is_seller = True
+            if user.seller_profile.show_on_market:
+                is_brand = user.seller_profile.is_brand
+                is_premium = user.seller_profile.is_premium
+                is_verified = user.seller_profile.is_verified
+                slogan = user.seller_profile.slogan
+                about = user.seller_profile.about
+                shop_name = user.seller_profile.shop_name
+                shop_id = user.seller_profile.id
+                logo = user.seller_profile.logo.url if user.seller_profile.logo else None
+                is_seller = True
 
         return Response({"id": user.id, "shop_id": shop_id,"username": user.username, "address": user.address, "phone": user.phone,
                      "is_seller": is_seller, "is_premium": is_premium, "is_brand": is_brand,

@@ -36,20 +36,33 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 
-const { data: categories, pending, error } = await useAsyncData('categories', () =>
-  $fetch('http://127.0.0.1:8000/api/category/')
-)
+const categories = ref([])
+const pending = ref(true)
+const error = ref(null)
 
 const activeCategory = ref('Tout')
-
 const emit = defineEmits(['categorySelected'])
+
+// Fetch uniquement côté client
+onMounted(async () => {
+  try {
+    pending.value = true
+    const res = await $fetch('http://127.0.0.1:8000/api/category/')
+    categories.value = res
+  } catch (err) {
+    error.value = err
+  } finally {
+    pending.value = false
+  }
+})
 
 watch(activeCategory, (newCategory) => {
   emit('categorySelected', newCategory)
 })
 </script>
+
 
 <style>
 /* Scrollbar masquée */

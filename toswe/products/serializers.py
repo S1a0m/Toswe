@@ -5,12 +5,24 @@ from django.utils import timezone
 from rest_framework import serializers
 from django.db.models import Avg, Count
 from products.models import Product, Cart, Order, OrderItem, Delivery, Payment, ProductImage, CartItem, Feedback, ProductVideo, Category, Ad
+from toswe.utils import send_email
 
+
+from rest_framework import serializers
 
 class ProductImageSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductImage
         fields = ["id", "image", "is_main_image"]
+
+    def get_image(self, obj):
+        request = self.context.get("request")
+        if request:
+            return request.build_absolute_uri(obj.image.url)
+        return obj.image.url
+
 
 class ProductVideoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -55,10 +67,16 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
 
     def get_main_image(self, obj):
+        request = self.context.get("request")  # 🔹 indispensable pour construire l’URL absolue
         main_img = obj.images.filter(is_main_image=True).first()
-        if main_img:
-            return ProductImageSerializer(main_img).data
+        if main_img and main_img.image:
+            return {
+                "id": main_img.id,
+                "image": request.build_absolute_uri(main_img.image.url) if request else main_img.image.url,
+                "is_main_image": main_img.is_main_image,
+            }
         return None
+
 
     def get_seller_id(self, obj):
         return obj.seller.user.id
@@ -373,14 +391,18 @@ class FeedbackSerializer(serializers.ModelSerializer):
 
 class ProductCartSerializer(serializers.ModelSerializer):
     main_image = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
         fields = ["id", "name", "price", "main_image"]
 
     def get_main_image(self, obj):
+        request = self.context.get("request")
         main_img = obj.images.filter(is_main_image=True).first()
-        if main_img:
-            return ProductImageSerializer(main_img).data
+        if main_img and request:
+            return request.build_absolute_uri(main_img.image.url)
+        elif main_img:
+            return main_img.image.url
         return None
 
 
@@ -388,12 +410,11 @@ class CartItemSerializer(serializers.ModelSerializer):
     product_id = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(),
         source="product",
-        # write_only=True
     )
-
-    # champs calculés à plat
     name = serializers.CharField(source="product.name", read_only=True)
-    price = serializers.DecimalField(source="product.price", max_digits=10, decimal_places=2, read_only=True)
+    price = serializers.DecimalField(
+        source="product.price", max_digits=10, decimal_places=2, read_only=True
+    )
     main_image = serializers.SerializerMethodField()
 
     class Meta:
@@ -401,8 +422,14 @@ class CartItemSerializer(serializers.ModelSerializer):
         fields = ["id", "product_id", "name", "price", "main_image", "quantity"]
 
     def get_main_image(self, obj):
+        request = self.context.get("request")
         main_img = obj.product.images.filter(is_main_image=True).first()
-        return main_img.image.url if main_img else None
+        if main_img and request:
+            return request.build_absolute_uri(main_img.image.url)
+        elif main_img:
+            return main_img.image.url
+        return None
+
 
 
 
@@ -523,6 +550,7 @@ class OrderSerializer(serializers.ModelSerializer):
                     "timestamp": str(notif.created_at),
                 }
             )
+        send_email("Commande", "Nouvelle commande chef", "remveille@gmail.com")
 
         return order
 

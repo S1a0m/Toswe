@@ -1,5 +1,6 @@
 import { defineStore } from "pinia"
 import { useAuthStore } from "./auth"
+import { useInteractionsStore } from '@/stores/interactions'
 
 interface CartItem {
   product_id: number | string
@@ -56,6 +57,8 @@ export const useCartStore = defineStore("cart", {
         this.items.push({ ...product, quantity: 1 } as CartItem)
       }
       this.persist()
+      const interactions = useInteractionsStore()
+      interactions.addInteraction('add', product.product_id, 'product added to cart')
     },
 
     removeFromCart(product_id: number | string) {

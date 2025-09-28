@@ -28,18 +28,27 @@
              transition-all duration-500 group-hover:translate-y-[-15%]"
     >
       <!-- Nom boutique -->
-      <div class="flex items-center">
-        <h3 class="font-semibold text-lg sm:text-xl truncate">
-          {{ shopName }}
-        </h3>
-        <span v-if="isVerified">
-          <Icon
-            name="mdi:check-decagram"
-            class="inline-block w-5 h-5 text-blue-400 ml-1"
-            title="Vendeur vérifié"
-          />
-        </span>
-      </div>
+      <div class="flex items-center gap-2">
+      <!-- Nom boutique -->
+      <h3
+        class="font-semibold text-base sm:text-lg md:text-xl truncate"
+      >
+        {{ shopName }}
+      </h3>
+
+      <!-- Badge vérifié -->
+      <span
+        v-if="isVerified"
+        class="flex items-center justify-center rounded-full bg-blue-50 p-0.5 shadow-sm"
+      >
+        <Icon
+          name="mdi:check-decagram"
+          class="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"
+          title="Vendeur vérifié"
+        />
+      </span>
+    </div>
+
 
       <!-- Abonnés -->
       <p class="text-sm opacity-90 mt-1">

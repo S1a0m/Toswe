@@ -2,18 +2,18 @@
 <template>
   <header
     :class="[
-      'fixed top-0 left-0 w-full z-[1000] text-white transition-all duration-500 backdrop-blur-xl',
+      'fixed top-0 left-0 w-full z-[1000] text-white transition-all duration-500',
       isScrolled ? 'bg-gradient-to-r from-[#6B1F0D]/90 to-[#7D260F]/90 py-2 shadow-lg' : 'bg-gradient-to-r from-[#7D260F]/70 to-[#6B1F0D]/70 py-4 shadow-md'
     ]"
   >
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 backdrop-blur-xl">
       <div class="flex justify-between items-center">
         
         <!-- Logo -->
         <div class="flex items-center space-x-3 cursor-pointer" @click="goToMarket">
           <img src="/assets/images/logo.png" alt="Tôswè" class="h-9 w-auto drop-shadow-md" />
           <span class="hidden sm:block font-bold text-xl font-[Kumbh_Sans] tracking-wide">Tôswè</span>
-          <div class="flex flex-col text-xs"> <span v-if="auth.isAuthenticated" class="text-sm flex items-center gap-1 font-semibold"> <span class="bg-green-500 w-2 h-2 inline-block rounded-full"></span>{{ auth.getUsername }} </span> <span class="text-xs text-gray-500 flex items-center gap-1" v-if="auth.isSeller"> <Icon name="uil:shopping-cart" size="16" /> Vendeur</span> </div>
+          <div class="flex flex-col text-xs"> <span v-if="auth.isAuthenticated" class="text-sm flex items-center gap-1 font-semibold"> <span class="bg-green-500 w-2 h-2 inline-block rounded-full"></span>{{ auth.getUsername }} </span> <span class="text-xs text-gray-800 flex items-center gap-1" v-if="auth.isSeller"> <Icon name="uil:shopping-cart" size="16" /> Vendeur</span> </div>
         </div>
 
         <!-- Menu desktop -->
@@ -82,6 +82,11 @@
               @click="goToNotifications"
             >
               <Icon name="uil:bell" size="20" />
+              <!-- Badge rouge -->
+              <span
+                v-if="hasNewNotification"
+                class="relative top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full"
+              ></span>
             </button>
 
             <button
@@ -147,7 +152,7 @@
         @click="goToSearch"
       >
         <Icon name="mdi:image-search" size="20" class="text-[#6B1F0D]" />
-        Rechercher / Scanner un produit
+        Rechercher produit
       </button>
       <button
         class="flex items-center gap-3 px-3 py-3 rounded-md hover:bg-[#6B1F0D]/10 transition"
@@ -165,7 +170,7 @@
         @click="goToSearch"
       >
         <Icon name="mdi:image-search" size="20" class="text-[#6B1F0D]" />
-        Rechercher / Scanner un produit
+        Rechercher produit
       </button>
       <button
         class="flex items-center gap-3 px-3 py-3 rounded-md hover:bg-[#6B1F0D]/10 transition"
@@ -180,6 +185,10 @@
       >
         <Icon name="uil:bell" size="20" class="text-[#6B1F0D]" />
         Notifications
+          <span
+            v-if="hasNewNotification"
+            class="relative right-3 top-2 w-2.5 h-2.5 bg-red-500 rounded-full"
+          ></span>
       </button>
       <button
         class="flex items-center gap-3 px-3 py-3 rounded-md hover:bg-[#6B1F0D]/10 transition"
@@ -213,6 +222,8 @@ import { useAuthStore } from '@/stores/auth'
 import { goToAuth, goToNotifications, goToOrders, goToSettings, goToSearch, goToMarket } from "@/utils/navigations";
 import { useRoute } from "vue-router";
 import { useNavigation } from "@/composables/useNavigation";
+import { useNotifications } from "@/composables/useNotifications"
+const { hasNewNotification, markAsRead } = useNotifications()
 
 const { goToMyShop } = useNavigation();
 

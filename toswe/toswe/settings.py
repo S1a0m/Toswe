@@ -147,7 +147,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("localhost", 6379)],
+            "hosts": [("127.0.0.1", 6379)],
         },
     },
 }
@@ -193,6 +193,23 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 FRONTEND_URL = "http://127.0.0.1:3000"
 
+# Send sms for order to seller
 TWILIO_ACCOUNT_SID = "xxxxxxxxxxxxxxxx"
 TWILIO_AUTH_TOKEN = "xxxxxxxxxxxxxxxx"
 TWILIO_PHONE_NUMBER = "+1234567890"
+
+
+# Send mail for order to admin
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+# Utilise ton adresse Gmail
+EMAIL_HOST_USER = "precieuxdev1@gmail.com"
+
+# ⚠️ Utilise un mot de passe d'application (pas ton vrai mot de passe Gmail)
+# -> à créer dans ton compte Google > Sécurité > Mots de passe d'application
+EMAIL_HOST_PASSWORD = "oery vefq wpew xptv"
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

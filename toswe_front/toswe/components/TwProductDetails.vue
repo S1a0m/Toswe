@@ -146,9 +146,7 @@
     </div>
 
     <!-- Description -->
-    <p class="text-gray-700 leading-relaxed text-base mb-6" v-html="DOMPurify.sanitize(product.description, {
-      ALLOWED_TAGS: ['b', 'i', 'strong', 'em', 'br']
-    })">
+    <p class="text-gray-700 leading-relaxed text-base mb-6" v-html="contentSanitized">
     </p>
 
     <!-- ✅ Bouton Ajouter uniquement si ce n'est PAS le propriétaire -->
@@ -217,6 +215,7 @@ import { useCartStore } from '@/stores/cart'
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useInteractionsStore } from '@/stores/interactions'
 
 import DOMPurify from 'dompurify'
 
@@ -253,8 +252,8 @@ function handleAddClick() {
   if (isAdded.value) return goToCart()
 
   cart.addToCart({
-    id: product.value.id,
-    img: main_image.value,
+    product_id: product.value.id,
+    main_image: main_image.value,
     name: product.value.name,
     price: product.value.price
   })
@@ -326,6 +325,15 @@ function closeVideo() {
   document.body.style.overflow = ""
 }
 
-onMounted(() => window.addEventListener('keydown', onKey))
+const contentSanitized = ref('')
+const interactions = useInteractionsStore()
+
+onMounted(() => {
+  window.addEventListener('keydown', onKey)
+  contentSanitized.value = DOMPurify.sanitize(product.value.description, {
+    ALLOWED_TAGS: ['b', 'i', 'strong', 'em', 'br']
+  })
+  interactions.addInteraction('view', product.value.id, 'product details viewed')
+})
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>

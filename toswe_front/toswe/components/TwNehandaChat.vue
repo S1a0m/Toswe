@@ -100,12 +100,10 @@ import { v4 as uuidv4 } from 'uuid'
 import { useAuthStore } from '@/stores/auth'
 const auth = useAuthStore()
 
-const STORAGE_KEY = 'nehanda_conversation_v1'
+const STORAGE_KEY = 'nehanda_conversation_vx'
 
 const defaultMessages = [
   { id: uuidv4(), role: 'assistant', content: "Bonjour — je suis Nehanda. En quoi puis-je vous aider aujourd'hui ?", time: new Date().toISOString() },
-  { id: uuidv4(), role: 'user', content: "Je veux meubler ma chambre, quel serait le meilleur matelas à acheter pour cette saison ?", time: new Date().toISOString() },
-  { id: uuidv4(), role: 'assistant', content: "Cela dépend de votre budget, de la fermeté désirée et de la taille. Pour cette saison (chaude), un matelas respirant à base de latex ou mousse à mémoire avec bonne aération est recommandé. Souhaitez-vous des options locales ?", time: new Date().toISOString() }
 ]
 
 const messages = ref([])
@@ -225,41 +223,6 @@ async function send() {
     sending.value = false
     isTyping.value = false
   }
-}
-
-
-
-function cannedReply(userText) {
-  if (/matelas|lit|chambre/i.test(userText)) {
-    return "Pour meubler la chambre : commencez par choisir la taille du lit (140/160/180), puis optez pour un matelas respirant (latex ou mousse aération). Je peux vous proposer des modèles locaux à petit prix ou premium. Voulez-vous voir des suggestions ?"
-  }
-  if (/commander|programme/i.test(userText)) {
-    return "Je peux vous aider à programmer une commande. Dites-moi quel produit, la quantité et la date souhaitée. Souhaitez-vous continuer ?"
-  }
-  return "Merci pour votre message — dites-m'en plus pour que je puisse vous aider au mieux."
-}
-
-async function simulateStreamReply(text) {
-  isTyping.value = true
-  const chunkSize = 40
-  let built = ''
-  for (let i = 0; i < text.length; i += chunkSize) {
-    const part = text.slice(i, i + chunkSize)
-    built += part
-    // update a temporary assistant message
-    const tmp = { id: 'tmp', role: 'assistant', content: built, time: new Date().toISOString() }
-    // replace last assistant tmp if exists
-    const idx = messages.value.findIndex(m => m.id === 'tmp')
-    if (idx !== -1) messages.value.splice(idx, 1, tmp)
-    else messages.value.push(tmp)
-
-    await new Promise(r => setTimeout(r, 250))
-  }
-  // finalize
-  const final = { id: uuidv4(), role: 'assistant', content: text, time: new Date().toISOString() }
-  const tIdx = messages.value.findIndex(m => m.id === 'tmp')
-  if (tIdx !== -1) messages.value.splice(tIdx, 1, final)
-  else messages.value.push(final)
 }
 </script>
 

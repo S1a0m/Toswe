@@ -42,7 +42,7 @@
               <input type="text" placeholder="Nom de la boutique" class="input" v-model="shopName" />
             </div>
 
-            <!-- Catégories -->
+            <!-- Catégories 
             <div>
               <label class="label">Catégorie</label>
               <select class="input" v-model="selectedCategories" multiple>
@@ -51,7 +51,7 @@
                 </option>
               </select>
               <p class="text-xs text-gray-500 mt-1">Maintenez <kbd>Ctrl</kbd> (ou <kbd>Cmd</kbd>) pour sélectionner plusieurs.</p>
-            </div>
+            </div>-->
 
             <!-- Logo + preview -->
             <div>

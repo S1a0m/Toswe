@@ -11,6 +11,7 @@ export default defineNuxtRouteMiddleware((to) => {
     '/product',
     '/cart',
     '/search',
+    '/pc-cgu',
     '/',
   ]
 

@@ -19,6 +19,11 @@ interface User {
   logo: string | null
 }
 
+interface ConfirmData {
+  phone: string
+  otp: string
+}
+
 
 
 export const useAuthStore = defineStore("auth", {
@@ -52,19 +57,19 @@ export const useAuthStore = defineStore("auth", {
             body: { phone },
           }
         )
-        return res.detail
+        return res
       } catch (e: any) {
         throw new Error(e?.data?.detail || "Erreur d'initialisation connexion")
       }
     },
 
-    async confirmConnexion(phone: string, otp: string) {
+    async confirmConnexion(payload: ConfirmData) {
       try {
         const res = await $fetch<{ access: string; user: User }>(
           "http://127.0.0.1:8000/api/user/confirm_connexion/",
           {
             method: "POST",
-            body: { phone, session_mdp: otp },
+            body: payload,
             credentials: "include", // <-- Pour recevoir le cookie
           }
         )
