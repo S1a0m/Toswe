@@ -33,7 +33,7 @@
         class="group text-white bg-white/10 backdrop-blur-lg border border-white/20 flex flex-col items-center text-center p-8 rounded-2xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
       >
         <Icon name="uil:robot" size="56" class="mb-4 text-white" />
-        <h3 class="text-lg font-semibold mb-3">Assistance IA (EIA)</h3>
+        <h3 class="text-lg font-semibold mb-3">Emplettes IA (EIA)</h3>
         <p class="text-white/90 leading-relaxed">
           Profitez d’une intelligence artificielle pour vous conseiller, trouver
           les meilleurs produits et optimiser vos emplettes.

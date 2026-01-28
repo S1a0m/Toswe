@@ -6,16 +6,20 @@
       <!-- Logo -->
       <div class="relative shrink-0">
         <img
-          :src="`http://127.0.0.1:8000/${shop.logo_url || 'placeholder-shop.png'}`"
+          :src="`http://127.0.0.1:8000${shop.logo_url || 'placeholder-shop.png'}`"
           alt="Logo boutique"
           class="size-16 rounded-2xl object-cover border border-[#e6d9d3] shadow-sm"
         />
         <span
           v-if="shop.is_verified"
-          class="absolute -bottom-1 -right-1 inline-flex items-center gap-1 rounded-full bg-emerald-600 text-white px-0.5 py-0.5 text-2xs shadow"
+          class="absolute -bottom-1 -right-1 inline-flex items-center gap-1 rounded-full bg-blue-50 text-white px-0.5 py-0.5 text-2xs shadow"
           title="Boutique vérifiée"
         >
-          <Icon name="mdi:check-decagram" class="w-3 h-3" />
+        <Icon
+          name="mdi:check-decagram"
+          class="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"
+          title="Vendeur vérifié"
+        />
         </span>
       </div>
 
@@ -79,16 +83,18 @@
         >
           {{ isSubscribed ? "Se désabonner" : "S'abonner" }}
         </button>
+        <NuxtLink to="/premium"
+          v-else v-if="!auth.user.is_premium">
         <span
-          v-else v-if="!auth.user.is_premium"
           class="px-4 py-2 rounded-xl border border-[#e6d9d3] text-gray-700 hover:bg-[#fdf8f5] transition"
         >
-          <NuxtLink to="/premium">Devenir vendeur premium</NuxtLink>
-        </span>
+          Devenir vendeur premium
+        </span></NuxtLink>
         <span
           title="Partager le lien de ma boutique"
           class="flex items-center justify-center gap-1 px-4 py-2 rounded-xl border border-[#e6d9d3] text-gray-700 hover:bg-[#fdf8f5] transition"
           v-if="isOwner"
+          @click="copyShopLink"
         >
           <Icon name="uil:share-alt" /> 
         </span>
@@ -147,6 +153,19 @@ const toggleSubscribe = async () => {
     totalSubscribers.value += res.subscribed ? 1 : -1
   } catch (err) {
     alert('Erreur : ' + (err?.data?.detail || err.message))
+  }
+}
+
+async function copyShopLink() {
+  try {
+    // Ici tu copies l'URL courante (celle du navigateur)
+    const shopUrl = `${window.location.origin}/shop?id=${auth.user.shop_id}`
+    await navigator.clipboard.writeText(shopUrl)
+
+    alert("✅ Lien copié dans le presse-papier !")
+  } catch (err) {
+    console.error("Erreur lors de la copie :", err)
+    alert("❌ Impossible de copier le lien.")
   }
 }
 </script>

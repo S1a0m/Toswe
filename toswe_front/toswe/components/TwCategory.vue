@@ -33,7 +33,7 @@
         >
           <!-- Cercle pour l'image -->
           <div
-            class="w-32 h-32 rounded-full overflow-hidden border-4 border-[#8b5e3c] shadow-lg bg-[#fff9f2]"
+            class="w-35 h-35 rounded-full overflow-hidden border-4 border-[#8b5e3c] shadow-lg bg-[#fff9f2]"
           >
             <img
               :src="imageSrc"

@@ -1,6 +1,5 @@
 <template>
   <TwProductDetails @seller="handleSeller" />
-  <TwComments />
 
   <!-- Produits du vendeur -->
   <TwProducts 
@@ -10,7 +9,7 @@
   />
 
   <span 
-  @click="goToShopDetails(sellerProducts[0]?.seller_id)" 
+  @click="goToShopDetails(sellerProducts[0]?.shop_id)" 
   class="flex items-center gap-2 w-fit mx-auto my-6 px-4 py-2 
          text-center text-[#7D260F] font-medium 
          border border-[#7D260F]/30 rounded-xl 
@@ -18,7 +17,8 @@
          transition-all duration-300 cursor-pointer shadow-sm"
   >
     <Icon name="uil:store" class="w-5 h-5" />
-    Visiter sa boutique
+
+    Visiter la boutique
   </span>
 
 
@@ -30,7 +30,8 @@
   />
 
   <TwMenuSide />
-  <TwPopupAd />
+
+  <!--<TwPopupAd />-->
   <TwCart />
 </template>
 
@@ -60,6 +61,8 @@ watch(sellerId, async (id) => {
 })
 
 const { goToShopDetails } = useNavigation()
+
+const isOwner = auth?.user?.id === sellerProducts[0]?.value.seller_id
 
 // 🔹 Gestion des produits similaires
 const route = useRoute()

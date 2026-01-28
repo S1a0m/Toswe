@@ -22,6 +22,13 @@ export function useNavigation() {
         }
     }
 
+    function goToMyDeliveries() {
+        const auth = useAuthStore()
+        if (auth.user && auth.user.is_deliverer) {
+            return navigateTo({ path: "/deliveries", query: { id: auth.user.id } })
+        }
+    }
+
     function goToOrderDetails(orderId: number) {
         return navigateTo({ path: "/order", query: { id: orderId } })
     }
@@ -31,13 +38,14 @@ export function useNavigation() {
     }
 
     function goToProductEdit(productId: number) {
-        return navigateTo({ path: "/edit", query: { id: productId } })
+        return navigateTo({ path: "/products/edit", query: { id: productId } })
     }
 
     return {
         goToProductDetails,
         goToShopDetails,
         goToMyShop,
+        goToMyDeliveries,
         goToOrderDetails,
         goToMyOrderDetails,
         goToProductEdit

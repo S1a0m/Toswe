@@ -14,7 +14,7 @@
         </span>
       </div>
 
-      <!-- ✅ Actions CRUD si propriétaire -->
+      <!-- ✅ Actions CRUD si propriétaire 
       <div v-if="isOwner" class="flex items-center gap-2">
         <button
           @click="editProduct"
@@ -38,7 +38,7 @@
         >
           <Icon name="mdi:bullhorn" size="18" class="text-blue-600" />
         </button>
-      </div>
+      </div>-->
     </div>
 
     <!-- Prix + Note -->
@@ -207,6 +207,7 @@
         </div>
       </transition>
     </Teleport>
+  <TwComments :is-owner="isOwner"/>
   </section>
 </template>
 

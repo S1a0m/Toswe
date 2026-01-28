@@ -36,7 +36,7 @@
            group cursor-pointer transition-all duration-500 hover:shadow-2xl"
       >
         <div class="flex items-center justify-center w-16 h-16 rounded-full bg-[#7D260F]/10 group-hover:bg-[#7D260F]/20 transition">
-          <Icon name="mdi:arrow-right-bold-circle" class="w-10 h-10 text-[#7D260F]" />
+          <Icon name="uil:arrow-right" class="w-20 h-20 text-[#7D260F]" />
         </div>
         <p class="mt-4 font-semibold text-[#7D260F] group-hover:underline">
           Voir tous les vendeurs

@@ -34,32 +34,43 @@
         {{ badge }}
       </span>
 
-      <!-- ✅ Boutons CRUD (uniquement si propriétaire) -->
-      <div
-        v-if="isOwner && route.path !== '/market'"
-        class="absolute top-3 right-3 flex flex-col gap-2 z-20"
+    <!-- ✅ Boutons CRUD (uniquement si propriétaire) -->
+    <div
+      v-if="isOwner && route.path === '/shop'"
+      class="absolute top-3 right-3 flex flex-col gap-2 z-20"
+    >
+      <button
+        @click="goToProductEdit(id)"
+        class="p-2 flex items-center justify-center bg-white/90 rounded-full shadow hover:bg-yellow-100 transition border border-[#e6d9d3]"
       >
-        <button
-          @click="goToProductEdit(id)"
-          class="p-2 flex items-center justify-center bg-white/90 rounded-full shadow hover:bg-yellow-100 transition border border-[#e6d9d3]"
-        >
-          <Icon name="mdi:pencil" size="18" class="text-yellow-600" />
-        </button>
-        <button
-          @click.stop="deleteProduct"
-          class="p-2 flex items-center justify-center bg-white/90 rounded-full shadow hover:bg-red-100 transition border border-[#e6d9d3]"
-        >
-          <Icon name="mdi:trash-can" size="18" class="text-red-600" />
-        </button>
-        <button
-        v-if="!isSponsored"
-          @click="showPopup = true"
-          class="p-2 flex items-center justify-center bg-white/90 rounded-full shadow hover:bg-blue-100 transition border border-[#e6d9d3]"
-        >
-          <Icon name="mdi:bullhorn" size="18" class="text-blue-600" />
-        </button> 
-      </div>
+        <Icon name="mdi:pencil" size="18" class="text-yellow-600" />
+      </button>
+
+      <button
+        @click.stop="deleteProduct"
+        class="p-2 flex items-center justify-center bg-white/90 rounded-full shadow hover:bg-red-100 transition border border-[#e6d9d3]"
+      >
+        <Icon name="mdi:trash-can" size="18" class="text-red-600" />
+      </button>
+
+      <!-- ✅ Bouton QR Code -->
+      <button
+        @click.stop="fetchQrCode"
+        class="p-2 flex items-center justify-center bg-white/90 rounded-full shadow hover:bg-green-100 transition border border-[#e6d9d3]"
+      >
+        <Icon name="mdi:qrcode" size="18" class="text-green-600" />
+      </button>
+
+            <!--<button
+            v-if="!isSponsored"
+              @click="showPopup = true"
+              class="p-2 flex items-center justify-center bg-white/90 rounded-full shadow hover:bg-blue-100 transition border border-[#e6d9d3]"
+            >
+              <Icon name="mdi:bullhorn" size="18" class="text-blue-600" />
+            </button> -->
+          </div>
     </div>
+
 
     <!-- Contenu -->
     <div class="absolute bottom-0 left-0 right-0 p-4 text-white 
@@ -71,7 +82,8 @@
         {{ productName }}
       </h3>
 
-      <p class="text-xs opacity-90 line-clamp-2" v-html="contentSanitized"></p>
+      <p class="text-xs opacity-90 line-clamp-2 cursor-pointer"
+        @click="goToProductDetails(id)" v-html="contentSanitized"></p>
 
       <!-- Étoiles -->
       <div class="flex items-center gap-1 mt-1">
@@ -114,6 +126,47 @@
       </div>
     </div>
   </div>
+
+  <!-- ✅ Popup QR Code -->
+<div
+  v-if="showQrPopup"
+  class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+>
+  <div class="bg-white rounded-2xl p-6 shadow-xl max-w-sm w-full relative">
+    <button
+      @click="showQrPopup = false"
+      class="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
+    >
+      ✕
+    </button>
+    <h2 class="text-lg font-semibold text-center mb-4">QR Code du produit</h2>
+    <img
+      v-if="qrCodeUrl"
+      :src="qrCodeUrl"
+      alt="QR Code"
+      class="w-48 h-48 mx-auto"
+    />
+<div class="flex gap-2 mt-4">
+  <!-- Télécharger -->
+  <button 
+    @click="downloadQrCode"
+    class="flex-1 py-2 bg-[#7D260F] text-white rounded-lg flex items-center justify-center gap-1 hover:bg-[#A13B20] transition"
+  >
+    Télécharger <Icon name="mdi:download" />
+  </button>
+
+  <!-- Partager -->
+  <button 
+    @click="shareQrCode"
+    class="flex-1 py-2 bg-blue-600 text-white rounded-lg flex items-center justify-center gap-1 hover:bg-blue-700 transition"
+  >
+    Partager <Icon name="mdi:share-variant" />
+  </button>
+</div>
+
+  </div>
+</div>
+
 
     <!-- Popup paiement -->
     <TwPopupPayment
@@ -181,32 +234,100 @@ function handleAddClick() {
 
 async function handlePayment(payload) {
   try {
-    // payload = { paymentType: "premium", paymentMethod, userNumber }
-    const body = {
-      user_number: payload.userNumber,
-      payment_method: payload.paymentMethod
+    // payload = { paymentType: "sponsorship", paymentMethod, userNumber, sponsorDays, totalPrice }
+
+    if (payload.paymentType === "sponsorship") {
+      const body = {
+        ad_type: "sponsored",
+        product: props.id,           // ID du produit
+        amount: payload.totalPrice,  // calculé par TwPopupPayment
+      }
+
+      const response = await $fetch("http://127.0.0.1:8000/api/ad/", {
+        method: "POST",
+        body,
+        headers: { Authorization: `Bearer ${auth.accessToken}` }
+      })
+
+      alert("🎉 Votre produit est sponsorisé avec succès !")
     }
-
-    const response = await $fetch("http://127.0.0.1:8000/api/seller/become_premium/", {
-      method: "POST",
-      body,
-      headers: { Authorization: `Bearer ${auth.accessToken}` }
-    })
-
-    console.log("Réponse become_premium:", response)
-    alert("Félicitations 🎉 vous êtes passé Premium avec succès !")
-
   } catch (error) {
-    console.error("Erreur lors du passage Premium :", error)
-    alert("Une erreur est survenue. Veuillez réessayer.")
+    console.error("Erreur sponsorisation:", error)
+    alert("❌ Une erreur est survenue. Veuillez réessayer.")
   } finally {
     showPopup.value = false
   }
 }
 
-function deleteProduct() {
-  if (confirm('Supprimer ce produit ?')) {
-    console.log('Supprimer produit', props.id)
+const showQrPopup = ref(false)
+const qrCodeUrl = ref(null)
+
+// 🔹 Récupérer QR code depuis l’API
+async function fetchQrCode() {
+  try {
+    const response = await $fetch(`http://127.0.0.1:8000/api/product/${props.id}/get_qr_code/`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` }
+    })
+    qrCodeUrl.value = response.qr_code_url
+    showQrPopup.value = true
+  } catch (error) {
+    console.error("Erreur QR Code:", error)
+    alert("❌ Impossible de charger le QR code.")
+  }
+}
+
+// Télécharger le QR Code
+function downloadQrCode() {
+  if (!qrCodeUrl.value) return
+
+  const link = document.createElement("a")
+  link.href = qrCodeUrl.value
+  link.download = `qr_code_produit_${props.id}.png`  // nom du fichier
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+// Partager le QR Code
+async function shareQrCode() {
+  if (!qrCodeUrl.value) return
+
+  // Si le navigateur supporte Web Share API
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: "QR Code Produit",
+        text: "Voici le QR code de mon produit sur Tôswè.",
+        url: qrCodeUrl.value
+      })
+    } catch (err) {
+      console.error("Partage annulé ou erreur :", err)
+    }
+  } else {
+    // Fallback si share() n’est pas supporté
+    alert("Le partage n’est pas supporté sur ce navigateur.")
+  }
+}
+
+
+async function deleteProduct() {
+  if (!confirm("Supprimer ce produit ?")) return
+
+  try {
+    await $fetch(`http://127.0.0.1:8000/api/product/${props.id}/delete/`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${auth.accessToken}`,
+      },
+    })
+
+    alert("✅ Produit supprimé avec succès.")
+    // rafraîchir la page ou émettre un event pour retirer le produit du DOM
+    // Exemple :
+    // emit("deleted", props.id)
+  } catch (error) {
+    console.error("Erreur suppression produit:", error)
+    alert("❌ Impossible de supprimer ce produit.")
   }
 }
 

@@ -1,11 +1,11 @@
 <template>
-  <section class="px-4 md:px-8 py-12 max-w-6xl mx-auto">
+  <section class="px-4 md:px-8 py-12 max-w-6xl mx-auto relative">
     <h2 class="text-2xl font-bold text-[#7D260F] mb-8 font-[Kenia] tracking-tight">
       Votre panier
     </h2>
 
     <div class="bg-white shadow-2xl rounded-2xl p-6 md:p-8 space-y-6">
-      
+      <p class="text-gray-700 bg-gray-100 font-semibold p-1">Assurez-vous de bien choisir vos produits avant de passer commande. </p>
       <!-- Liste des articles -->
       <div v-if="cart.items.length > 0" class="space-y-4">
         <TwCartItem
@@ -66,7 +66,6 @@
         @close="showPopup = false"
         @pay="handlePayment"
       />
-
     </div>
 
     <!-- Texte d’aide -->
@@ -76,8 +75,53 @@
         Nehanda
       </strong> 
       ou contactez-nous via WhatsApp ou appel direct au : 
-      <span class="font-semibold">01 90 00 00 00</span>.
+      <span class="font-semibold">01 54 14 12 87</span>.
     </p>
+
+    <!-- 🔹 Overlay Spinner Global -->
+    <div
+      v-if="isLoading"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
+    >
+      <div class="bg-white p-6 rounded-xl shadow-lg flex flex-col items-center gap-3">
+        <svg class="w-10 h-10 text-[#7D260F] animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <p class="text-gray-700 font-medium">Traitement de la commande...</p>
+      </div>
+    </div>
+
+    <!-- Popup commande reçue  -->
+<div
+  v-if="showOrderOkPopup"
+  class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+>
+  <div class="bg-white rounded-2xl p-6 shadow-xl max-w-sm w-full relative">
+    <button
+      @click="showOrderOkPopup = false"
+      class="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
+    >
+      ✕
+    </button>
+    <h2 class="text-lg font-semibold text-center mb-4">Félicitations !</h2>
+    <div class="p-3 bg-green-100 rounded-lg text-center">
+      <p class="">Nous avons bien reçu votre commande.</p>
+      <p class="">Nous vous contacterons dans quelques instants pour finaliser la livraison.</p>
+    </div>
+    <div class="flex gap-2 mt-4">
+      <!-- Télécharger -->
+      <button 
+        @click="showOrderOkPopup = false"
+        class="flex-1 py-2 bg-[#7D260F] text-white rounded-lg flex items-center justify-center gap-1 hover:bg-[#A13B20] transition"
+      >
+        C'est compris
+      </button>
+    </div>
+
+  </div>
+</div>
+
   </section>
 </template>
 
@@ -93,7 +137,8 @@ definePageMeta({
 const cart = useCartStore()
 const auth = useAuthStore()
 const showPopup = ref(false)
-const isLoading = ref(false) // 🔹 état loading
+const isLoading = ref(false) // 🔹 état loading global
+const showOrderOkPopup = ref(false)
 
 async function handlePayment(payload) {
   isLoading.value = true
@@ -117,7 +162,10 @@ async function handlePayment(payload) {
         : {},
     })
 
-    alert("Votre commande a bien été enregistrée ✅", response.message)
+    //alert("Votre commande a bien été enregistrée ✅", response.message)
+
+    showOrderOkPopup.value = true
+    // cart.clearCart()
 
   } catch (error) {
     console.error("Erreur lors de la commande :", error)
@@ -128,7 +176,6 @@ async function handlePayment(payload) {
   }
 }
 </script>
-
 
 <style scoped>
 @keyframes bounceSlow {

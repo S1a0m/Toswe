@@ -87,7 +87,8 @@
 
     <TwMenuSide />
     <TwCart />
-    <TwPopupAd />
+
+  <!--<TwPopupAd />-->
   </div>
 </template>
 

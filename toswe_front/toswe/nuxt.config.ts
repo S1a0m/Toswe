@@ -14,21 +14,14 @@ export default defineNuxtConfig({
     '@nuxt/icon',
     '@vueuse/motion/nuxt',
     '@pinia/nuxt',
-    // '@vite-pwa/nuxt',
+    '@vite-pwa/nuxt',
   ],
 
- /*/ plugins: ["~/plugins/init-auth.client.ts"],
 
-  runtimeConfig: {
-    public: {
-      apiBase: "http://127.0.0.1:8000/api"
-    }
-  },
-
-/*  pwa: {
+  pwa: {
     registerType: 'autoUpdate', // met à jour automatiquement le service worker
     manifest: {
-      name: 'Tôswè',
+      name: 'Tôswè Africa',
       short_name: 'Tôswè',
       description: 'Une application Nuxt transformée en PWA',
       theme_color: '#ffffff',
@@ -37,30 +30,33 @@ export default defineNuxtConfig({
       start_url: '/',
       icons: [
         {
-          src: '/pwa-192x192.png',
+          src: '/images/logo.png',
           sizes: '192x192',
           type: 'image/png'
         },
         {
-          src: '/pwa-512x512.png',
+          src: '/images/logo.png',
           sizes: '512x512',
           type: 'image/png'
         }
       ]
     },
     workbox: {
-      navigateFallback: '/', // fallback en cas de navigation offline
-    },
-    client: {
-      installPrompt: true, // active la boîte de dialogue "Installer l'app"
+      cleanupOutdatedCaches: true,
+      clientsClaim: true,
+      skipWaiting: true,
     },
     devOptions: {
       enabled: true, // pour tester le service worker en mode dev
       type: 'module'
     }
-  },*/
+  },
   app: {
     head: {
+      meta: [
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+      ],
       link: [
         {
           rel: "preconnect",
@@ -74,12 +70,8 @@ export default defineNuxtConfig({
           rel: "stylesheet",
           href: "https://fonts.googleapis.com/css2?family=Kenia&family=Kumbh+Sans:wght@400;700&display=swap",
         },
+        { rel: 'apple-touch-icon', href: '/images/logo.png' },
       ],
     },
   },
-  /*runtimeConfig: {
-    public: {
-      apiBase: process.env.API_BASE || 'http://localhost:8000/api',
-    }
-  }*/
 })

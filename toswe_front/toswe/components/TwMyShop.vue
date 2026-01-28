@@ -79,7 +79,7 @@
         </div>
 
         <!-- Promotions -->
-        <div v-else-if="active === 'promotions' && auth.user?.is_premium">
+        <div v-else-if="active === 'promotions'">
           <!--<div class="flex items-center justify-between mb-4">
             <h3 class="font-semibold text-lg">Mes promotions</h3>
           </div>-->
@@ -151,32 +151,6 @@
               </button>
             </div>
           </form>
-
-          <!-- Liste promos existantes 
-          <div class="mt-6">
-            <h4 class="font-semibold mb-2">Promotions actives</h4>
-            <div v-if="promotions?.length" class="grid md:grid-cols-2 gap-4">
-              <article
-                v-for="promo in promotions"
-                :key="promo.id"
-                class="rounded-2xl border border-[#e6d9d3] bg-white/70 p-4 shadow-sm"
-              >
-                <div class="font-medium">{{ promo.product_name }}</div>
-                <div class="text-sm text-gray-600">
-                  -{{ promo.discount }}% pendant {{ promo.days }} jours
-                </div>
-                <div class="text-[#7D260F] font-semibold">
-                  Nouveau prix : {{ money(promo.new_price) }}
-                </div>
-              </article>
-            </div>
-            <div
-              v-else
-              class="rounded-2xl border border-[#e6d9d3] bg-white/70 p-10 text-center text-gray-600"
-            >
-              Aucune promotion active.
-            </div>
-          </div>-->
         </div>
 
         <!-- Pubs -->
@@ -298,7 +272,7 @@ const auth = useAuthStore()
 const tabs = [
   { key: 'products', label: 'Produits' },
   // { key: 'ads', label: 'Pubs' },
-  { key: 'promotions', label: 'Promotions' },
+  { key: 'promotions', label: '+ Promotions' },
   { key: 'loycs', label: 'Abonnés' },
   { key: 'settings', label: 'Paramètres' }
 ]

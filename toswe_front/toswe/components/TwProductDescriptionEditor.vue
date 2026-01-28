@@ -144,6 +144,36 @@
               </div>
               <p v-if="errors.videos" class="text-xs text-red-500 mt-2">{{ errors.videos }}</p>
             </section>
+
+            <!-- STEP 5: Preview (mobile only) -->
+            <section v-else-if="step === 5 && isMobile" class="space-y-4">
+              <h2 class="text-lg font-semibold">Aperçu avant publication</h2>
+
+              <div class="border rounded-2xl overflow-hidden shadow-lg">
+                <div class="w-full h-44 bg-gray-100">
+                  <img v-if="imagePreviews[0]" :src="imagePreviews[0]" alt="preview" class="w-full h-full object-cover" />
+                  <div v-else class="w-full h-full flex items-center justify-center text-gray-400">Aperçu image</div>
+                </div>
+                <div class="p-4 bg-white">
+                  <h3 class="text-lg font-semibold truncate">{{ name || 'Titre du produit' }}</h3>
+                  <div class="text-sm text-gray-500 mt-1 truncate">{{ categoryName }}</div>
+                  <div class="mt-3 flex items-baseline justify-between">
+                    <div class="text-xl font-bold text-[#7D260F]">{{ priceText }}</div>
+                  </div>
+                  <p class="text-sm text-gray-600 mt-3 line-clamp-3" v-html="descriptionShort"></p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2 mt-3">
+                <div v-for="(img,i) in imagePreviews" :key="i" class="h-16 rounded overflow-hidden border">
+                  <img :src="img" class="w-full h-full object-cover"/>
+                </div>
+              </div>
+
+              <p class="text-xs text-gray-500">⚠ Vérifie bien ton produit avant de publier.</p>
+              
+            </section>
+
           </div>
         </transition>
 
@@ -162,7 +192,7 @@
             </button>
 
             <button
-              v-else
+              v-else-if="(!isMobile && step === maxStep) || (isMobile && step === 5)"
               @click="handleSubmit"
               class="px-6 py-2 bg-green-600 text-white rounded-lg flex items-center gap-2 hover:bg-green-700"
               :disabled="isSubmitting"
@@ -170,6 +200,7 @@
               <svg v-if="isSubmitting" class="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
               Publier
             </button>
+
             <!--<span v-else>Upload {{ isSubmittingProgress }}%</span>-->
           </div>
 
@@ -189,7 +220,6 @@
             <div class="text-sm text-gray-500 mt-1 truncate">{{ categoryName }}</div>
             <div class="mt-3 flex items-baseline justify-between">
               <div class="text-xl font-bold text-[#7D260F]">{{ priceText }}</div>
-              <button class="px-3 py-1 rounded-md bg-[#7D260F] text-white text-sm" @click="previewGoToDetails" :disabled="!previewHasProduct">Voir la fiche</button>
             </div>
             <p class="text-sm text-gray-600 mt-3 line-clamp-3" v-html="descriptionShort"></p>
           </div>
@@ -206,19 +236,30 @@
       </aside>
     </div>
 
-    <!-- Toasts -->
+    <!-- Toasts 
     <div class="fixed right-4 bottom-6 flex flex-col gap-3 z-60">
       <div v-for="(t, i) in toasts" :key="t.id" class="bg-gray-900 text-white px-4 py-2 rounded-md shadow-md flex items-center gap-3">
         <div class="text-sm">{{ t.message }}</div>
         <button class="ml-2 text-gray-300" @click="removeToast(t.id)">✕</button>
       </div>
-    </div>
+    </div>-->
+    <!-- Toast -->
+    <TwToast
+      v-if="toast.visible"
+      :message="toast.message"
+      :type="toast.type"
+      :duration="toast.duration"
+      @close="toast.visible = false"
+    />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
+import { useNavigation } from "@/composables/useNavigation";
+
+const { goToMyShop } = useNavigation();
 
 const props = defineProps({
   mode: {
@@ -235,7 +276,23 @@ const route = useRoute()
 
 /* ----- Wizard state ----- */
 const step = ref(1)
-const maxStep = computed(() => (auth.isPremiumSeller ? 4 : 3))
+
+const isMobile = ref(false)
+
+onMounted(() => {
+  const check = () => {
+    isMobile.value = window.innerWidth < 1024 // lg breakpoint
+  }
+  check()
+  window.addEventListener("resize", check)
+})
+
+
+
+const maxStep = computed(() => {
+  if (isMobile.value) return 5
+  return auth.isPremiumSeller ? 4 : 3
+})
 const progressInStep = ref(0) // for stepper micro-progress (not required but kept)
 
 /* ----- Form data ----- */
@@ -271,11 +328,11 @@ const errors = ref<Record<string, string>>({})
 type Toast = { id: number; message: string }
 const toasts = ref<Toast[]>([])
 let toastId = 1
-const pushToast = (msg: string, ttl = 4000) => {
+/*const pushToast = (msg: string, ttl = 4000) => {
   const id = toastId++
   toasts.value.push({ id, message: msg })
   setTimeout(() => removeToast(id), ttl)
-}
+}*/
 const removeToast = (id: number) => {
   toasts.value = toasts.value.filter(t => t.id !== id)
 }
@@ -286,7 +343,7 @@ const fectchProduct = ref({})
 onMounted(async () => {
   try {
     const res = await $fetch<{ results: Category[] }>('http://127.0.0.1:8000/api/category/')
-    categories.value = res.results || []
+    categories.value = (res.results || []).filter(cat => cat.name !== 'Tout')
   } catch (err) {
     console.error(err)
     pushToast('Impossible de charger les catégories')
@@ -298,12 +355,16 @@ onMounted(async () => {
       headers: { Authorization: `Bearer ${auth.accessToken}` }
     })
     fectchProduct.value = data
+
+    console.log("Les DATA sont:", data)
     
     // Pré-remplir les champs
     name.value = data.name || ''
     price.value = data.price || null
     description.value = data.description || ''
     category.value = data.category || null
+
+    console.log("Cat Data:", category)
 
     // Images
     imagePreviews.value = data.images?.map((img: any) => img.image) || []
@@ -315,6 +376,14 @@ onMounted(async () => {
     console.error(err)
   }
 }
+const categoryName =  computed(() => {
+  const c = categories.value.find(cat => cat.id === category.value)
+
+  console.log("Cat Data MIDDLE:", c)
+  return c ? c.name : '—'
+})
+
+console.log("Cat Data END:", categoryName)
 
 })
 
@@ -334,10 +403,6 @@ const descriptionTextLength = computed(() => {
 })
 
 /* ----- Previews/preview helpers ----- */
-const categoryName = computed(() => {
-  const c = categories.value.find(cat => cat.id === category.value)
-  return c ? c.name : '—'
-})
 const priceText = computed(() => (price.value ? new Intl.NumberFormat('fr-FR').format(price.value) + ' FCFA' : '--'))
 const descriptionShort = computed(() => {
   const s = description.value.replace(/<[^>]*>?/gm, '')
@@ -453,6 +518,23 @@ const resetToFirst = () => {
   step.value = 1
 }
 
+/* ----- Toast state ----- */
+const toast = ref({
+  visible: false,
+  message: '',
+  type: 'success', // success | error | info | warning
+  duration: 3000
+})
+
+const pushToast = (message: string, type: string = 'success', duration = 3000) => {
+  toast.value = {
+    visible: true,
+    message,
+    type,
+    duration
+  }
+}
+
 /* ----- Submit ----- */
 const handleSubmit = async () => {
   if (!validateStep()) return
@@ -500,11 +582,11 @@ const handleSubmit = async () => {
           const res = JSON.parse(xhr.responseText || '{}')
           pushToast('Produit publié avec succès')
           // rediriger vers la page produit si id dispo
-         /* if (res?.id) {
-            setTimeout(() => router.push(`/product/${res.id}`), 700)
+          if (res?.id) {
+            setTimeout(() => router.push(`/product/?id=${res.id}`), 700)
           } else {
-            setTimeout(() => router.push('/my-products'), 700)
-          }*/
+            setTimeout(() => goToMyShop, 700)
+          }
           resolve()
         } else {
           // afficher erreurs renvoyées par DRF si format JSON

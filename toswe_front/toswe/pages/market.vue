@@ -4,11 +4,19 @@
   <TwMenuSide />
   <TwCart />
 
+  <div class="max-w-6xl mx-auto  px-4 md:px-8">
+    <TwShowAd />
+  </div>
+
   <!-- 1er bloc -->
   <TwProducts
+    v-if="!isLoadingCategory"
     title="Choisis pour vous"
     :products="firstProducts"
   />
+
+  <TwProductsSkeleton v-else />
+
 
   <div class="max-w-6xl mx-auto my-10 px-4 md:px-8">
     <h2 class="text-xl font-bold text-[#7D260F] mb-2 font-[Kumbh_Sans]">
@@ -16,12 +24,15 @@
     </h2>
     <TwSellersMix />
   </div>
-
-  <!-- 2ème bloc -->
+  <!-- 2ème bloc --><!-- 2ème bloc -->
   <TwProducts
+    v-if="!isLoadingCategory && secondProducts.length > 0"
     title="D'autres clients ont aussi acheté ça"
     :products="secondProducts"
-    v-if="secondProducts.length > 0"
+  />
+
+  <TwProductsSkeleton
+    v-if="isLoadingCategory"
   />
 
   <!-- Bouton Voir plus -->
@@ -31,10 +42,13 @@
   >
     <button
       @click="loadMore"
-      class="px-6 py-2 bg-[#7D260F] text-white rounded-lg hover:bg-[#5a1b0c] transition"
+      :disabled="isLoadingMore"
+      class="px-6 py-2 bg-[#7D260F] text-white rounded-lg flex items-center gap-2"
     >
-      Voir plus
+      <span v-if="!isLoadingMore">Voir plus</span>
+      <span v-else class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
     </button>
+
   </div>
 
   <div class="max-w-6xl mx-auto my-10 px-4 md:px-8">
@@ -43,8 +57,6 @@
     </h2>
     <TwBrands />
   </div>
-
-  <TwPopupAd />
 </template>
 
 <script setup>
@@ -58,33 +70,47 @@ const firstProducts = ref([])
 const secondProducts = ref([])
 const nextPage = ref(null)
 
+const isLoadingCategory = ref(false)
+const isLoadingMore = ref(false)
+
+
 async function fetchProducts(category) {
-  const headers = {}
+  isLoadingCategory.value = true
 
-  // ⚡️ Ajouter Authorization uniquement si un token est présent
-  if (auth.accessToken) {
-    headers["Authorization"] = `Bearer ${auth.accessToken}`
-  }
-
-  const data = await $fetch(`http://127.0.0.1:8000/api/product/suggestions/?category=${category}`, {
-    headers,
-    credentials: "include",
-  })
-
-  firstProducts.value = data.results || []
+  firstProducts.value = []
   secondProducts.value = []
-  nextPage.value = data.next
+  nextPage.value = null
 
-  // Charger 2ème bloc si possible
-  if (nextPage.value) {
-    const nextData = await $fetch(nextPage.value, {
-      headers,
-      credentials: "include",
-    })
-    secondProducts.value = nextData.results || []
-    nextPage.value = nextData.next
+  try {
+    const headers = {}
+    if (auth.accessToken) {
+      headers["Authorization"] = `Bearer ${auth.accessToken}`
+    }
+
+    const data = await $fetch(
+      `http://127.0.0.1:8000/api/product/suggestions/?category=${category}`,
+      { headers, credentials: "include" }
+    )
+
+    firstProducts.value = data.results || []
+    nextPage.value = data.next
+
+    // Charger le 2e bloc si dispo
+    if (nextPage.value) {
+      const nextData = await $fetch(nextPage.value, {
+        headers,
+        credentials: "include",
+      })
+      secondProducts.value = nextData.results || []
+      nextPage.value = nextData.next
+    }
+  } catch (e) {
+    console.error("Erreur chargement produits", e)
+  } finally {
+    isLoadingCategory.value = false
   }
 }
+
 
 await fetchProducts(activeCategory.value)
 
@@ -93,13 +119,21 @@ watch(activeCategory, (newCat) => {
 })
 
 async function loadMore() {
-  if (!nextPage.value) return
-  const headers = {}
-  if (auth.accessToken) headers["Authorization"] = `Bearer ${auth.accessToken}`
+  if (!nextPage.value || isLoadingMore.value) return
 
-  const moreData = await $fetch(nextPage.value, { headers })
-  secondProducts.value.push(...(moreData.results || []))
-  nextPage.value = moreData.next
+  isLoadingMore.value = true
+
+  try {
+    const headers = {}
+    if (auth.accessToken) headers["Authorization"] = `Bearer ${auth.accessToken}`
+
+    const moreData = await $fetch(nextPage.value, { headers })
+    secondProducts.value.push(...(moreData.results || []))
+    nextPage.value = moreData.next
+  } finally {
+    isLoadingMore.value = false
+  }
 }
+
 </script>
 

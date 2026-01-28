@@ -1,11 +1,10 @@
 <!-- components/TwToast.vue -->
 <template>
   <transition name="slide-up">
+    <div class="fixed right-4 bottom-6 flex flex-col gap-3 z-60">
     <div
       v-if="visible"
-      class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] 
-             flex items-center gap-3 px-5 py-3 rounded-2xl shadow-lg text-white 
-             w-[90%] max-w-sm"
+      class="text-white px-4 py-2 rounded-md shadow-md flex items-center gap-3"
       :class="bgColor"
     >
       <!-- Icône -->
@@ -13,6 +12,7 @@
 
       <!-- Message -->
       <span class="text-sm font-medium">{{ message }}</span>
+    </div>
     </div>
   </transition>
 </template>

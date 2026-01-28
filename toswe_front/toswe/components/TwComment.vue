@@ -10,7 +10,7 @@
       <div class="flex items-center justify-between mb-1">
         <h4 class="font-semibold text-gray-900">{{ username }}</h4>
         <span class="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-600">
-          {{ dayjs(date).fromNow() }}
+          Publié {{ dayjs(date).fromNow() }}
         </span>
       </div>
 

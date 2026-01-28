@@ -13,9 +13,9 @@
             <div
               v-for="(msg, idx) in messages"
               :key="idx"
-              class="min-w-full px-8 py-10 bg-white/10 backdrop-blur-sm rounded-xl shadow-lg text-center"
+              class="min-w-full px-8 py-10 bg-white/10 backdrop-blur-sm rounded-xl shadow-lg text-left"
             >
-              <h2 class="text-2xl font-bold mb-4 tracking-wide">Tôswè</h2>
+              <h2 class="text-2xl font-bold mb-4 tracking-wide flex items-center p-1"><Icon name="lucide:info" class="mr-2"/>Info</h2>
               <p class="leading-relaxed text-lg font-medium max-w-md mx-auto">
                 {{ msg }}
               </p>
@@ -60,18 +60,18 @@
             @submit.prevent="initConnexion"
             class="space-y-6"
           >
-            <!-- Téléphone -->
+            <!-- Email -->
             <div>
-              <label class="block text-sm font-medium mb-2 text-gray-700">Votre numéro de téléphone</label>
+              <label class="block text-sm font-medium mb-2 text-gray-700">Votre adresse email</label>
               <div class="relative">
                 <input
-                  v-model="phone"
-                  type="tel"
+                  v-model="email"
+                  type="email"
                   class="w-full border border-gray-300 rounded-xl p-3 pl-12 focus:ring-2 focus:ring-[#7D260F] outline-none transition"
-                  placeholder="+229 01 2345678"
+                  placeholder="utilisateur@example.com"
                   required
                 />
-                <span class="absolute left-4 top-3.5 text-gray-400">📱</span>
+                <span class="absolute left-4 top-3.5 text-gray-400"><Icon name="uil:envelope" class="w-5 h-5" /></span>
               </div>
             </div>
 
@@ -88,7 +88,7 @@
             <!-- Politique -->
             <p class="text-xs text-gray-500 text-center">
               En vous connectant, vous acceptez que vos données soient utilisées pour améliorer votre expérience sur Tôswè, conformément à notre
-              <a href="/pc-cgu" class="text-[#7D260F] underline hover:text-[#5c1d0c]">politique de confidentialité</a>.
+              <button @click="goToCGU" class="text-[#7D260F] underline hover:text-[#5c1d0c]">politique de confidentialité</button>.
             </p>
           </form>
 
@@ -100,12 +100,12 @@
             class="space-y-6"
           >
             <p class="text-gray-600 text-sm mb-2 text-center">
-              Entrez le code reçu par SMS 📩
+              Entrez le code reçu dans votre boite email 📩
             </p>
 
             <!-- Numéro affiché -->
             <input
-              v-model="phone"
+              v-model="email"
               type="text"
               readonly
               class="w-full border rounded-xl p-3 bg-gray-100 text-gray-500 cursor-not-allowed text-center"
@@ -185,7 +185,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 
 const step = ref(1)
-const phone = ref('')
+const email = ref('')
 const loading = ref(false)
 const auth = useAuthStore()
 
@@ -193,9 +193,9 @@ const isSubscriber = ref(true)
 const username = ref('') 
 
 const messages = ref([
-  "Vous pouvez à tout moment quitter le statut de simple client pour devenir vendeur",
-  "Mettez vos produits en avant et touchez plus de clients grâce à notre plateforme",
-  "Notre conviction est simple : les produits africains méritent une vitrine mondiale",
+  "Vous pouvez à tout moment quitter le statut de simple client pour devenir vendeur.",
+  "Nous essayons de rendre Tôswè le plus accessible possible aux non habitués du numérique.",
+  "Lancez votre commande. Vous paierez à la livraison.",
 ])
 const currentIndex = ref(0)
 let carouselTimer = null
@@ -226,7 +226,7 @@ let timer = null
 const initConnexion = async () => {
   loading.value = true
   try {
-    const res = await auth.initConnexion(phone.value)
+    const res = await auth.initConnexion(email.value)
     isSubscriber.value = res.is_subscriber  // <-- récupère valeur du backend
     console.log("Abbonne:", isSubscriber.value)
     step.value = 2
@@ -243,7 +243,7 @@ const confirmConnexion = async () => {
   loading.value = true
   try {
     const otp = otpInputs.value.join("")
-    const payload = { phone: phone.value, otp }
+    const payload = { email: email.value, otp }
 
     // Ajoute username si utilisateur nouveau
     if (!isSubscriber.value) {
@@ -285,7 +285,7 @@ const startCountdown = () => {
 
 const resendOtp = async () => {
   try {
-    await auth.initConnexion(phone.value)
+    await auth.initConnexion(email.value)
     startCountdown()
     showToast("Nouveau code envoyé 🔄", "info")
   } catch {

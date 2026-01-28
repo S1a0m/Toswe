@@ -6,9 +6,9 @@
       <!-- Section Tôswè -->
       <div class="flex-1 min-w-[200px]">
         <h3 class="text-white text-lg mb-2 font-semibold">Tôswè</h3>
-        <p class="text-gray-400 mb-1">
+        <!--<p class="text-gray-400 mb-1">
           Plateforme intelligente de vente et de livraison locale. 
-        </p>
+        </p>-->
         <p class="text-gray-400">
           Ce qui n'est pas africain n'est pas Tôswè !
         </p>
@@ -19,14 +19,14 @@
         <h4 class="text-white text-base mb-2 font-semibold">Liens utiles</h4>
         <ul class="list-none p-0 m-0 space-y-1">
           <li>
-            <a href="/pc-cgu#privacy" class="text-gray-400 hover:underline"
-              >Politique de confidentialité</a
-            >
-          </li>
-          <li>
-            <a href="/pc-cgu#terms" class="text-gray-400 hover:underline"
-              >Conditions d'utilisation</a
-            >
+            <button @click="goToCGU" class="text-start">
+              <span class="text-gray-400 hover:underline"
+                >Politique de confidentialité</span
+              > <br>
+              <span class="text-gray-400 hover:underline"
+                >Conditions d'utilisation</span
+              >
+            </button>
           </li>
           <!--<li>
             <a
@@ -83,15 +83,13 @@
         <h4 class="text-white text-base mb-3 font-semibold">Contact</h4>
 
         <p class="flex items-center text-gray-400 mb-1 gap-3">
+          <span class="">Vôtre avis compte. Contactez-nous.</span>
           <Icon name="feather:edit" class="w-5 h-5"/>
-          <a href="mailto:contact@toswe.africa" class="hover:underline"
-            >contact@toswe.africa</a
-          >
         </p>
 
         <p class="flex items-center text-gray-400 mb-1 gap-3">
           <Icon name="feather:phone" class="w-5 h-5"/>
-          +229 90 00 00 00
+          +229 01 54 14 12 87
         </p>
 
         <p class="flex items-center text-gray-400 gap-3">
@@ -102,7 +100,7 @@
     </div>
 
     <div class="border-t border-gray-700 mt-8 pt-4 text-center text-gray-500 text-xs">
-      © 2025 Tôswè. Tous droits réservés.
+      © 2026 Tôswè. Tous droits réservés.
     </div>
   </footer>
 </template>

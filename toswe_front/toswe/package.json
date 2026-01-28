@@ -29,6 +29,7 @@
     "recharts": "^3.1.2",
     "swiper": "^11.2.10",
     "tailwindcss": "^4.1.11",
+    "uuid": "^13.0.0",
     "vue": "^3.5.18",
     "vue-chartjs": "^5.3.2",
     "vue-router": "^4.5.1"

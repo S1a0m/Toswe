@@ -17,19 +17,19 @@
       <!-- Catégories -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 place-items-center flex-1">
         <TwCategory
-          image-src="/images/img1.png"
+          image-src="/images/cat1.png"
           category-name="Agriculture & agroalimentaire"
         />
         <TwCategory
-          image-src="/images/img1.png"
+          image-src="/images/cat2.png"
           category-name="Cuisine traditionnelle"
         />
         <TwCategory
-          image-src="/images/img1.png"
+          image-src="/images/cat3.png"
           category-name="Artisanat culturel"
         />
         <TwCategory
-          image-src="/images/img1.png"
+          image-src="/images/cat4.png"
           category-name="Cosmétiques naturels"
         />
       </div>

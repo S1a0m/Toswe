@@ -6,9 +6,10 @@ import { goToMarket } from "@/utils/navigations"
 interface User {
   id: number
   shop_id: number
-  phone: string
+  email: string
   address: string
   is_seller: boolean
+  is_deliverer: boolean
   is_premium: boolean
   is_brand: boolean
   is_verified: boolean
@@ -20,7 +21,7 @@ interface User {
 }
 
 interface ConfirmData {
-  phone: string
+  email: string
   otp: string
 }
 
@@ -35,6 +36,7 @@ export const useAuthStore = defineStore("auth", {
   getters: {
     isAuthenticated: (state) => state.accessToken && !!state.user, // !!state.refreshTokenValue
     isSeller: (state) => state.user?.is_seller ?? false,
+    isDeliverer: (state) => state.user?.is_deliverer ?? false,
     isPremiumSeller: (state) => state.user?.is_premium ?? false,
     isBrand: (state) => state.user?.is_brand ?? false,
     isVerified: (state) => state.user?.is_verified ?? false,
@@ -42,19 +44,19 @@ export const useAuthStore = defineStore("auth", {
     getAbout: (state) => state.user?.about ?? '',
     getUsername: (state) => state.user?.username ?? '',
     getShopName: (state) => state.user?.shop_name ?? '',
-    getPhone: (state) => state.user?.phone ?? '',
+    getEmail: (state) => state.user?.email ?? '',
     getAddress: (state) => state.user?.address ?? '',
     getLogo: (state) => state.user?.logo ?? '',
   },
 
   actions: {
-    async initConnexion(phone: string) {
+    async initConnexion(email: string) {
       try {
         const res = await $fetch<{ detail: string }>(
           "http://127.0.0.1:8000/api/user/init_connexion/",
           {
             method: "POST",
-            body: { phone },
+            body: { email },
           }
         )
         return res
@@ -110,13 +112,13 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
-    async updateUser(username: string, phone: string, address: string, shop_name: string, about: string, slogan: string, logo: File | null) {
+    async updateUser(username: string, email: string, address: string, shop_name: string, about: string, slogan: string, logo: File | null) {
       if (!this.accessToken) return
       try {
         const user = await $fetch<any>("http://127.0.0.1:8000/api/user/update_me/", {
           method: 'POST',
           headers: { Authorization: `Bearer ${this.accessToken}` },
-          body: { username, phone, address, shop_name, about, slogan }
+          body: { username, email, address, shop_name, about, slogan }
         })
         this.user = user
       } catch {

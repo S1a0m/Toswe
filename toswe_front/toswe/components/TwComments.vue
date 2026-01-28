@@ -42,7 +42,7 @@
     </button>
 
     <!-- Message si vide -->
-    <p v-if="feedbacks.results.length === 0 && auth.isAuthenticated" class="text-gray-500">
+    <p v-if="feedbacks.results.length === 0 && auth.isAuthenticated && !isOwner" class="text-gray-500">
       Soyez le premier à laisser un commentaire !
     </p>
 
@@ -69,7 +69,7 @@
 
     <!-- Formulaire -->
     <form
-      v-if="auth.isAuthenticated"
+      v-if="auth.isAuthenticated && !isOwner"
       @submit.prevent="addComment"
       class="bg-white p-5 border border-gray-200 rounded-xl shadow-sm space-y-4 mt-6"
     >
@@ -110,6 +110,10 @@
 import { useAuthStore } from '@/stores/auth'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
+
+defineProps({
+  isOwner: Boolean
+})
 
 const auth = useAuthStore()
 

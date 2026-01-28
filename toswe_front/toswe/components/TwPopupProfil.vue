@@ -49,8 +49,8 @@
               <input type="text" placeholder="Nom" class="input" v-model="username" />
             </div>
             <div>
-              <label class="label">Téléphone</label>
-              <input type="text" placeholder="Téléphone" class="input" v-model="phone" />
+              <label class="label">Email</label>
+              <input type="email" placeholder="Email" class="input" v-model="email" />
             </div>
             <div>
               <label class="label">Adresse</label>
@@ -71,6 +71,17 @@
                 <textarea placeholder="Votre slogan" class="input" rows="2" v-model="slogan"></textarea>
               </div>
             </template>
+
+            <!--<template v-if="auth.isDeliverer">
+              <div>
+                <label class="label">Véhicule</label>
+                <input type="text" placeholder="Type de véhicule (moto, vélo, voiture...)" class="input" v-model="auth.getVehicle" disabled />
+              </div>
+              <div>
+                <label class="label">Zone de livraison</label>
+                <input type="text" placeholder="Zone de livraison" class="input" v-model="auth.getDeliveryZone" disabled />
+              </div>
+            </template>-->
 
             <!-- Bouton CTA -->
             <button
@@ -122,7 +133,7 @@ const shopName = ref(auth.getShopName)
 const about = ref(auth.getAbout)
 const slogan = ref(auth.getSlogan)
 const address = ref(auth.getAddress)
-const phone = ref(auth.getPhone)
+const email = ref(auth.getEmail)
 const username = ref(auth.getUsername)
 
 const toast = reactive({
@@ -143,7 +154,7 @@ const showToast = (msg, type = "success") => {
 const updateUser = async () => {
   await auth.updateUser(
     username.value,
-    phone.value,
+    email.value,
     address.value,
     shopName.value,
     about.value,

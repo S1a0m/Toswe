@@ -7,7 +7,7 @@
   >
     <!-- Icône panier -->
     <Icon 
-      name="mdi:cart-outline" 
+      name="mdi:cart" 
       size="28" 
       class="group-hover:scale-110 transition-transform duration-200"
     />

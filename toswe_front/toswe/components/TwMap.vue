@@ -10,7 +10,7 @@
         <p class="font-[Kumbh_Sans] text-base sm:text-lg leading-relaxed">
           Tôswè connecte vendeurs et clients dans tout le Bénin.
           <br />
-          Suivez notre présence sur la carte. Nous ne sommes pas loin du portail secondaire de l'Université d'Abomey-Calavi, <br>Quartier: Tôpka-Zoungbo.
+          Suivez notre présence sur la carte.
         </p>
       </div>
 

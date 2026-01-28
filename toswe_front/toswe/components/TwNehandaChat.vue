@@ -9,7 +9,10 @@
           <p class="text-sm text-gray-600">Posez une question, demandez une recommandation ou programmez une commande.</p>
         </div>
         <div class="ml-auto text-sm text-gray-500">
-          <span v-if="auth.isAuthenticated" class="text-sm flex items-center gap-1 font-semibold"><span class="bg-green-500 w-2 h-2 inline-block rounded-full"></span>{{ auth.getUsername}}</span></div>
+          <span v-if="auth.isAuthenticated" class="text-sm flex items-center gap-1 font-semibold">
+            <span class="bg-green-500 w-2 h-2 inline-block rounded-full"></span>{{ auth.getUsername }}
+          </span>
+        </div>
       </div>
     </header>
 
@@ -18,7 +21,7 @@
       <div class="max-w-4xl mx-auto h-full flex flex-col">
 
         <!-- Conversation area -->
-        <div ref="scrollRoot" class="flex-1 overflow-auto px-4 py-6" :class="{'pb-32': true}">
+        <div ref="scrollRoot" class="flex-1 overflow-auto px-4 py-6 pb-32">
           <div class="space-y-4">
             <div v-for="(msg, idx) in messages" :key="msg.id || idx" class="flex" :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
 
@@ -30,7 +33,9 @@
               <!-- Message bubble -->
               <div :class="[
                   'max-w-[78%] px-4 py-3 rounded-2xl shadow-sm',
-                  msg.role === 'user' ? 'bg-gradient-to-r from-[#7D260F] to-[#A13B20] text-white rounded-br-none' : 'bg-white/90 text-gray-900 rounded-bl-none border border-white/30'
+                  msg.role === 'user'
+                    ? 'bg-gradient-to-r from-[#7D260F] to-[#A13B20] text-white rounded-br-none'
+                    : 'bg-white/90 text-gray-900 rounded-bl-none border border-white/30'
                 ]">
                 <div class="whitespace-pre-wrap text-sm" v-html="formatContent(msg.content)"></div>
                 <div class="mt-2 text-xs text-gray-400 text-right">{{ formatTime(msg.time) }}</div>
@@ -54,7 +59,6 @@
                 </div>
               </div>
             </div>
-
           </div>
         </div>
 
@@ -85,7 +89,7 @@
               </div>
             </div>
 
-            <div class="text-xs text-gray-500">Conversation sauvegardée localement · Suggestions: cliquez une invite</div>
+            <div class="text-xs text-gray-500">Suggestions: cliquez une invite</div>
           </div>
         </div>
 
@@ -95,55 +99,44 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useAuthStore } from '@/stores/auth'
 const auth = useAuthStore()
 
-const STORAGE_KEY = 'nehanda_conversation_vx'
-
-const defaultMessages = [
+// Messages initiaux
+const messages = ref([
   { id: uuidv4(), role: 'assistant', content: "Bonjour — je suis Nehanda. En quoi puis-je vous aider aujourd'hui ?", time: new Date().toISOString() },
-]
+])
 
-const messages = ref([])
 const input = ref('')
 const sending = ref(false)
 const isTyping = ref(false)
 const scrollRoot = ref(null)
 
-const { $apiFetch } = useNuxtApp()
-
 const quickPrompts = [
-  'Je veux meubler ma chambre',
-  "Quel est le meilleur matelas pour cette saison ?",
-  'Programmer une commande',
+  "Quand sort officiellement Tôswè ?",
+  "Pourquoi l’app n’est pas encore prête ?",
+  "Quel est l’objectif de Tôswè ?",
+  "Comment Tôswè aide les vendeurs illettrés ?",
+  "Quelles fonctionnalités arrivent bientôt ?",
+  "Est-ce que les marques ont une priorité ?",
+  "Comment contacter les administrateurs ?",
+  "Est-ce que Tôswè rend les produits locaux plus accessibles ?",
 ]
 
-function load() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    messages.value = raw ? JSON.parse(raw) : defaultMessages
-  } catch (e) {
-    messages.value = defaultMessages
-  }
+const quickReplies = {
+  "Quand sort officiellement Tôswè ?": "La plateforme est actuellement en phase de test, la sortie officielle est prévue le mois prochain avec plusieurs nouvelles fonctionnalités.",
+  "Pourquoi l’app n’est pas encore prête ?": "Tôswè est encore en phase de test afin d’assurer une meilleure expérience aux vendeurs et acheteurs. C’est normal qu’elle ne soit pas encore disponible à grande échelle.",
+  "Quel est l’objectif de Tôswè ?": "Notre but est d’aider les vendeurs locaux, qu’ils soient lettrés ou illettrés, à vendre plus facilement leurs produits, tout en valorisant le Made in Africa et en particulier le Made in Bénin.",
+  "Comment Tôswè aide les vendeurs illettrés ?": "Tôswè a été pensée pour être simple d’utilisation et inclusive. Même un vendeur illettré pourra publier et gérer ses produits grâce à une interface intuitive et une assistance adaptée.",
+  "Quelles fonctionnalités arrivent bientôt ?": "La sortie officielle apportera : la sponsorisation de produits, un Nehanda plus performant, des statistiques de vente pour les vendeurs, ainsi qu’une meilleure visibilité pour les marques.",
+  "Est-ce que les marques ont une priorité ?": "Oui, les marques locales bénéficient d’une certaine priorité sur la plateforme afin de valoriser leurs produits et soutenir leur croissance.",
+  "Comment contacter les administrateurs ?": "Vous pouvez contacter les administrateurs via email : contact@toswe.com ou par téléphone : +229 00 00 00 00.",
+  "Est-ce que Tôswè rend les produits locaux plus accessibles ?": "Absolument. L’un des objectifs de Tôswè est de rendre les produits locaux plus accessibles et abordables pour le citoyen moyen africain et béninois.",
 }
-
-function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.value))
-}
-
-watch(messages, () => {
-  save()
-  // scroll to bottom
-  nextTick(() => {
-    const el = scrollRoot.value
-    if (el) el.scrollTop = el.scrollHeight
-  })
-}, { deep: true })
 
 onMounted(() => {
-  load()
   nextTick(() => {
     const el = scrollRoot.value
     if (el) el.scrollTop = el.scrollHeight
@@ -154,13 +147,12 @@ function formatTime(iso) {
   try {
     const d = new Date(iso)
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  } catch (e) {
+  } catch {
     return ''
   }
 }
 
 function formatContent(text) {
-  // simple -> escape then replace \n with <br>
   return escapeHtml(text).replace(/\n/g, '<br/>')
 }
 
@@ -180,6 +172,7 @@ function usePrompt(p) {
 async function send() {
   const text = input.value.trim()
   if (!text) return
+
   const userMsg = { id: uuidv4(), role: 'user', content: text, time: new Date().toISOString() }
   messages.value.push(userMsg)
   input.value = ''
@@ -187,42 +180,26 @@ async function send() {
   isTyping.value = true
 
   try {
-    // Récupérer dernier conversation_id si présent
-    const lastConv = messages.value.find(m => m.conversation_id)
-    const convId = lastConv?.conversation_id
+    const assistantReply =
+      quickReplies[text] ||
+      "Désolé, je n’ai pas encore de réponse pour cette question. Essayez une des suggestions ci-dessus."
 
-    const payload = { message: text, conversation_id: convId || null }
-
-    // 👉 Ici $apiFetch renvoie déjà du JSON, pas besoin de res.json()
-    const json = await $apiFetch('http://127.0.0.1:8080/nehanda/chat', {
-      method: 'POST',
-      body: payload, // pas besoin de JSON.stringify, $fetch gère
-    })
-
-    // Réponse backend
-    const assistantReply = json.response
-
-    // Ajoute le message assistant
     messages.value.push({
       id: uuidv4(),
       role: 'assistant',
       content: assistantReply,
       time: new Date().toISOString(),
-      conversation_id: json.conversation_id
-    })
-  } catch (e) {
-    console.error('Chat error:', e)
-    // fallback
-    messages.value.push({
-      id: uuidv4(),
-      role: 'assistant',
-      content: "Désolé, je n’ai pas pu contacter le serveur.",
-      time: new Date().toISOString()
     })
   } finally {
     sending.value = false
     isTyping.value = false
   }
+
+  // Scroll automatique vers le bas
+  nextTick(() => {
+    const el = scrollRoot.value
+    if (el) el.scrollTop = el.scrollHeight
+  })
 }
 </script>
 
