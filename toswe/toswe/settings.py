@@ -206,10 +206,10 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 # Utilise ton adresse Gmail
-EMAIL_HOST_USER = "precieuxdev1@gmail.com"
+EMAIL_HOST_USER = "toswe.africa@gmail.com"
 
 # ⚠️ Utilise un mot de passe d'application (pas ton vrai mot de passe Gmail)
 # -> à créer dans ton compte Google > Sécurité > Mots de passe d'application
-EMAIL_HOST_PASSWORD = "oery vefq wpew xptv"
+EMAIL_HOST_PASSWORD = "afau xxff sjrl knqj"
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

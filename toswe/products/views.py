@@ -223,9 +223,10 @@ class ProductViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])# , url_path='qr-code')
     def get_qr_code(self, request, pk=None):
         """Retourne uniquement l'URL du QR code du produit"""
+        user = request.user
         try:
             product = self.get_object()
-            if product.qr_code:
+            if product.qr_code and product.seller.user == user:
                 return Response({
                     "product_id": product.id,
                     "qr_code_url": request.build_absolute_uri(product.qr_code.url)
@@ -371,6 +372,20 @@ class ProductViewSet(viewsets.ModelViewSet):
             products, many=True, context={"request": request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=["delete"], url_path="delete", permission_classes=[IsAuthenticated])
+    def delete_product(self, request, pk=None):
+        """Suppression d’un produit par son propriétaire"""
+        try:
+            product = self.get_object()
+            # Vérifier que l’utilisateur est bien le vendeur du produit
+            if product.seller.user != request.user:
+                return Response({"detail": "Vous ne pouvez supprimer que vos propres produits."}, status=403)
+            product.delete()
+            return Response({"detail": "Produit supprimé avec succès."}, status=204)
+        except Product.DoesNotExist:
+            return Response({"detail": "Produit introuvable."}, status=404)
+
 
 class PromotionViewSet(viewsets.ModelViewSet):
     queryset = Promotion.objects.all().select_related("product", "product__seller")
@@ -379,16 +394,27 @@ class PromotionViewSet(viewsets.ModelViewSet):
     authentication_classes = [JWTAuthentication]
 
     def perform_create(self, serializer):
-        """
-        Lorsqu’un vendeur crée une promotion, on s’assure que
-        la promotion est liée à son produit.
-        """
         product = serializer.validated_data["product"]
+        days = serializer.validated_data.pop("days")
+        discount_percent = serializer.validated_data["discount_percent"]
+
         # Vérifie que l’utilisateur connecté est bien le vendeur du produit
-        if hasattr(product, "seller") and product.seller.user == self.request.user:
-            serializer.save()
-        #else:
-            #raise serializers.ValidationError("Vous ne pouvez créer une promotion que pour vos propres produits.")
+        if not hasattr(product, "seller") or product.seller.user != self.request.user:
+            raise serializers.ValidationError(
+                "Vous ne pouvez créer une promotion que pour vos propres produits."
+            )
+
+        # Calcul du prix remisé
+        discount_price = product.price * (100 - discount_percent) / 100
+
+        # Calcul de la date de fin
+        ended_at = now() + timedelta(days=days)
+
+        serializer.save(
+            discount_price=discount_price,
+            ended_at=ended_at
+        )
+
 
     @action(detail=False, methods=["get"], url_path="seller/(?P<seller_id>[^/.]+)")
     def by_seller(self, request, seller_id=None):
@@ -418,7 +444,7 @@ class AdViewSet(viewsets.ModelViewSet):
         return Ad.objects.select_related("product", "product__seller", "seller")
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset().filter(is_active=True, ad_type="generic")
+        queryset = self.get_queryset().filter(ad_type="generic", ended_at__gte=now())
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -440,6 +466,7 @@ class AdViewSet(viewsets.ModelViewSet):
 
         qs = self.get_queryset().filter(
             seller=seller,
+            ad_type='generic',
             ended_at__gte=now()
         )
         serializer = self.get_serializer(qs, many=True)
@@ -590,6 +617,42 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(qs, many=True)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=["post"])
+    def cancel(self, request, pk=None):
+        """
+        Permet à l’acheteur d’annuler sa commande.
+        """
+        order = get_object_or_404(Order, pk=pk)
+
+        # Vérifier que l’utilisateur est bien l’acheteur
+        if order.user != request.user:
+            return Response(
+                {"detail": "Vous ne pouvez pas annuler cette commande."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Vérifier que la commande n’est pas déjà expédiée ou annulée
+        if order.status in ["shipped", "canceled"]:
+            return Response(
+                {"detail": f"Impossible d’annuler une commande déjà {order.status}."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Annuler
+        order.status = "cancelled"
+        order.save()
+        Notification.objects.create(
+            user=request.user,
+            title="Commande",
+            message=f"Vous venez d'annuler la commande #{order.id}."
+        )
+        
+
+        return Response(
+            {"detail": "Commande annulée avec succès."},
+            status=status.HTTP_200_OK
+        )
 
 
 

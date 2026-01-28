@@ -1,6 +1,6 @@
 from django.db.models import Avg, Count
 from rest_framework import serializers
-from users.models import CustomUser, Notification, SellerProfile, SellerStatistics
+from users.models import CustomUser, Notification, SellerProfile, SellerStatistics, DelivererProfile
 from products.models import Product, Order, Delivery, Payment, Feedback
 from toswe.utils import send_email
 
@@ -224,5 +224,31 @@ class SellerProfileSerializer(serializers.ModelSerializer):
         return None
 
 
+class DelivererProfileSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+    deliver_to = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(),
+        many=True,
+        required=False
+    )
+
+    class Meta:
+        model = DelivererProfile
+        fields = [
+            "id",
+            "user",
+            "user_image",
+            "vehicle_image",
+            "vehicle_plate_number",
+            "vehicle_type",
+            "license_number",
+            "id_card",
+            "is_verified",
+            "deliver_to",
+            "total_income",
+            "rating",
+            "status",
+        ]
+        read_only_fields = ["total_income", "rating", "is_verified"]
 
 

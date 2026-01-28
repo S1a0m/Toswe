@@ -1,0 +1,706 @@
+{
+    # ========== PRODUITS, PROMOS, STOCK, PRIX, ALTERNATIVES ==========
+    "Quels produits sont disponibles dans la catégorie X ?": {
+        "intent": "list_products_by_category",
+        "response": (
+            "Voici les produits disponibles dans la catégorie « {category} » :\n"
+            "1) [Nom produit A] — Prix: {priceA} — En stock: {stockA}\n"
+            "2) [Nom produit B] — Prix: {priceB} — En stock: {stockB}\n"
+            "...\n"
+            "Souhaitez-vous que je vous montre les détails d’un produit en particulier, "
+            "ou que je filtre par prix / vendeur / disponibilité ?"
+        ),
+        "endpoint": "/products",
+        "params": {"filter": "category:{category}", "sort": "relevance", "limit": 20},
+        "follow_ups": ["Montrer détails de {product_id}", "Trier par prix le moins cher"]
+    },
+
+    "Montre-moi les promos du moment.": {
+        "intent": "show_current_promotions",
+        "response": (
+            "Voici les promotions en cours :\n"
+            "- [Produit X] : {promo_percent}% jusqu'au {end_date}\n"
+            "- [Produit Y] : prix spécial {promo_price}\n"
+            "Souhaitez-vous voir seulement les promos dans une catégorie précise ?"
+        ),
+        "endpoint": "/promotions",
+        "params": {"active": True, "limit": 50},
+        "follow_ups": ["Afficher promos catégorie {category}", "M'alerter si cette promo revient"]
+    },
+
+    "Quels sont les produits sponsorisés ?": {
+        "intent": "list_sponsored_products",
+        "response": (
+            "Les produits sponsorisés actuellement :\n"
+            "- [Produit A] — Vendeur : [Nom] — Durée de sponsorisation : {days_left} jours\n"
+            "- [Produit B] — Remise spéciale : {sponsor_bonus}\n"
+            "Voulez-vous filtrer par catégorie ou prix ?"
+        ),
+        "endpoint": "/products",
+        "params": {"filter": "sponsored:true", "limit": 30},
+        "follow_ups": ["Afficher sponsorisés dans {category}", "Comment sponsoriser un produit ?"]
+    },
+
+    "Ce produit est-il en stock ?": {
+        "intent": "check_stock",
+        "response": (
+            "Je vérifie la disponibilité du produit « {product_name_or_id} »...\n"
+            "- Statut : {in_stock} (Quantité disponible : {quantity})\n"
+            "Si le produit est en rupture, voulez-vous recevoir une alerte dès qu’il revient ?"
+        ),
+        "endpoint": "/products/{product_id}/stock",
+        "params": {"product_id": "{product_id}"},
+        "follow_ups": ["M'avertir quand en stock", "Voir produits similaires en stock"]
+    },
+
+    "Quel est le prix de X ?": {
+        "intent": "get_product_price",
+        "response": (
+            "Le prix du produit « {product_name_or_id} » est : {price} {currency}.\n"
+            "Souhaitez-vous comparer les prix chez différents vendeurs ou ajouter au panier ?"
+        ),
+        "endpoint": "/products/{product_id}",
+        "params": {"fields": "price,currency,offers", "product_id": "{product_id}"},
+        "follow_ups": ["Comparer prix entre vendeurs", "Ajouter au panier"]
+    },
+
+    "Quelle boutique vend X au meilleur prix ?": {
+        "intent": "best_price_seller",
+        "response": (
+            "Le meilleur prix pour « {product_name_or_id} » actuellement est {best_price} {currency} "
+            "chez {seller_name} (livraison: {shipping_cost}). Voulez-vous voir les autres offres ?"
+        ),
+        "endpoint": "/products/{product_id}/offers",
+        "params": {"sort": "price_asc", "limit": 10, "product_id": "{product_id}"},
+        "follow_ups": ["Afficher toutes les offres", "Commander chez {seller_name}"]
+    },
+
+    "Donne-moi des alternatives à ce produit.": {
+        "intent": "product_alternatives",
+        "response": (
+            "Voici des alternatives à « {product_name_or_id} » :\n"
+            "1) {alt1} — Prix: {alt1_price} — Caractéristiques clés: {alt1_features}\n"
+            "2) {alt2} — Prix: {alt2_price} — Caractéristiques clés: {alt2_features}\n"
+            "Souhaitez-vous que je filtre ces alternatives par prix ou disponibilité ?"
+        ),
+        "endpoint": "/recommendations/alternatives",
+        "params": {"product_id": "{product_id}", "limit": 5},
+        "follow_ups": ["Filtrer par prix", "Comparer {product_name} et {alt1}"]
+    },
+
+    # ========== COMMANDES ==========
+    "Comment passer une commande ?": {
+        "intent": "how_to_order",
+        "response": (
+            "Pour passer une commande sur Tôswè :\n"
+            "1) Recherchez le produit et ajoutez-le au panier.\n"
+            "2) Allez dans le panier et vérifiez les quantités.\n"
+            "3) Choisissez l’adresse de livraison et le mode de livraison.\n"
+            "4) Choisissez le mode de paiement (Mobile Money, à la livraison, etc.).\n"
+            "5) Confirmez la commande.\n"
+            "Je peux aussi vous guider pas à pas et créer la commande pour vous si vous le souhaitez."
+        ),
+        "endpoint": None,
+        "params": None,
+        "follow_ups": ["Créer une commande maintenant", "Aide pour le paiement"]
+    },
+
+    "Où en est ma commande #123 ?": {
+        "intent": "order_status",
+        "response": (
+            "Je consulte l'état de la commande {order_id}...\n"
+            "- Statut actuel : {status}\n"
+            "- Dernière mise à jour : {last_update}\n"
+            "- Localisation actuelle : {current_location}\n"
+            "- Estimation livraison : {eta}\n"
+            "Souhaitez-vous des détails sur les étapes précédentes ou demander une modification ?"
+        ),
+        "endpoint": "/orders/{order_id}",
+        "params": {"order_id": "{order_id}"},
+        "follow_ups": ["Modifier la commande", "Contacter le livreur"]
+    },
+
+    "Est-ce que je peux modifier ma commande ?": {
+        "intent": "modify_order",
+        "response": (
+            "Vous pouvez modifier une commande tant qu’elle n’est pas préparée pour l'expédition.\n"
+            "Dites-moi ce que vous souhaitez modifier (adresse, articles, quantité). "
+            "Je vérifie la possibilité et les éventuels frais.\n"
+            "Souhaitez-vous modifier maintenant ?"
+        ),
+        "endpoint": "/orders/{order_id}/modify",
+        "params": {"order_id": "{order_id}", "changes": "{changes}"},
+        "follow_ups": ["Modifier l'adresse", "Changer la quantité de {product_id}"]
+    },
+
+    "Quels sont les frais de livraison ?": {
+        "intent": "shipping_fees",
+        "response": (
+            "Les frais de livraison dépendent du poids, de la distance et du mode choisi :\n"
+            "- Livraison standard : {std_fee} FCFA (2-4 jours)\n"
+            "- Livraison express : {express_fee} FCFA (same-day / 24h selon zone)\n"
+            "- Livraison gratuite possible au-delà d'un seuil de {free_threshold} FCFA\n"
+            "Donnez-moi votre adresse ou code postal pour calculer les frais précis."
+        ),
+        "endpoint": "/shipping/estimate",
+        "params": {"address": "{address}", "cart": "{cart_items}"},
+        "follow_ups": ["Calculer frais pour mon adresse", "Choisir mode express"]
+    },
+
+    "Puis-je annuler une commande ?": {
+        "intent": "cancel_order",
+        "response": (
+            "L’annulation est possible tant que la commande n’a pas été préparée.\n"
+            "Si l'annulation est acceptée : remboursement selon le mode de paiement (détails ci-dessous).\n"
+            "Voulez-vous que j’essaie d’annuler la commande {order_id} maintenant ?"
+        ),
+        "endpoint": "/orders/{order_id}/cancel",
+        "params": {"order_id": "{order_id}"},
+        "follow_ups": ["Confirmer annulation", "Remboursement combien de temps ?"]
+    },
+
+    # ========== LIVRAISON ==========
+    "Quand est-ce que ma commande sera livrée ?": {
+        "intent": "delivery_eta",
+        "response": (
+            "Estimation de livraison pour la commande {order_id} :\n"
+            "- Statut : {status}\n"
+            "- Date/heure estimée : {eta}\n"
+            "Note : ce délai est sujet aux conditions locales et à la disponibilité du livreur."
+        ),
+        "endpoint": "/orders/{order_id}/eta",
+        "params": {"order_id": "{order_id}"},
+        "follow_ups": ["Envoyer un rappel au livreur", "Modifier date de livraison"]
+    },
+
+    "Quels sont les modes de livraison disponibles ?": {
+        "intent": "available_shipping_methods",
+        "response": (
+            "Modes de livraison disponibles :\n"
+            "- Standard (économie)\n"
+            "- Express (rapide)\n"
+            "- Point relais (si disponible)\n"
+            "- Retrait en magasin (si le vendeur a un point physique)\n"
+            "Le choix dépend de votre adresse et du vendeur."
+        ),
+        "endpoint": "/shipping/methods",
+        "params": {"address": "{address}", "seller_id": "{seller_id}"},
+        "follow_ups": ["Choisir express", "Voir point relais près de moi"]
+    },
+
+    "Puis-je être livré à Porto-Novo ?": {
+        "intent": "check_delivery_zone",
+        "response": (
+            "Je vérifie la couverture pour Porto-Novo... \n"
+            "- Couverture : {covered}\n"
+            "- Modes disponibles : {methods}\n"
+            "Si la zone est couverte, vous pouvez recevoir la livraison normalement. "
+            "Sinon, proposez une adresse alternative ou point relais."
+        ),
+        "endpoint": "/delivery/coverage",
+        "params": {"location": "Porto-Novo"},
+        "follow_ups": ["Donner adresse exacte", "Trouver point relais proche"]
+    },
+
+    "Qui va livrer mon colis ?": {
+        "intent": "who_is_delivering",
+        "response": (
+            "Le livreur assigné à votre commande {order_id} est :\n"
+            "- Nom : {courier_name}\n"
+            "- Téléphone : {courier_phone}\n"
+            "- Véhicule : {courier_vehicle}\n"
+            "Souhaitez-vous le contacter ou que j'envoie une instruction particulière ?"
+        ),
+        "endpoint": "/orders/{order_id}/courier",
+        "params": {"order_id": "{order_id}"},
+        "follow_ups": ["Appeler le livreur", "Envoyer instruction de livraison"]
+    },
+
+    # ========== PAIEMENTS ==========
+    "Quels sont les modes de paiement disponibles ?": {
+        "intent": "payment_methods",
+        "response": (
+            "Modes de paiement acceptés :\n"
+            "- Mobile Money (MTN MoMo, Moov, etc.)\n"
+            "- Paiement à la livraison (selon zone)\n"
+            "- Carte bancaire (selon intégration)\n"
+            "- Paiement via porte-monnaie Tôswè (bientôt / si activé)\n"
+            "Souhaitez-vous que je vous guide pour effectuer un paiement ?"
+        ),
+        "endpoint": "/payments/methods",
+        "params": {},
+        "follow_ups": ["Payer avec Mobile Money", "Payer à la livraison"]
+    },
+
+    "Est-ce que vous acceptez Mobile Money ?": {
+        "intent": "accepts_mobile_money",
+        "response": (
+            "Oui, nous acceptons Mobile Money (MTN MoMo et autres opérateurs locaux lorsque disponibles). "
+            "Choisissez Mobile Money au moment du paiement et suivez la procédure à l’écran.\n"
+            "Souhaitez-vous que je vous explique la procédure étape par étape ?"
+        ),
+        "endpoint": "/payments/methods",
+        "params": {"method": "mobile_money"},
+        "follow_ups": ["Expliquer procédure MoMo", "Tester paiement MoMo"]
+    },
+
+    "Puis-je payer à la livraison ?": {
+        "intent": "cash_on_delivery",
+        "response": (
+            "Le paiement à la livraison est disponible selon le vendeur et la zone. "
+            "Si disponible, choisissez 'Paiement à la livraison' à la validation. "
+            "Attention : certains vendeurs peuvent exiger un acompte."
+        ),
+        "endpoint": "/payments/methods",
+        "params": {"method": "cod", "address": "{address}"},
+        "follow_ups": ["Vérifier disponibilité COD pour mon adresse"]
+    },
+
+    "Mon paiement a échoué, que faire ?": {
+        "intent": "payment_failed",
+        "response": (
+            "Désolé pour le désagrément. Voici les étapes :\n"
+            "1) Vérifiez le solde et l'historique de votre méthode de paiement.\n"
+            "2) Si vous avez été débité sans confirmation, envoyez-nous la capture/preuve. "
+            "Nous vérifierons et effectuerons un remboursement si nécessaire.\n"
+            "3) Essayez une autre méthode (Mobile Money / COD / Carte).\n"
+            "Souhaitez-vous que j'ouvre un ticket support et transmette votre preuve ?"
+        ),
+        "endpoint": "/payments/verify",
+        "params": {"order_id": "{order_id}", "user_id": "{user_id}", "evidence": "{evidence}"},
+        "follow_ups": ["Ouvrir ticket support", "Essayer autre mode de paiement"]
+    },
+
+    # ========== VENDEURS, BOUTIQUES, DEVENIR VENDEUR ==========
+    "Quelles sont les boutiques populaires ?": {
+        "intent": "popular_shops",
+        "response": (
+            "Voici quelques boutiques populaires sur Tôswè :\n"
+            "- {shop1} — Spécialité : {cat1}\n"
+            "- {shop2} — Note moyenne : {rating2}\n"
+            "Voulez-vous afficher leurs vitrines ou les contacter ?"
+        ),
+        "endpoint": "/shops",
+        "params": {"sort": "popularity", "limit": 10},
+        "follow_ups": ["Voir vitrine de {shop1}", "Contacter {shop2}"]
+    },
+
+    "Quels vendeurs vendent dans la catégorie X ?": {
+        "intent": "sellers_by_category",
+        "response": (
+            "Les vendeurs actifs dans la catégorie « {category} » :\n"
+            "- {seller1} — Note : {rating1}\n"
+            "- {seller2} — Délai moyen de livraison : {seller2_eta}\n"
+            "Souhaitez-vous voir leurs produits ou comparer les prix ?"
+        ),
+        "endpoint": "/shops",
+        "params": {"filter": "category:{category}", "limit": 20},
+        "follow_ups": ["Afficher produits de {seller1}", "Comparer vendeurs"]
+    },
+
+    "Quelles marques locales sont disponibles ?": {
+        "intent": "local_brands",
+        "response": (
+            "Voici des marques locales présentes : {brand_list}. "
+            "Souhaitez-vous voir les produits d'une marque en particulier ?"
+        ),
+        "endpoint": "/brands",
+        "params": {"filter": "local:true"},
+        "follow_ups": ["Afficher produits de {brand}", "Contact marque {brand}"]
+    },
+
+    "Comment devenir vendeur sur Tôswè ?": {
+        "intent": "how_to_become_seller",
+        "response": (
+            "Pour devenir vendeur :\n"
+            "1) Créez un compte vendeur sur https://toswe.africa/seller/signup (ou via l'app).\n"
+            "2) Complétez votre profil (nom, pièces justificatives, coordonnées).\n"
+            "3) Ajoutez vos produits et choisissez si vous optez pour FFT (logistique Tôswè).\n"
+            "4) Après vérification, votre boutique sera activée.\n"
+            "Souhaitez-vous que je vous envoie le lien d’inscription ?"
+        ),
+        "endpoint": "/seller/apply",
+        "params": {"user_id": "{user_id}", "documents": "{documents}"},
+        "follow_ups": ["Envoyer lien d'inscription", "Liste des pièces demandées"]
+    },
+
+    # ========== PROMOS & SPONSORISATION ==========
+    "Quels sont les produits en promotion ?": {
+        "intent": "products_on_sale",
+        "response": (
+            "Produits actuellement en promotion :\n"
+            "- {prodA} : -{percentA}% jusqu'au {endA}\n"
+            "- {prodB} : nouvelle offre à {priceB}\n"
+            "Voulez-vous uniquement les promotions locales ?"
+        ),
+        "endpoint": "/promotions",
+        "params": {"active": True},
+        "follow_ups": ["Afficher promos locales", "M'alerter quand promo sur {product_id}"]
+    },
+
+    "Comment sponsoriser mon produit ?": {
+        "intent": "how_to_sponsor_product",
+        "response": (
+            "Pour sponsoriser un produit :\n"
+            "1) Ouvrez votre tableau de bord vendeur → Promotions/Sponsorisation.\n"
+            "2) Choisissez le produit, durée et budget.\n"
+            "3) Validez le paiement de la sponsorisation.\n"
+            "Le système vous montrera les estimations de visibilité et le coût.\n"
+            "Souhaitez-vous que je vous guide vers le formulaire de sponsorisation ?"
+        ),
+        "endpoint": "/seller/{seller_id}/sponsor",
+        "params": {"seller_id": "{seller_id}", "product_id": "{product_id}", "duration_days": "{days}", "budget": "{budget}"},
+        "follow_ups": ["Aller à sponsoriser {product_id}", "Estimation coût sponsorisation"]
+    },
+
+    "Quelle est la différence entre promo et sponsorisation ?": {
+        "intent": "promo_vs_sponsor",
+        "response": (
+            "Différence :\n"
+            "- Promotion : réduction du prix du produit pour attirer plus d’acheteurs.\n"
+            "- Sponsorisation : mise en avant payante dans les résultats / recommandations ; "
+            "le prix du produit peut rester inchangé.\n"
+            "Les deux peuvent être combinés selon la stratégie vendeur."
+        ),
+        "endpoint": None,
+        "params": None,
+        "follow_ups": ["Soumettre promo pour {product_id}", "Estimer ROI de sponsorisation"]
+    },
+
+    # ========== COMPTE & SUPPORT ==========
+    "Comment créer un compte ?": {
+        "intent": "create_account",
+        "response": (
+            "Pour créer un compte :\n"
+            "1) Allez sur S'inscrire → entrez votre email et mot de passe.\n"
+            "2) Confirmez l'email reçu.\n"
+            "3) Complétez les informations du profil.\n"
+            "Besoin que je crée le compte pour vous ou que je vous envoie le lien d'inscription ?"
+        ),
+        "endpoint": "/users/signup",
+        "params": {"email": "{email}", "name": "{name}"},
+        "follow_ups": ["Envoyer lien d'inscription", "Aide pour confirmer l'email"]
+    },
+
+    "Comment réinitialiser mon mot de passe ?": {
+        "intent": "reset_password",
+        "response": (
+            "Pour réinitialiser le mot de passe :\n"
+            "1) Allez sur 'Mot de passe oublié' sur la page de connexion.\n"
+            "2) Entrez votre adresse email. Vous recevrez un lien pour réinitialiser.\n"
+            "Si vous ne recevez rien, vérifiez les spams ou demandez que je renvoie le lien."
+        ),
+        "endpoint": "/users/password_reset",
+        "params": {"email": "{email}"},
+        "follow_ups": ["Renvoyer lien de réinitialisation", "Aide si email non reçu"]
+    },
+
+    "Comment contacter le support ?": {
+        "intent": "contact_support",
+        "response": (
+            "Vous pouvez contacter le support via :\n"
+            "- Email : support@toswe.africa\n"
+            "- Formulaire : https://toswe.africa/support\n"
+            "- Chat en ligne depuis l'application (si disponible)\n"
+            "Souhaitez-vous que j'ouvre un ticket pour vous maintenant ?"
+        ),
+        "endpoint": "/support/ticket",
+        "params": {"user_id": "{user_id}", "subject": "{subject}", "message": "{message}"},
+        "follow_ups": ["Ouvrir ticket maintenant", "Suivre ticket #{ticket_id}"]
+    },
+
+    # ========== DISPONIBILITÉ, NOUVEAUTÉS, RECOMMANDATIONS ==========
+    "Ce produit est-il disponible actuellement ?": {
+        "intent": "is_product_available",
+        "response": (
+            "Je vérifie la disponibilité pour « {product_name_or_id} » :\n"
+            "- Disponible : {in_stock}\n"
+            "- Quantité : {quantity}\n"
+            "- Délai de réassort si rupture : {restock_eta}\n"
+            "Voulez-vous être notifié quand il sera de nouveau disponible ?"
+        ),
+        "endpoint": "/products/{product_id}/availability",
+        "params": {"product_id": "{product_id}"},
+        "follow_ups": ["Créer alerte de retour en stock", "Voir alternatives disponibles"]
+    },
+
+    "Quels sont les nouveaux produits ?": {
+        "intent": "new_products",
+        "response": (
+            "Voici les nouveautés :\n"
+            "- {new1} — Ajouté le {date1}\n"
+            "- {new2} — Ajouté le {date2}\n"
+            "Voulez-vous être informé des prochaines nouveautés dans une catégorie ?"
+        ),
+        "endpoint": "/products",
+        "params": {"sort": "created_at_desc", "limit": 20},
+        "follow_ups": ["M'alerter sur nouveautés catégorie {category}"]
+    },
+
+    "Peux-tu me recommander des produits dans la catégorie **X** ?": {
+        "intent": "recommend_products",
+        "response": (
+            "Recommandations pour la catégorie « {category} » :\n"
+            "1) {rec1} — Pourquoi : {reason1}\n"
+            "2) {rec2} — Pourquoi : {reason2}\n"
+            "Souhaitez-vous des recommandations basées sur votre historique d'achats ?"
+        ),
+        "endpoint": "/recommendations",
+        "params": {"category": "{category}", "user_id": "{user_id}", "limit": 5},
+        "follow_ups": ["Recommandations personnalisées", "Comparer les recommandations"]
+    },
+
+    "Est-ce que vous avez le produit **Y** ?": {
+        "intent": "do_you_have_product",
+        "response": (
+            "Je cherche le produit « {product_y} »...\n"
+            "- Résultat : {found}\n"
+            "- Si trouvé : {product_summary}\n"
+            "Souhaitez-vous que je le réserve ou vous envoie le lien d'achat ?"
+        ),
+        "endpoint": "/products/search",
+        "params": {"q": "{product_y}"},
+        "follow_ups": ["Réserver le produit", "Signaler si en rupture"]
+    },
+
+    "Quels produits sont en promo/sponsorisés ?": {
+        "intent": "promoted_or_sponsored_products",
+        "response": (
+            "Produits en promo ou sponsorisés :\n"
+            "- Promos : {list_promos}\n"
+            "- Sponsorisés : {list_sponsored}\n"
+            "Souhaitez-vous filtrer l’un ou l’autre ?"
+        ),
+        "endpoint": "/products",
+        "params": {"filter": "promo:true OR sponsored:true", "limit": 50},
+        "follow_ups": ["Afficher seulement promos", "Afficher seulement sponsorisés"]
+    },
+
+    "Ce produit existe-t-il dans plusieurs tailles/couleurs ?": {
+        "intent": "product_variants",
+        "response": (
+            "Le produit {product_name_or_id} est disponible en variantes :\n"
+            "- Tailles : {sizes}\n"
+            "- Couleurs : {colors}\n"
+            "Souhaitez-vous voir un variant spécifique ?"
+        ),
+        "endpoint": "/products/{product_id}/variants",
+        "params": {"product_id": "{product_id}"},
+        "follow_ups": ["Afficher {size} en {color}", "Ajouter variant au panier"]
+    },
+
+    # ========== CONSEILS D'ACHAT & COMPARAISONS ==========
+    "Quel est le meilleur produit pour [besoin particulier] ?": {
+        "intent": "best_product_for_need",
+        "response": (
+            "Pour « {need} », je recommande :\n"
+            "- {product1} : {reason1}\n"
+            "- {product2} : {reason2}\n"
+            "Le meilleur dépendra de votre priorité (budget, durabilité, marque). "
+            "Souhaitez-vous prioriser l’un de ces critères ?"
+        ),
+        "endpoint": "/recommendations/for_need",
+        "params": {"need": "{need}", "limit": 5},
+        "follow_ups": ["Filtrer par budget {budget}", "Prioriser durabilité"]
+    },
+
+    "Quel produit me conseilles-tu entre X et Y ?": {
+        "intent": "compare_two_products",
+        "response": (
+            "Comparaison rapide entre {X} et {Y} :\n"
+            "- Prix : {priceX} vs {priceY}\n"
+            "- Points forts : {featuresX} / {featuresY}\n"
+            "- Note moyenne : {ratingX} / {ratingY}\n"
+            "En fonction de votre usage, je recommande {recommended}. Voulez-vous l'ajouter au panier ?"
+        ),
+        "endpoint": "/products/compare",
+        "params": {"product_a": "{X}", "product_b": "{Y}"},
+        "follow_ups": ["Ajouter {recommended} au panier", "Voir avis utilisateurs"]
+    },
+
+    "Quelle marque est la plus fiable dans [catégorie] ?": {
+        "intent": "most_reliable_brand",
+        "response": (
+            "D'après les avis et les ventes, les marques les plus fiables dans « {category} » sont : {brand_list}. "
+            "Je peux afficher les produits et avis détaillés pour la marque de votre choix."
+        ),
+        "endpoint": "/brands/reliability",
+        "params": {"category": "{category}", "limit": 5},
+        "follow_ups": ["Afficher produits de {brand}", "Voir notes détaillées"]
+    },
+
+    "Quels sont les produits populaires/les plus vendus ?": {
+        "intent": "best_sellers",
+        "response": (
+            "Top produits les plus vendus :\n"
+            "1) {best1} — Ventes : {sales1}\n"
+            "2) {best2} — Ventes : {sales2}\n"
+            "Souhaitez-vous trier par catégorie ou région ?"
+        ),
+        "endpoint": "/products",
+        "params": {"sort": "sales_desc", "limit": 20},
+        "follow_ups": ["Filtrer par catégorie {category}", "Top locaux seulement"]
+    },
+
+    "Que puis-je acheter avec un budget de Z ?": {
+        "intent": "products_by_budget",
+        "response": (
+            "Avec {budget} {currency}, vous pouvez acheter :\n"
+            "- {prodA} — {priceA}\n"
+            "- {prodB} — {priceB}\n"
+            "Souhaitez-vous que je vous montre les meilleurs rapports qualité/prix ?"
+        ),
+        "endpoint": "/products",
+        "params": {"price_max": "{budget}", "sort": "value_desc", "limit": 20},
+        "follow_ups": ["Afficher meilleures valeurs", "Réserver produit {prodA}"]
+    },
+
+    # ========== BOUTIQUES / GÉOLOCALISATION ==========
+    "Quelle boutique vend le produit X ?": {
+        "intent": "which_shop_sells_product",
+        "response": (
+            "Les boutiques vendant « {product_X} » :\n"
+            "- {shop1} — Prix : {price1}\n"
+            "- {shop2} — Prix : {price2}\n"
+            "Voulez-vous la boutique la plus proche de vous ?"
+        ),
+        "endpoint": "/products/{product_id}/shops",
+        "params": {"product_id": "{product_id}", "limit": 20},
+        "follow_ups": ["Boutique la plus proche", "Contacter {shop1}"]
+    },
+
+    "Quelles sont les meilleures boutiques de [catégorie] ?": {
+        "intent": "best_shops_in_category",
+        "response": (
+            "Meilleures boutiques pour « {category} » :\n"
+            "- {shop1} — Note: {rating1}\n"
+            "- {shop2} — Livraison rapide\n"
+            "Voulez-vous voir leurs catalogues ?"
+        ),
+        "endpoint": "/shops",
+        "params": {"filter": "category:{category}", "sort": "rating_desc", "limit": 10},
+        "follow_ups": ["Voir catalogue {shop1}", "Afficher avis {shop2}"]
+    },
+
+    "Quelle boutique est la plus proche de moi (si tu actives la géoloc) ?": {
+        "intent": "closest_shop",
+        "response": (
+            "Je recherche les boutiques proches de votre position ({user_location})...\n"
+            "- Boutique la plus proche : {closest_shop} — Distance : {distance}\n"
+            "Souhaitez-vous l'itinéraire ou l'appeler ?"
+        ),
+        "endpoint": "/shops/nearby",
+        "params": {"location": "{user_location}", "radius_km": 10},
+        "follow_ups": ["Donner l'itinéraire", "Appeler la boutique"]
+    },
+
+    "Est-ce que le vendeur X est vérifié ?": {
+        "intent": "is_seller_verified",
+        "response": (
+            "Le vendeur {seller_name} — Vérifié : {is_verified}\n"
+            "Détails de vérification : {verification_details}\n"
+            "Souhaitez-vous voir les avis clients pour ce vendeur ?"
+        ),
+        "endpoint": "/shops/{seller_id}/verification",
+        "params": {"seller_id": "{seller_id}"},
+        "follow_ups": ["Afficher avis", "Contacter vendeur"]
+    },
+
+    # ========== COMMANDES (rappels répétés) ==========
+    "Où en est ma commande #123": {
+        "intent": "order_status_short",
+        "response": (
+            "Je consulte la commande {order_id} : statut = {status}, ETA = {eta}. "
+            "Souhaitez-vous plus de détails ?"
+        ),
+        "endpoint": "/orders/{order_id}",
+        "params": {"order_id": "{order_id}"},
+        "follow_ups": ["Plus de détails", "Contacter le service client"]
+    },
+
+    "Combien de temps prend la livraison ?": {
+        "intent": "delivery_time_general",
+        "response": (
+            "Temps de livraison estimé selon le mode :\n"
+            "- Standard : 2–4 jours\n"
+            "- Express : same-day ou 24h selon zone\n"
+            "Pour une estimation précise, fournissez l'adresse de livraison."
+        ),
+        "endpoint": "/shipping/estimate",
+        "params": {"address": "{address}", "cart": "{cart}"},
+        "follow_ups": ["Calculer pour mon adresse", "Choisir livraison express"]
+    },
+
+    "Quels modes de paiement sont acceptés ?": {
+        "intent": "payment_methods_repeat",
+        "response": (
+            "Nous acceptons Mobile Money, paiement à la livraison (selon zone), cartes bancaires (si activé) "
+            "et le porte-monnaie interne (si activé)."
+        ),
+        "endpoint": "/payments/methods",
+        "params": {},
+        "follow_ups": ["Payer par Mobile Money", "Activer porte-monnaie"]
+    },
+
+    "Puis-je annuler ou modifier ma commande ?": {
+        "intent": "cancel_modify_order_combined",
+        "response": (
+            "Oui — modification/annulation possibles si la commande n'est pas encore préparée. "
+            "Dites-moi l'ID de commande et la modification souhaitée."
+        ),
+        "endpoint": "/orders/{order_id}/modify_or_cancel",
+        "params": {"order_id": "{order_id}", "action": "{modify|cancel}", "changes": "{changes}"},
+        "follow_ups": ["Annuler maintenant", "Modifier la quantité de {product_id}"]
+    },
+
+    # ========== UTILISATION / COMPATIBILITÉ / ENTRETIEN ==========
+    "Comment utiliser ce produit ?": {
+        "intent": "how_to_use_product",
+        "response": (
+            "Mode d’emploi pour {product_name} :\n"
+            "1) {step1}\n"
+            "2) {step2}\n"
+            "Pour un guide complet, consultez la fiche produit ou la notice fournie par le vendeur."
+        ),
+        "endpoint": "/products/{product_id}/manual",
+        "params": {"product_id": "{product_id}"},
+        "follow_ups": ["Télécharger le manuel", "Voir tutoriel vidéo"]
+    },
+
+    "Est-ce que ce produit est compatible avec [autre produit] ?": {
+        "intent": "product_compatibility",
+        "response": (
+            "Compatibilité entre {productA} et {productB} : {compatibility_result}. "
+            "Détails : {compatibility_details}"
+        ),
+        "endpoint": "/products/compatibility",
+        "params": {"product_a": "{productA}", "product_b": "{productB}"},
+        "follow_ups": ["Voir accessoires compatibles", "Trouver adaptateur recommandé"]
+    },
+
+    "Quelle est la durée de vie de ce produit ?": {
+        "intent": "product_lifespan",
+        "response": (
+            "La durée de vie estimée pour {product_name} est d'environ {lifespan}. "
+            "Cela dépend de l'usage et de l'entretien. Voici des conseils pour prolonger la durée de vie : {tips}."
+        ),
+        "endpoint": "/products/{product_id}/specs",
+        "params": {"product_id": "{product_id}", "fields": "lifespan,maintenance"},
+        "follow_ups": ["Conseils d'entretien", "Accessoires d'entretien"]
+    },
+
+    "Comment entretenir ce produit ?": {
+        "intent": "product_maintenance",
+        "response": (
+            "Conseils d'entretien pour {product_name} :\n"
+            "- Nettoyage : {cleaning}\n"
+            "- Stockage : {storage}\n"
+            "- Réparations : {repair}\n"
+            "Souhaitez-vous que je vous indique les centres de réparation proches ?"
+        ),
+        "endpoint": "/products/{product_id}/maintenance",
+        "params": {"product_id": "{product_id}"},
+        "follow_ups": ["Centres réparation proches", "Acheter kit d'entretien"]
+    }
+}
+

@@ -29,12 +29,12 @@ class JWTAuthentication(authentication.BaseAuthentication):
         except jwt.InvalidTokenError:
             raise exceptions.AuthenticationFailed("Token invalide")
 
-        phone = payload.get("phone")
-        if not phone:
-            raise exceptions.AuthenticationFailed("Token invalide : aucun phone trouvé")
+        email = payload.get("email")
+        if not email:
+            raise exceptions.AuthenticationFailed("Token invalide : aucun email trouvé")
 
         try:
-            user = User.objects.get(phone=phone)
+            user = User.objects.get(email=email)
         except User.DoesNotExist:
             raise exceptions.AuthenticationFailed("Utilisateur introuvable")
 

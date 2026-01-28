@@ -50,6 +50,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=20, unique=True, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
 
+    email = models.EmailField(blank=True, null=True)
+
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
@@ -99,6 +101,30 @@ class SellerProfile(models.Model):
             self.is_premium = False
             self.premium_expires_at = None
             self.save()
+
+class DelivererProfile(models.Model):
+    STATUS_CHOICES = [
+        ('available', 'Disponible'),
+        ('on_delivery', 'En livraison'),
+        ('paused', 'En pause'),
+    ]
+
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="deliverer_profile")
+    user_image = models.ImageField(upload_to="delivery_user_image", null=True, blank=True)
+    vehicle_image = models.ImageField(upload_to="delivery_vehicle_image", null=True, blank=True)
+    vehicle_plate_number = models.CharField(max_length=20, blank=True, null=True)
+    vehicle_type = models.CharField(max_length=100, blank=True, null=True)
+    license_number = models.CharField(max_length=100, blank=True, null=True)
+    id_card = models.FileField(upload_to="delivery_id_card", null=True, blank=True)
+    is_verified = models.BooleanField(default=False)
+    deliver_to = models.ManyToManyField(CustomUser, related_name="deliveries", blank=True)
+    total_income = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    rating = models.FloatField(default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
+
+    def __str__(self):
+        return f"Deliver Profile of {self.user.username}"
+
 
 
 class ProductsPreferences(models.Model):

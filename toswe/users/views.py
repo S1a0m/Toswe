@@ -13,7 +13,7 @@ from .serializers import *
 from toswe.payments import PaymentGateway
 from toswe.utils import verify_token
 
-from toswe.utils import send_sms
+from toswe.utils import send_email
 
 from toswe.permissions import IsUserAuthenticated
 
@@ -50,17 +50,17 @@ class UserViewSet(viewsets.ModelViewSet):
     def init_connexion(self, request):
         """Étape 1: envoi du numéro → envoi OTP par SMS"""
 
-        phone = request.data.get("phone")
+        email = request.data.get("email")
         is_subscriber = False
-        if not phone:
-            return Response({"detail": "Numéro de téléphone requis."}, status=400)
+        if not email:
+            return Response({"detail": "Email requis."}, status=400)
 
         # Générer OTP 6 chiffres
         otp = str(random.randint(100000, 999999))
 
         try:
             user = CustomUser.objects.get(
-                phone=phone)  # utilisateur existant → on met à jour OTP
+                email=email)  # utilisateur existant → on met à jour OTP
             user.session_mdp = otp
             user.mdp_timeout = timezone.now() + timedelta(minutes=5)
             user.save()
@@ -68,25 +68,104 @@ class UserViewSet(viewsets.ModelViewSet):
         except CustomUser.DoesNotExist:
             # Si l'utilisateur n’existe pas → le créer (flux inscription implicite)
             user = CustomUser.objects.create(
-                phone=phone, session_mdp=otp,
+                email=email, session_mdp=otp,
                 mdp_timeout=timezone.now() + timedelta(minutes=5)
             )
             is_subscriber = False
 
         # Envoi SMS
-        print(phone, f"Votre code de connexion Toswe est {otp}")
-        return Response({"detail": "Un code temporaire a été envoyé par SMS.", "is_subscriber": is_subscriber})
+        print(email, f"Votre code de connexion Tôswè est {otp}")
+        send_email(
+            "Connexion Tôswè",
+            f"""
+            <html>
+            <head>
+                <style>
+                body {{
+                    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                    background-color: #fdf8f5;
+                    margin: 0;
+                    padding: 0;
+                }}
+                .container {{
+                    max-width: 600px;
+                    margin: 20px auto;
+                    background: #ffffff;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+                }}
+                .header {{
+                    background: linear-gradient(135deg, #7D260F, #A13B20);
+                    padding: 20px;
+                    text-align: center;
+                    color: white;
+                }}
+                .header h1 {{
+                    margin: 0;
+                    font-size: 20px;
+                    letter-spacing: 1px;
+                }}
+                .content {{
+                    padding: 30px;
+                    color: #333333;
+                    line-height: 1.6;
+                    font-size: 15px;
+                }}
+                .otp-box {{
+                    display: inline-block;
+                    padding: 14px 28px;
+                    margin: 20px 0;
+                    background: #f6d8b6;
+                    color: #7D260F;
+                    font-size: 24px;
+                    font-weight: bold;
+                    border-radius: 8px;
+                    letter-spacing: 2px;
+                }}
+                .footer {{
+                    text-align: center;
+                    font-size: 12px;
+                    color: #888888;
+                    padding: 20px;
+                }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                <div class="header">
+                    <h1>Connexion à Tôswè</h1>
+                </div>
+                <div class="content">
+                    <p>Bonjour 👋🏽,</p>
+                    <p>Voici votre code de connexion à Tôswè&nbsp;:</p>
+                    <div class="otp-box">{otp}</div>
+                    <p>⚠️ Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet email en toute sécurité.</p>
+                    <p>Merci de faire confiance à <strong>Tôswè Africa</strong> pour vos emplettes locales 💛.</p>
+                </div>
+                <div class="footer">
+                    &copy; {2025} Tôswè Africa — Tous droits réservés.<br/>
+                    Ceci est un email automatique, merci de ne pas y répondre.
+                </div>
+                </div>
+            </body>
+            </html>
+            """,
+            email
+        )
+
+        return Response({"detail": "Un code temporaire a été envoyé par email.", "is_subscriber": is_subscriber})
 
     @action(detail=False, methods=["post"], permission_classes=[AllowAny])
     def confirm_connexion(self, request):
-        phone = request.data.get("phone")
+        email = request.data.get("email")
         otp = request.data.get("otp")
 
-        if not phone or not otp:
-            return Response({"detail": "Numéro de téléphone et OTP requis."}, status=400)
+        if not email or not otp:
+            return Response({"detail": "Numéro de téléemail et OTP requis."}, status=400)
 
         try:
-            user = CustomUser.objects.get(phone=phone)
+            user = CustomUser.objects.get(email=email)
             if not user.username:
                 if not request.data.get("username"):
                     return Response({"detail": "Pseudo requis."}, status=400)
@@ -97,11 +176,11 @@ class UserViewSet(viewsets.ModelViewSet):
 
         if user.session_mdp == otp and user.mdp_timeout > timezone.now():
             access_payload = {
-                "phone": user.phone,
+                "email": user.email,
                 "exp": datetime.utcnow() + timedelta(minutes=15)
             }
             refresh_payload = {
-                "phone": user.phone,
+                "email": user.email,
                 "type": "refresh",
                 "exp": datetime.utcnow() + timedelta(days=7)
             }
@@ -116,11 +195,16 @@ class UserViewSet(viewsets.ModelViewSet):
             is_brand = False
             is_verified = False
             is_seller = False
+            is_deliverer = False
             slogan = ""
             about = ""
             shop_name = ""
             logo = None
             shop_id = None
+
+            if hasattr(user, "deliverer_profile"):
+                if user.deliverer_profile.is_verified:
+                    is_deliverer = True
             if hasattr(user, "seller_profile"):
                 if user.seller_profile.show_on_market:
                     is_brand = user.seller_profile.is_brand
@@ -141,8 +225,9 @@ class UserViewSet(viewsets.ModelViewSet):
                     "shop_id": shop_id,
                     "username": user.username,
                     "address": user.address,
-                    "phone": user.phone,
+                    "email": user.email,
                     "is_seller": is_seller,
+                    "is_deliverer": is_deliverer,
                     "is_premium": is_premium,
                     "is_brand": is_brand,
                     "is_verified": is_verified,
@@ -189,11 +274,16 @@ class UserViewSet(viewsets.ModelViewSet):
         is_brand = False
         is_verified = False
         is_seller = False
+        is_deliverer = False
         slogan = ""
         about = ""
         shop_name = ""
         logo = None
         shop_id = None
+
+        if hasattr(user, "deliverer_profile"):
+            if user.deliverer_profile.is_verified:
+                is_deliverer = True
         if hasattr(user, "seller_profile"):
             if user.seller_profile.show_on_market:
                 is_brand = user.seller_profile.is_brand
@@ -206,8 +296,8 @@ class UserViewSet(viewsets.ModelViewSet):
                 logo = user.seller_profile.logo.url if user.seller_profile.logo else None
                 is_seller = True
 
-        return Response({"id": user.id, "shop_id": shop_id,"username": user.username, "address": user.address, "phone": user.phone,
-                     "is_seller": is_seller, "is_premium": is_premium, "is_brand": is_brand,
+        return Response({"id": user.id, "shop_id": shop_id,"username": user.username, "address": user.address, "email": user.email,
+                     "is_seller": is_seller, "is_deliverer": is_deliverer, "is_premium": is_premium, "is_brand": is_brand,
                      "is_verified": is_verified, "shop_name": shop_name, "slogan": slogan, "about": about, "logo": logo})
 
     @action(detail=False, methods=["post"])
@@ -218,20 +308,21 @@ class UserViewSet(viewsets.ModelViewSet):
         # Champs de base utilisateur
         username = data.get("username")
         address = data.get("address")
-        phone = data.get("phone")
+        email = data.get("email")
 
         if username:
             user.username = username
         if address:
             user.address = address
-        if phone:
-            user.phone = phone
+        if email:
+            user.email = email
 
         # Valeurs par défaut
         is_premium = False
         is_brand = False
         is_verified = False
-        is_seller = True
+        is_seller = False
+        is_deliverer = False
         shop_name = ""
         slogan = ""
         about = ""
@@ -239,6 +330,9 @@ class UserViewSet(viewsets.ModelViewSet):
         shop_id = None
 
         seller_profile = None
+        if hasattr(user, "deliverer_profile"):
+            if user.deliverer_profile.is_verified:
+                is_deliverer = True
         if hasattr(user, "seller_profile"):
             seller_profile = user.seller_profile
             shop_name = data.get("shop_name", seller_profile.shop_name)
@@ -269,8 +363,9 @@ class UserViewSet(viewsets.ModelViewSet):
                 "shop_id": shop_id,
                 "username": user.username,
                 "address": user.address,
-                "phone": user.phone,
+                "email": user.email,
                 "is_seller": is_seller,
+                "is_deliverer": is_deliverer,
                 "is_premium": is_premium,
                 "is_brand": is_brand,
                 "is_verified": is_verified,
@@ -339,6 +434,23 @@ class UserViewSet(viewsets.ModelViewSet):
             "message": "Votre profil vendeur a été créé/mis à jour avec succès.",
             "seller_profile": BecomeSellerSerializer(profile).data
         }, status=status.HTTP_201_CREATED)
+    
+    @action(detail=False, methods=["delete"], url_path="delete-account")
+    def delete_account(self, request):
+        """Permet à l’utilisateur connecté de supprimer son propre compte"""
+        user = request.user
+        user.delete()
+
+        response = Response({"detail": "Compte supprimé avec succès."}, status=204)
+
+        # Supprimer le cookie refresh_token pour éviter réutilisation
+        response.delete_cookie(
+            key="refresh_token",
+            path="/",
+            samesite="Lax"
+        )
+
+        return response
     
 
 
@@ -428,9 +540,9 @@ class SellerProfileViewSet(viewsets.ModelViewSet):
         amount = 1000  # Montant premium (à ajuster)
 
         # Simulation de paiement
-        if payment_method.lower() == "moov_user":
+        if payment_method.lower() == "moov_money":
             success = PaymentGateway.pay_with_moov(user_number, amount)
-        elif payment_method.lower() == "mtn_user":
+        elif payment_method.lower() == "mtn_momo":
             success = PaymentGateway.pay_with_mtn(user_number, amount)
         else:
             return Response({'status': 'Méthode de paiement invalide'}, status=400)
@@ -453,6 +565,21 @@ class SellerProfileViewSet(viewsets.ModelViewSet):
             'status': 'Vendeur premium activé avec succès !',
             'expires_at': seller_profile.premium_expires_at
         })
+    
+    @action(detail=False, methods=['post'])
+    def become_brand(self, request):
+        user = request.user
+        seller_profile = getattr(user, "seller_profile", None)
+        if not seller_profile:
+            return Response({"error": "Seller profile not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        # 🔹 Toggle (inverser la valeur)
+        seller_profile.is_brand = not seller_profile.is_brand
+        seller_profile.save()
+
+        return Response({
+            'seller_is_brand': seller_profile.is_brand
+        }, status=status.HTTP_200_OK)
     
 
     @action(detail=False, methods=["post"], url_path="verify_account")
@@ -561,6 +688,82 @@ class SellerProfileViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class DelivererProfileViewSet(viewsets.ModelViewSet):
+    queryset = DelivererProfile.objects.all()
+    serializer_class = DelivererProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return DelivererProfile.objects.all()
+        return DelivererProfile.objects.filter(user=user)
+
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        """Retourne le profil du livreur connecté"""
+        try:
+            profile = request.user.deliverer_profile
+        except DelivererProfile.DoesNotExist:
+            return Response({"detail": "Profil non trouvé"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(profile)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def verify(self, request, pk=None):
+        """Vérifier le profil du livreur (admin only)"""
+        profile = self.get_object()
+        profile.is_verified = True
+        profile.save()
+        return Response({"detail": "Profil vérifié"}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def add_delivery(self, request, pk=None):
+        """Ajouter un utilisateur à la liste des livraisons"""
+        profile = self.get_object()
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response({"detail": "user_id requis"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user_to_deliver = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({"detail": "Utilisateur non trouvé"}, status=status.HTTP_404_NOT_FOUND)
+        profile.deliver_to.add(user_to_deliver)
+        profile.status = 'on_delivery'
+        profile.save()
+        return Response({"detail": "Utilisateur ajouté aux livraisons et statut mis à jour"}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def complete_delivery(self, request, pk=None):
+        """Marquer une livraison comme terminée et ajouter le revenu"""
+        profile = self.get_object()
+        user_id = request.data.get("user_id")
+        amount = request.data.get("amount", 0)
+        try:
+            user_to_deliver = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({"detail": "Utilisateur non trouvé"}, status=status.HTTP_404_NOT_FOUND)
+
+        profile.deliver_to.remove(user_to_deliver)
+        profile.total_income += float(amount)
+        # Si plus de livraisons en cours, on remet le statut sur disponible
+        if profile.deliver_to.count() == 0:
+            profile.status = 'available'
+        profile.save()
+        return Response({"detail": "Livraison terminée et revenu mis à jour"}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def set_status(self, request, pk=None):
+        """Mettre à jour le statut du livreur"""
+        profile = self.get_object()
+        status_value = request.data.get("status")
+        if status_value not in dict(DelivererProfile.STATUS_CHOICES):
+            return Response({"detail": "Statut invalide"}, status=status.HTTP_400_BAD_REQUEST)
+        profile.status = status_value
+        profile.save()
+        return Response({"detail": f"Statut mis à jour à {status_value}"}, status=status.HTTP_200_OK)
+
+
 class RefreshTokenView(APIView):
 
     # @csrf_exempt
@@ -577,7 +780,7 @@ class RefreshTokenView(APIView):
 
             # Générer un nouveau access token
             new_access_payload = {
-                "phone": payload["phone"],
+                "email": payload["email"],
                 "exp": datetime.utcnow() + timedelta(minutes=15)
             }
             new_access_token = jwt.encode(new_access_payload, settings.SECRET_KEY, algorithm="HS256")
@@ -599,20 +802,35 @@ class NotificationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.is_authenticated:
-            return Notification.objects.filter(is_deleted=False, user=user)
+            return Notification.objects.filter(is_deleted=False, user=user).order_by("-created_at")
         return Notification.objects.none()
 
-    def destroy(self, request, *args, **kwargs):
-        """Ne supprime pas réellement la notification, mais la marque comme supprimée"""
-        notification = self.get_object()
-        notification.is_deleted = True
-        notification.save()
-        return Response({"detail": "Notification supprimée."})
-
-    @action(detail=False, methods=["post"])
+    # Marquer UNE notification comme lue
+    @action(detail=True, methods=["post"])
     def read(self, request, pk=None):
         notification = self.get_object()
         notification.is_read = True
         notification.save()
-        return Response({"detail": "Notification read."})
+        return Response({"detail": "Notification marked as read."})
+
+    # Marquer TOUTES les notifications comme lues
+    @action(detail=False, methods=["post"])
+    def read_all(self, request):
+        count = self.get_queryset().update(is_read=True)
+        return Response({"detail": f"{count} notifications marked as read."})
+
+    # Supprimer UNE notification (soft delete)
+    @action(detail=True, methods=["delete"])
+    def delete(self, request, pk=None):
+        notification = self.get_object()
+        notification.is_deleted = True
+        notification.save()
+        return Response({"detail": "Notification deleted."})
+
+    # Supprimer TOUTES les notifications (soft delete en lot)
+    @action(detail=False, methods=["delete"])
+    def delete_all(self, request):
+        count = self.get_queryset().update(is_deleted=True)
+        return Response({"detail": f"{count} notifications deleted."})
+
 

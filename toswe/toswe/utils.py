@@ -15,6 +15,7 @@ from reportlab.lib.units import cm
 from reportlab.lib import colors
 from reportlab.platypus import Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
+from django.core.mail import EmailMultiAlternatives
 
 
 def generate_order_pdf(order):
@@ -105,24 +106,44 @@ def generate_order_pdf(order):
     return ContentFile(buffer.read(), name=f"order_{order.id}.pdf")
 
 
-def send_email(subject: str, message: str, recipient: str, from_email=None):
+from django.core.mail import EmailMultiAlternatives
+from django.conf import settings
+
+def send_email(subject: str, message: str, recipient: str, from_email=None, is_html=True):
     """
-    Envoie un email simple via Gmail.
+    Envoie un email via Gmail.
+    - subject : sujet du mail
+    - message : contenu (peut être texte ou HTML)
+    - recipient : destinataire
+    - is_html : si True, envoie le message comme HTML + fallback texte
     """
     if from_email is None:
         from_email = settings.DEFAULT_FROM_EMAIL
 
     try:
-        send_mail(
-            subject,
-            message,
-            from_email,
-            [recipient],
-            fail_silently=False,
+        # Si c'est du HTML, on génère une version texte brute simple
+        if is_html:
+            text_message = "Ce message contient du contenu en HTML. Veuillez utiliser un client mail compatible."
+        else:
+            text_message = message  # message déjà en texte brut
+
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_message,  # fallback texte
+            from_email=from_email,
+            to=[recipient],
         )
+
+        # Si c’est du HTML → attacher la version HTML
+        if is_html:
+            email.attach_alternative(message, "text/html")
+
+        email.send()
         return {"status": "success", "message": "Email envoyé ✅"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+
 
 
 def send_sms(phone_number: str, message: str):

@@ -50,6 +50,7 @@ class ProductSerializer(serializers.ModelSerializer):
     short_description = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
     seller_id = serializers.SerializerMethodField()
+    shop_id = serializers.SerializerMethodField()
     is_sponsored = serializers.SerializerMethodField()  # 🔹 calculé dynamiquement
 
     class Meta:
@@ -57,6 +58,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "seller_id",
+            "shop_id",
             "name",
             "price",
             "main_image",
@@ -80,6 +82,10 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_seller_id(self, obj):
         return obj.seller.user.id
+
+
+    def get_shop_id(self, obj):
+        return obj.seller.id
 
     def get_total_rating(self, obj):
         stats = obj.feedback_set.aggregate(avg=Avg("rating"), count=Count("id"))
@@ -114,7 +120,7 @@ class ProductSerializer(serializers.ModelSerializer):
     def get_is_sponsored(self, obj):
         """Un produit est sponsorisé si une pub active existe"""
         now = timezone.now()
-        return obj.ads.filter(ad_type="sponsored", is_active=True, ended_at__gte=now).exists()
+        return obj.ads.filter(ad_type="sponsored", ended_at__gte=now).exists()
 
 # serializers.py
 from rest_framework import serializers
@@ -123,6 +129,7 @@ from .models import Promotion
 class PromotionSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source="product.name", read_only=True)
     seller_name = serializers.CharField(source="product.seller.shop_name", read_only=True)
+    days = serializers.IntegerField(write_only=True, required=True)
 
     class Meta:
         model = Promotion
@@ -135,12 +142,25 @@ class PromotionSerializer(serializers.ModelSerializer):
             "discount_price",
             "created_at",
             "ended_at",
+            "days",
         ]
+        read_only_fields = ["discount_price", "ended_at"]
+
+    def validate_discount_percent(self, value):
+        if value <= 0 or value >= 100:
+            raise serializers.ValidationError("Le pourcentage doit être compris entre 1 et 99.")
+        return value
 
 
+
+from decimal import Decimal, InvalidOperation
+
+GENERIC_DAILY_RATE = Decimal("500")   # prix/jour pour une annonce générique
+SPONSOR_DAILY_RATE = Decimal("250")   # prix/jour pour sponsorisation
 
 class AdSerializer(serializers.ModelSerializer):
     seller_id = serializers.SerializerMethodField()
+
     class Meta:
         model = Ad
         fields = [
@@ -160,17 +180,14 @@ class AdSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         user = self.context["request"].user
-        # seller = getattr(user, "seller_profile", None)
-        seller = user.seller_profile
-        print("Vendeur:?", user)
-        print("Seller:?", user.seller_profile, seller)
+        seller = getattr(user, "seller_profile", None)
 
         if not seller:
             raise serializers.ValidationError("Seuls les vendeurs peuvent créer une publicité.")
 
         ad_type = data.get("ad_type")
 
-        # Règle 1 : annonces génériques → seulement premium
+        # --- Cas annonce générique
         if ad_type == "generic":
             if not seller.is_premium:
                 raise serializers.ValidationError(
@@ -181,14 +198,29 @@ class AdSerializer(serializers.ModelSerializer):
                     "Titre et description sont obligatoires pour une annonce générale."
                 )
 
-        # Règle 2 : sponsorisation produit → max 2 / mois pour non-premium
+            # Validation du montant
+            amount = data.get("amount", Decimal("0"))
+            if amount <= 0:
+                raise serializers.ValidationError("Le montant doit être supérieur à 0.")
+
+            try:
+                if amount % GENERIC_DAILY_RATE != 0:
+                    raise serializers.ValidationError(
+                        f"Le montant doit être un multiple de {GENERIC_DAILY_RATE} FCFA."
+                    )
+            except InvalidOperation:
+                raise serializers.ValidationError("Montant invalide.")
+
+            generic_days = int(amount / GENERIC_DAILY_RATE)
+            data["ended_at"] = timezone.now() + timedelta(days=generic_days)
+
+        # --- Cas sponsorisation produit
         elif ad_type == "sponsored":
             if not data.get("product"):
                 raise serializers.ValidationError("Un produit doit être lié à la sponsorisation.")
 
             if not seller.is_premium:
-                from django.utils.timezone import now
-                month_start = now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
                 count_ads = Ad.objects.filter(
                     ad_type="sponsored",
                     product__seller=seller,
@@ -199,7 +231,23 @@ class AdSerializer(serializers.ModelSerializer):
                         "Vous avez atteint la limite de 2 sponsorisations pour ce mois."
                     )
 
-            # Supprimer champs inutiles (pas de title, image, description pour sponsorisation)
+            # Validation du montant
+            amount = data.get("amount", Decimal("0"))
+            if amount <= 0:
+                raise serializers.ValidationError("Le montant doit être supérieur à 0.")
+
+            try:
+                if amount % SPONSOR_DAILY_RATE != 0:
+                    raise serializers.ValidationError(
+                        f"Le montant doit être un multiple de {SPONSOR_DAILY_RATE} FCFA."
+                    )
+            except InvalidOperation:
+                raise serializers.ValidationError("Montant invalide.")
+
+            sponsor_days = int(amount / SPONSOR_DAILY_RATE)
+            data["ended_at"] = timezone.now() + timedelta(days=sponsor_days)
+
+            # Supprimer champs inutiles
             data["title"] = None
             data["description"] = None
             data["image"] = None
@@ -208,6 +256,7 @@ class AdSerializer(serializers.ModelSerializer):
 
     def get_seller_id(self, obj):
         return obj.seller.user.id
+
 
 
 
@@ -240,7 +289,7 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
         ]
 
     def get_category(self, obj):
-        return obj.category.name
+        return obj.category.id
 
     def get_total_rating(self, obj):
         stats = obj.feedback_set.aggregate(avg=Avg("rating"), count=Count("id"))
@@ -254,7 +303,7 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
 
     def get_is_sponsored(self, obj):
         now = timezone.now()
-        return obj.ads.filter(ad_type="sponsored", is_active=True, ended_at__gte=now).exists()
+        return obj.ads.filter(ad_type="sponsored", ended_at__gte=now).exists()
 
     def get_promotion(self, obj):
         """
@@ -501,7 +550,7 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             "id", "user", "phone_number", "contact_method", "address",
-            "status", "created_at", "total", "items", "pdf"
+            "status", "created_at", "total", "items" #, "pdf"
         ]
         read_only_fields = ["id", "user", "status", "created_at"]
 

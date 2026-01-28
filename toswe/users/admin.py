@@ -1,8 +1,9 @@
 from django.contrib import admin
 
-from users.models import CustomUser, UserLog, SellerStatistics, UserInteractionEvent, Notification, SellerProfile
+from users.models import CustomUser, UserLog, SellerStatistics, UserInteractionEvent, Notification, SellerProfile, DelivererProfile
 
 admin.site.register(CustomUser)
+admin.site.register(DelivererProfile)
 admin.site.register(Notification)
 admin.site.register(UserInteractionEvent)
 admin.site.register(UserLog)
