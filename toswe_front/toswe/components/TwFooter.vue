@@ -5,7 +5,7 @@
     >
       <!-- Section Tôswè -->
       <div class="flex-1 min-w-[200px]">
-        <h3 class="text-white text-lg mb-2 font-semibold">Tôswè</h3>
+        <h3 class="text-white text-lg mb-2 font-semibold">Tôswè Africa</h3>
         <!--<p class="text-gray-400 mb-1">
           Plateforme intelligente de vente et de livraison locale. 
         </p>-->

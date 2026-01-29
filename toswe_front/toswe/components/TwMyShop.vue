@@ -1,8 +1,6 @@
-<!-- TwMyShop.vue -->
 <template>
-  <main class="max-w-6xl mx-auto px-4 py-8 grid gap-8 lg:grid-cols-12">
-    <!-- Stats -->
-    <section class="lg:col-span-12 grid grid-cols-2 md:grid-cols-4 gap-4">
+  <main class="max-w-6xl mx-auto px-4 py-6 md:py-8 grid gap-6 md:gap-8 lg:grid-cols-12">
+    <section class="lg:col-span-12 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
       <div
         v-for="s in [
           { label: 'Ventes (30j)', value: stats.sales_30d ?? '—' },
@@ -11,60 +9,62 @@
           { label: 'Produits actifs', value: stats.products_active ?? 0 }
         ]"
         :key="s.label"
-        class="rounded-2xl border border-[#e6d9d3] bg-white/70 backdrop-blur-sm p-5 shadow-sm"
+        class="rounded-2xl border border-[#e6d9d3] bg-white/70 backdrop-blur-sm p-4 md:p-5 shadow-sm"
       >
-        <div class="text-xs text-gray-600">{{ s.label }}</div>
-        <div class="text-2xl font-semibold mt-1 text-[#7D260F]">
+        <div class="text-[10px] md:text-xs uppercase tracking-wider text-gray-500 font-medium">{{ s.label }}</div>
+        <div class="text-lg md:text-2xl font-semibold mt-1 text-[#7D260F] truncate">
           {{ s.value }}
         </div>
       </div>
     </section>
 
-    <!-- Onglets -->
     <section class="lg:col-span-12">
-      <div class="flex gap-2 overflow-x-auto pb-2">
+      <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
         <button
           v-for="t in tabs"
           :key="t.key"
           @click="active = t.key"
-          class="px-4 py-2 rounded-xl border transition"
+          class="px-4 py-2 rounded-xl border transition whitespace-nowrap text-sm md:text-base"
           :class="active === t.key
-            ? 'bg-[#7D260F] text-white border-[#7D260F]'
-            : 'bg-white/70 border-[#e6d9d3] hover:bg-white'"
+            ? 'bg-[#7D260F] text-white border-[#7D260F] shadow-md'
+            : 'bg-white/70 border-[#e6d9d3] hover:bg-white text-gray-600'"
         >
           {{ t.label }}
         </button>
       </div>
 
-      <!-- Contenu onglets -->
-      <div class="mt-6">
-        <!-- Produits -->
+      <div class="mt-6 md:mt-8">
+        
         <div v-if="active === 'products'">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold text-lg">Mes produits</h3>
-            <p v-if="!auth.user?.is_premium && products.length >= max_products">Vous avez atteint la limite de {{ max_products }} produits.</p>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+                <h3 class="font-bold text-xl text-gray-800">Mes produits</h3>
+                <p v-if="!auth.user?.is_premium && products.length >= max_products" class="text-xs text-red-500 mt-1">
+                    Limite de {{ max_products }} produits atteinte.
+                </p>
+            </div>
             <button
-              class="px-4 py-2 rounded-xl bg-[#7D260F] text-white hover:bg-[#66200d] transition"
+              class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-[#7D260F] text-white hover:bg-[#66200d] transition font-medium text-sm shadow-sm"
               @click="goToAddProduct"
               :class="{ 'opacity-50 cursor-not-allowed': !auth.user?.is_premium && products.length >= max_products }"
             >
-              + Nouveau produit
+              <span class="mr-2 text-lg">+</span> Nouveau produit
             </button>
           </div>
 
           <div
             v-if="products?.length"
-            class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+            class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6"
           >
             <TwProduct
               v-for="product in products"
               :key="product.id"
               :id="product.id"
-              :image-src="product.main_image.image"
+              :image-src="product.main_image?.image"
               :product-name="product.name"
               :description="product.short_description"
               :price="product.price"
-              :rating="product.total_rating.average"
+              :rating="product.total_rating?.average"
               :badge="product.status"
               :is-sponsored="product.is_sponsored"
               :seller-id="product.seller_id"
@@ -72,184 +72,156 @@
           </div>
           <div
             v-else
-            class="rounded-2xl border border-[#e6d9d3] bg-white/70 p-10 text-center text-gray-600"
+            class="rounded-3xl border-2 border-dashed border-[#e6d9d3] bg-white/40 p-12 text-center text-gray-500"
           >
-            Vous n’avez pas encore de produits.
+            <p>Vous n’avez pas encore de produits.</p>
           </div>
         </div>
 
-        <!-- Promotions -->
         <div v-else-if="active === 'promotions'">
-          <!--<div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold text-lg">Mes promotions</h3>
-          </div>-->
-
-          <!-- Formulaire création promo -->
-          <form
-            class="space-y-4 rounded-2xl border border-[#e6d9d3] bg-white/70 p-6 shadow-sm max-w-lg"
-            @submit.prevent="createPromotion"
-          >
-            <!-- Choix produit -->
-            <div>
-              <label class="block text-sm font-medium mb-1">Produit concerné</label>
-              <select
-                v-model="promoForm.productId"
-                class="w-full rounded-xl border border-[#e6d9d3] px-3 py-2 bg-white"
-              >
-                <option disabled value="">-- Sélectionnez un produit --</option>
-                <option v-for="p in props.products" :key="p.id" :value="p.id">
-                  {{ p.name }} ({{ money(p.price) }})
-                </option>
-              </select>
-            </div>
-
-            <!-- Pourcentage réduction -->
-            <div>
-              <label class="block text-sm font-medium mb-1">Pourcentage de réduction (%)</label>
-              <input
-                v-model.number="promoForm.discount"
-                type="number"
-                min="1"
-                max="90"
-                placeholder="Ex: 20"
-                class="w-full rounded-xl border border-[#e6d9d3] px-3 py-2 bg-white"
-              />
-            </div>
-
-            <!-- Durée promo -->
-            <div>
-              <label class="block text-sm font-medium mb-1">Durée (jours)</label>
-              <input
-                v-model.number="promoForm.days"
-                type="number"
-                min="1"
-                placeholder="Ex: 7"
-                class="w-full rounded-xl border border-[#e6d9d3] px-3 py-2 bg-white"
-              />
-            </div>
-
-            <!-- Prix calculé -->
-            <div v-if="selectedProduct">
-              <p class="text-gray-700">
-                Prix initial : <span class="font-medium">{{ money(selectedProduct.price) }}</span>
-              </p>
-              <p class="text-gray-700">
-                Réduction : -{{ promoForm.discount || 0 }}%
-              </p>
-              <p class="text-lg font-semibold text-[#7D260F]">
-                Nouveau prix : {{ money(discountedPrice) }}
-              </p>
-            </div>
-
-            <!-- Bouton -->
-            <div class="pt-2">
-              <button
-                type="submit"
-                class="px-4 py-2 rounded-xl bg-[#7D260F] text-white hover:bg-[#66200d] transition w-full"
-              >
-                Créer la promotion
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Pubs -->
-        <div v-else-if="active === 'ads' && auth.user?.is_premium">
-
-          <!-- Publicités -->
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="font-semibold text-lg">Mes publicités</h3>
-              <button
-                @click="goToAdCreate"
-                class="px-4 py-2 rounded-xl bg-[#7D260F] text-white hover:bg-[#66200d] transition"
-              >
-                + Créer une pub
-              </button>
-            </div>
-
-            <div v-if="adsList?.length" class="grid md:grid-cols-3 gap-4">
-                <TwAdCard v-for="a in adsList" :key="a.id" :ad="a" />
-            </div>
-
-            <div
-              v-else
-              class="rounded-2xl border border-[#e6d9d3] bg-white/70 p-10 text-center text-gray-600"
+          <div class="max-w-xl mx-auto md:mx-0">
+            <h3 class="font-bold text-xl mb-6">Créer une promotion</h3>
+            <form
+                class="space-y-5 rounded-2xl border border-[#e6d9d3] bg-white p-5 md:p-8 shadow-sm"
+                @submit.prevent="createPromotion"
             >
-              Aucune pub active.
-            </div>
+                <div>
+                <label class="block text-sm font-semibold mb-2">Produit concerné</label>
+                <select
+                    v-model="promoForm.productId"
+                    class="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50 focus:ring-2 focus:ring-[#7D260F]/20 focus:border-[#7D260F] outline-none transition"
+                >
+                    <option disabled value="">-- Sélectionnez un produit --</option>
+                    <option v-for="p in props.products" :key="p.id" :value="p.id">
+                    {{ p.name }} ({{ money(p.price) }})
+                    </option>
+                </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                    <label class="block text-sm font-semibold mb-2">Réduction (%)</label>
+                    <input
+                        v-model.number="promoForm.discount"
+                        type="number" min="1" max="90"
+                        class="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50 outline-none focus:border-[#7D260F]"
+                    />
+                    </div>
+                    <div>
+                    <label class="block text-sm font-semibold mb-2">Durée (jours)</label>
+                    <input
+                        v-model.number="promoForm.days"
+                        type="number" min="1"
+                        class="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50 outline-none focus:border-[#7D260F]"
+                    />
+                    </div>
+                </div>
+
+                <div v-if="selectedProduct" class="p-4 rounded-xl bg-[#7D260F]/5 border border-[#7D260F]/10">
+                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>Prix initial</span>
+                        <span>{{ money(selectedProduct.price) }}</span>
+                    </div>
+                    <div class="flex justify-between text-sm text-red-600 mb-2 font-medium">
+                        <span>Réduction</span>
+                        <span>-{{ promoForm.discount || 0 }}%</span>
+                    </div>
+                    <div class="flex justify-between text-lg font-bold text-[#7D260F] pt-2 border-t border-[#7D260F]/10">
+                        <span>Nouveau prix</span>
+                        <span>{{ money(discountedPrice) }}</span>
+                    </div>
+                </div>
+
+                <button
+                    type="submit"
+                    class="w-full py-4 rounded-xl bg-[#7D260F] text-white font-bold hover:bg-[#66200d] shadow-lg shadow-[#7D260F]/20 transition transform active:scale-[0.98]"
+                >
+                    Activer la promotion
+                </button>
+            </form>
           </div>
         </div>
 
-        <!-- Abonnés -->
+        <div v-else-if="active === 'ads' && auth.user?.is_premium">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <h3 class="font-bold text-xl">Mes publicités</h3>
+            <button
+              @click="goToAdCreate"
+              class="px-5 py-2.5 rounded-xl bg-[#7D260F] text-white font-medium shadow-sm"
+            >
+              + Créer une pub
+            </button>
+          </div>
+          <div v-if="adsList?.length" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <TwAdCard v-for="a in adsList" :key="a.id" :ad="a" />
+          </div>
+          <div v-else class="rounded-3xl border border-[#e6d9d3] bg-white/70 p-10 text-center text-gray-500">
+            Aucune publicité active.
+          </div>
+        </div>
+
         <div v-else-if="active === 'loycs'">
-          <h3 class="font-semibold text-lg mb-4">Abonnés</h3>
-          <div v-if="loycs?.length" class="grid md:grid-cols-3 gap-4">
+          <h3 class="font-bold text-xl mb-6">Mes Abonnés</h3>
+          <div v-if="loycs?.length" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <article
               v-for="c in loycs"
               :key="c.id"
-              class="rounded-2xl border border-[#e6d9d3] bg-white/70 p-5 shadow-sm"
+              class="flex items-center gap-4 rounded-2xl border border-[#e6d9d3] bg-white p-4 shadow-sm"
             >
-              <div class="font-medium">{{ c.username || c.phone }}</div>
-              <div class="text-xs text-gray-500">
-                {{ c.orders_count || 0 }} commandes
+              <div class="size-10 rounded-full bg-[#7D260F]/10 flex items-center justify-center text-[#7D260F] font-bold">
+                {{ (c.username || 'U').charAt(0).toUpperCase() }}
+              </div>
+              <div>
+                <div class="font-bold text-gray-800">{{ c.username || c.phone }}</div>
+                <div class="text-xs text-gray-500">{{ c.orders_count || 0 }} commandes</div>
               </div>
             </article>
           </div>
-          <div
-            v-else
-            class="rounded-2xl border border-[#e6d9d3] bg-white/70 p-10 text-center text-gray-600"
-          >
+          <div v-else class="rounded-3xl border border-[#e6d9d3] bg-white/70 p-10 text-center text-gray-500">
             Pas encore d'abonnés.
           </div>
         </div>
 
-        <!-- Paramètres -->
         <div v-else>
-          <h3 class="font-semibold text-lg mb-4">Paramètres de la boutique</h3>
-          <form class="grid gap-4 max-w-xl" @submit.prevent="updateUser">
-            <div>
-              <label class="block text-sm font-medium mb-1">Nom de la boutique</label>
-              <input
-                v-model="shopName"
-                type="text"
-                class="w-full rounded-xl border border-[#e6d9d3] px-3 py-2 bg-white/70"
-              />
+          <h3 class="font-bold text-xl mb-6">Paramètres Boutique</h3>
+          <form class="grid gap-5 max-w-2xl" @submit.prevent="updateUser">
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                <label class="block text-sm font-semibold mb-2">Nom de la boutique</label>
+                <input v-model="shopName" type="text" class="w-full rounded-xl border border-gray-200 px-4 py-3 bg-white outline-none focus:border-[#7D260F]" />
+                </div>
+                <div>
+                <label class="block text-sm font-semibold mb-2">Slogan</label>
+                <input v-model="slogan" type="text" class="w-full rounded-xl border border-gray-200 px-4 py-3 bg-white outline-none focus:border-[#7D260F]" />
+                </div>
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">Slogan</label>
-              <input
-                v-model="slogan"
-                type="text"
-                class="w-full rounded-xl border border-[#e6d9d3] px-3 py-2 bg-white/70"
-              />
+              <label class="block text-sm font-semibold mb-2">À propos</label>
+              <textarea v-model="about" rows="4" class="w-full rounded-xl border border-gray-200 px-4 py-3 bg-white outline-none focus:border-[#7D260F]"></textarea>
             </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">À propos</label>
-              <textarea
-                v-model="about"
-                rows="4"
-                class="w-full rounded-xl border border-[#e6d9d3] px-3 py-2 bg-white/70"
-              ></textarea>
+            
+            <div class="p-4 rounded-xl border border-[#e6d9d3] bg-white/50">
+                <label class="block text-sm font-semibold mb-3">Logo de la boutique</label>
+                <div class="flex items-center gap-5">
+                    <img
+                        v-if="logoPreview"
+                        :src="logoPreview"
+                        class="size-20 rounded-2xl object-cover border-2 border-white shadow-md"
+                    />
+                    <div class="flex-1">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            @change="onLogo"
+                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#7D260F]/10 file:text-[#7D260F] hover:file:bg-[#7D260F]/20"
+                        />
+                    </div>
+                </div>
             </div>
-            <div class="flex items-center gap-3">
-              <input
-                type="file"
-                accept="image/*"
-                @change="onLogo"
-                class="block w-full rounded-xl border border-[#e6d9d3] px-3 py-2 bg-white/70"
-              />
-              <img
-                v-if="logoPreview"
-                :src="logoPreview"
-                class="size-12 rounded-lg object-cover border border-[#e6d9d3]"
-              />
-            </div>
-            <div class="pt-2">
-              <button
-                class="px-4 py-2 rounded-xl bg-[#7D260F] text-white hover:bg-[#66200d] transition"
-              >
-                Enregistrer
+
+            <div class="pt-4">
+              <button class="w-full md:w-auto px-10 py-3.5 rounded-xl bg-[#7D260F] text-white font-bold hover:bg-[#66200d] transition shadow-lg shadow-[#7D260F]/20">
+                Enregistrer les modifications
               </button>
             </div>
           </form>
@@ -258,6 +230,17 @@
     </section>
   </main>
 </template>
+
+<style scoped>
+/* Masquer la scrollbar pour les onglets sur mobile */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>
 
 <script setup>
 import { useAuthStore } from '@/stores/auth'

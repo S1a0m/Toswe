@@ -164,7 +164,7 @@ async function submitForm() {
       method: "POST",
       body: formData,
     })
-    auth.user.is_seller = true
+    //auth.user.is_seller = true
     closePopup()
     showToast("Votre demande de vendeur a été envoyée 🚀", "success")
   } catch (err) {

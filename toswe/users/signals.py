@@ -62,6 +62,7 @@ def order_created_notification(sender, instance, created, **kwargs):
         print("Les vendeurs: ", sellers)
         for seller in sellers:
             notif = Notification.objects.create(
+                title="Commande",
                 user=seller.user,
                 message=f"Nouvelle commande contenant vos produits (commande #{instance.id})."
             )

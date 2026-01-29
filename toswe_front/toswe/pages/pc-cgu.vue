@@ -89,8 +89,8 @@
           </ul>
           <p>
             Contact : 
-            <a href="mailto:support@toswe.com" class="text-[#7D260F] underline">
-              support@toswe.com
+            <a href="mailto:toswe.africa@gmail.com" class="text-[#7D260F] underline">
+              toswe.africa@gmail.com
             </a>
           </p>
         </div>

@@ -15,9 +15,13 @@
     </div>
 
     <!-- Montant -->
-    <div class="text-right">
+    <div class="text-right flex items-center gap-4">
       <p class="text-base font-bold text-gray-900">{{ order.total }} fcfa</p>
       <Icon name="uil:angle-right" class="text-gray-400 text-lg" />
+      <!--<button v-if="order.status == 'cancelled' || order.status == 'delivered'" class="hover:bg"><Icon
+        name="mdi:delete-outline"
+        size="22"
+        class="text-red-500 cursor-pointer hover:scale-110 transition-transform"/></button>-->
     </div>
   </div>
 </template>

@@ -83,20 +83,20 @@
         >
           {{ isSubscribed ? "Se désabonner" : "S'abonner" }}
         </button>
-        <NuxtLink to="/premium"
+        <!--<NuxtLink to="/premium"
           v-else v-if="!auth.user.is_premium">
         <span
           class="px-4 py-2 rounded-xl border border-[#e6d9d3] text-gray-700 hover:bg-[#fdf8f5] transition"
         >
           Devenir vendeur premium
-        </span></NuxtLink>
+        </span></NuxtLink>-->
         <span
           title="Partager le lien de ma boutique"
           class="flex items-center justify-center gap-1 px-4 py-2 rounded-xl border border-[#e6d9d3] text-gray-700 hover:bg-[#fdf8f5] transition"
           v-if="isOwner"
           @click="copyShopLink"
         >
-          <Icon name="uil:share-alt" /> 
+          <Icon name="uil:copy-alt" /> 
         </span>
       </div>
     </div>

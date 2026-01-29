@@ -8,26 +8,32 @@
     <div class="mb-8">
       <h2 class="text-lg font-semibold text-gray-600 mb-3">Compte </h2>
       <TwSettingsItem icon="uil:user" label="Profil" @click="profilPopup.showPopup()"/>
-      <TwSettingsItem icon="uil:check-circle" label="Vérifier votre compte"  v-if="!auth.isVerified && auth.isSeller" @click="verifyPopup.showPopup()"/>
+      <!-- <TwSettingsItem icon="uil:check-circle" label="Vérifier votre compte"  v-if="!auth.isVerified && auth.isSeller" @click="verifyPopup.showPopup()"/> -->
       <TwSettingsItem icon="uil:signout" label="Se déconnecter" @click="auth.logout"/>
       <TwSettingsItem icon="uil:trash" label="Supprimer le compte" @click="deleteAccount" danger />
     </div>
 
     <!-- Vente -->
-    <div class="mb-8" v-if="(!auth.isSeller && !auth.isDeliverer) || (auth.isSeller && !auth.isPremiumSeller)">
+    <div class="mb-8"  v-if="!auth.isSeller">
       <h2 class="text-lg font-semibold text-gray-600 mb-3">Vente</h2>
-      <TwSettingsItem icon="uil:briefcase" label="Devenir vendeur" v-if="!auth.isSeller && !auth.isDeliverer" @click="becomeSellerPopup.showPopup()"/>
-      <TwSettingsItem icon="uil:truck" label="Devenir livreur" v-if="!auth.isDeliverer && auth.isSeller" @click="becomeDelivererPopup.showPopup()"/>
-      <TwSettingsItem icon="uil:star" label="Devenir vendeur premium" v-if="auth.isSeller && !auth.isPremiumSeller" @click="goToPremium"/>
-      <!--<TwSettingsItem icon="uil:chart" label="Voir mes statistiques vendeur" v-if="auth.isPremiumSeller" @click="goToStats"/>-->
+      <TwSettingsItem icon="uil:briefcase" label="Devenir vendeur" v-if="!auth.isSeller" @click="becomeSellerPopup.showPopup()"/> <!-- && !auth.isDeliverer -->
+      <TwSettingsToggle
+        v-if="auth.isSeller"
+        icon="uil:lock"
+        label="Quitter le statut vendeur."
+        v-model="auth.isSeller"
+      />
+      <!--<TwSettingsItem icon="uil:truck" label="Devenir livreur" v-if="!auth.isDeliverer && auth.isSeller" @click="becomeDelivererPopup.showPopup()"/>-->
+      <!--<TwSettingsItem icon="uil:star" label="Devenir vendeur premium" v-if="auth.isSeller && !auth.isPremiumSeller" @click="goToPremium"/>
+      <TwSettingsItem icon="uil:chart" label="Voir mes statistiques vendeur" v-if="auth.isPremiumSeller" @click="goToStats"/>-->
     </div>
 
-    <!-- Publicité -->
+    <!-- Publicité 
     <div class="mb-8" v-if="auth.isPremiumSeller">
       <h2 class="text-lg font-semibold text-gray-600 mb-3">Publicité</h2>
       <TwSettingsItem icon="uil:megaphone" label="Créer une campagne publicitaire" @click="goToAdCreate"/>
-      <!--<TwSettingsItem icon="uil:chart" label="Voir mes performances publicitaires" @click="goToPerformances"/>-->
-    </div>
+      <TwSettingsItem icon="uil:chart" label="Voir mes performances publicitaires" @click="goToPerformances"/>
+    </div>-->
 
     <!-- Préférences -->
     <div v-if="auth.isSeller">

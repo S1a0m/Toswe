@@ -126,13 +126,13 @@ const quickPrompts = [
 ]
 
 const quickReplies = {
-  "Quand sort officiellement Tôswè ?": "La plateforme est actuellement en phase de test, la sortie officielle est prévue le mois prochain avec plusieurs nouvelles fonctionnalités.",
+  "Quand sort officiellement Tôswè ?": "La plateforme est actuellement en phase de test, la sortie officielle est prévue dans deux mois maximum avec plusieurs nouvelles fonctionnalités.",
   "Pourquoi l’app n’est pas encore prête ?": "Tôswè est encore en phase de test afin d’assurer une meilleure expérience aux vendeurs et acheteurs. C’est normal qu’elle ne soit pas encore disponible à grande échelle.",
-  "Quel est l’objectif de Tôswè ?": "Notre but est d’aider les vendeurs locaux, qu’ils soient lettrés ou illettrés, à vendre plus facilement leurs produits, tout en valorisant le Made in Africa et en particulier le Made in Bénin.",
+  "Quel est l’objectif de Tôswè ?": "Notre but est de promouvoir le made in Africa et en particulier le made in Bénin, en aidant les vendeurs locaux, qu’ils soient lettrés ou illettrés, à vendre plus facilement leurs produits.",
   "Comment Tôswè aide les vendeurs illettrés ?": "Tôswè a été pensée pour être simple d’utilisation et inclusive. Même un vendeur illettré pourra publier et gérer ses produits grâce à une interface intuitive et une assistance adaptée.",
   "Quelles fonctionnalités arrivent bientôt ?": "La sortie officielle apportera : la sponsorisation de produits, un Nehanda plus performant, des statistiques de vente pour les vendeurs, ainsi qu’une meilleure visibilité pour les marques.",
   "Est-ce que les marques ont une priorité ?": "Oui, les marques locales bénéficient d’une certaine priorité sur la plateforme afin de valoriser leurs produits et soutenir leur croissance.",
-  "Comment contacter les administrateurs ?": "Vous pouvez contacter les administrateurs via email : contact@toswe.com ou par téléphone : +229 00 00 00 00.",
+  "Comment contacter les administrateurs ?": "Vous pouvez contacter les administrateurs via email : toswe.africa@gmail.com ou par téléphone : +229 01 54 14 12 87.",
   "Est-ce que Tôswè rend les produits locaux plus accessibles ?": "Absolument. L’un des objectifs de Tôswè est de rendre les produits locaux plus accessibles et abordables pour le citoyen moyen africain et béninois.",
 }
 
@@ -182,7 +182,7 @@ async function send() {
   try {
     const assistantReply =
       quickReplies[text] ||
-      "Désolé, je n’ai pas encore de réponse pour cette question. Essayez une des suggestions ci-dessus."
+      "Désolé, je n’ai pas encore de réponse pour cette question. Essayez une des suggestions en-dessous."
 
     messages.value.push({
       id: uuidv4(),

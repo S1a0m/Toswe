@@ -599,7 +599,7 @@ class OrderSerializer(serializers.ModelSerializer):
                     "timestamp": str(notif.created_at),
                 }
             )
-        send_email("Commande", "Nouvelle commande chef", "remveille@gmail.com")
+        send_email("Commande", "Nouvelle commande Précieux", "remveille@gmail.com")
 
         return order
 
