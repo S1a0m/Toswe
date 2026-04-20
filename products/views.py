@@ -18,6 +18,8 @@ from products.serializers import *
 
 from toswe.permissions import IsUserAuthenticated
 
+from decimal import Decimal, ROUND_DOWN
+
 from toswe.utils import track_user_interaction
 from users.authentication import JWTAuthentication
 
@@ -813,6 +815,102 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(qs, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=["get"])
+    def my_balance(self, request):
+        """
+        Solde disponible du vendeur connecté.
+        Commission calculée selon l'offre active :
+          Pro    → 2%
+          Boost  → 5%
+          Basic  → 10% (même taux que sans offre)
+          Aucune → 10%
+        Seuls les OrderItem livrés et non encore payés sont inclus.
+        """
+        user = request.user
+ 
+        if not hasattr(user, "seller_profile"):
+            return Response({"detail": "Pas vendeur"}, status=403)
+ 
+        seller = user.seller_profile
+ 
+        # ── Taux de commission réel depuis l'offre active ──────
+        commission_rate = Decimal("0.10")   # défaut : 10%
+ 
+        active_sub = (
+            OfferSubscription.objects
+            .filter(
+                seller=seller,
+                status="active",
+                expires_at__gt=timezone.now(),
+            )
+            .select_related("offer")
+            .first()
+        )
+ 
+        if active_sub:
+            commission_rate = (
+                active_sub.offer.commission_percent / Decimal("100")
+            )
+ 
+        # ── Calcul du solde ────────────────────────────────────
+        items = OrderItem.objects.filter(
+            product__seller=seller,
+            order__status="delivered",
+            seller_paid=False,
+        )
+ 
+        total_sales          = Decimal("0")
+        total_commission     = Decimal("0")
+        total_seller_revenue = Decimal("0")
+ 
+        for item in items:
+            price    = item.price
+            quantity = item.quantity
+ 
+            commission_per_unit = (price * commission_rate).quantize(
+                Decimal("1"), rounding=ROUND_DOWN
+            )
+            seller_net_per_unit = price - commission_per_unit
+ 
+            total_sales          += price * quantity
+            total_commission     += commission_per_unit * quantity
+            total_seller_revenue += seller_net_per_unit * quantity
+ 
+        return Response({
+            "total_sales":       int(total_sales),
+            "commission":        int(total_commission),
+            "available_balance": int(total_seller_revenue),
+            # Infos affichées dans le dashboard vendeur Flutter
+            "commission_rate":   f"{int(commission_rate * 100)}%",
+            "offer_name":        active_sub.offer.name if active_sub else None,
+            "offer_expires_at":  active_sub.expires_at if active_sub else None,
+        })
+ 
+    @action(detail=False, methods=["post"])
+    def mark_seller_paid(self, request):
+        """
+        Marque tous les OrderItem livrés du vendeur comme payés.
+        À appeler après validation d'un retrait par l'admin.
+        """
+        seller = request.user.seller_profile
+ 
+        items = OrderItem.objects.filter(
+            product__seller=seller,
+            order__status="delivered",
+            seller_paid=False,
+        )
+ 
+        count = items.count()
+        items.update(
+            seller_paid=True,
+            seller_paid_at=timezone.now(),
+        )
+ 
+        return Response({
+            "detail": f"{count} item(s) marqué(s) comme payés.",
+        })
+ 
     
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):

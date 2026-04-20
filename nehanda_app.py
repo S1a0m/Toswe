@@ -56,7 +56,7 @@ from django.conf import settings as django_settings
 from users.models import CustomUser
 
 # ── Gemini ────────────────────────────────────────────────────
-_gemini_key = "AIzaSyCCfxK1lrnYW4zQ6TJCDA1X45JakDDncdI"    # f"os.getenv({"GEMINI_API_KEY"})"
+_gemini_key = "AIzaSyCCouzM4pu3U36HUOC760_7cVXtxs4u5j8"    # f"os.getenv({"GEMINI_API_KEY"})"
 if not _gemini_key:
     raise RuntimeError("GEMINI_API_KEY manquante.")
 gemini_client = genai.Client(api_key=_gemini_key)
@@ -544,8 +544,8 @@ NEHANDA_SYSTEM_PROMPT += """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PHILOSOPHIE DISCOVERY FIRST
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Nehanda est un assistant de découverte et de conseil.
-Elle trouve, compare, explique et suggère des produits.
+Tu es une assistante de découverte et de conseil.
+Tu trouves, compares, expliques et suggères des produits.
 L'utilisateur garde TOUJOURS la main sur le panier et la commande via l'app.
 
 Tu ne dois JAMAIS prétendre ajouter au panier ou passer une commande.

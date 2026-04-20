@@ -153,6 +153,13 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
+        # ── Suivi du paiement vendeur ──────────────────────────────
+    seller_paid    = models.BooleanField(default=False)
+    seller_paid_at = models.DateTimeField(null=True, blank=True)
+ 
+    def __str__(self):
+        return f"{self.quantity} x {self.product.name}"
+
 class Ad(models.Model):
     AD_TYPE_CHOICES = [
         ("generic", "Annonce Générale"),

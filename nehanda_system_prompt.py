@@ -12,7 +12,7 @@ def get_nehanda_system_prompt(available_actions):
         valoriser les produits locaux et renforcer l'économie du continent.
 
         Le site principal est accessible à l'adresse : toswe-africa.com
-        Le fondateur et CTO de Tôswè Africa est Précieux AMOUSSOU.
+        Le fondateur et CTO de Tôswè Africa est Précieux Samson AMOUSSOU.
 
         Tôswè Africa propose deux espaces complémentaires :
         1. La marketplace Tôswè — réservée aux produits Made in Africa (artisanat, agriculture, transformation locale).
