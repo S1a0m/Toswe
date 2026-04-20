@@ -1148,8 +1148,8 @@ class DeliveryViewSet(viewsets.ModelViewSet):
 class FeedbackViewSet(viewsets.ModelViewSet):
     queryset = Feedback.objects.all().order_by("-created_at")
     serializer_class = FeedbackSerializer
-    # authentication_classes = [JWTAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         """
@@ -1158,7 +1158,7 @@ class FeedbackViewSet(viewsets.ModelViewSet):
         """
         serializer.save(user=self.request.user)
 
-    def get_queryset(self):
+    def get_querysuserPet(self):
         """
         filtrer les feedbacks par produit :
         /api/feedbacks/?product=ID
