@@ -4,7 +4,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
 from django.db.models import Avg, Count, Sum
-from products.models import Product, Cart, Order, OrderItem, Delivery, Payment, ProductImage, CartItem, Feedback, ProductVideo, Category, Ad, SellerOffer, Announcement, OfferSubscription
+from products.models import Product, Cart, Order, OrderItem, Delivery, Payment, ProductImage, CartItem, Feedback, ProductVideo, Category, Ad, SellerOffer, Announcement, OfferSubscription, Promotion
 from toswe.utils import send_email
 
 
@@ -102,86 +102,121 @@ class ProductSearchSerializer(serializers.ModelSerializer):
     def get_is_sponsored(self, obj):
         now = timezone.now()
         return obj.ads.filter(ad_type="sponsored", ended_at__gte=now).exists()
- 
+
+
+class ActivePromotionInlineSerializer(serializers.ModelSerializer):
+    """
+    Sérialiseur léger pour la promo active d'un produit.
+    Retourne null si pas de promo en cours.
+    """
+    class Meta:
+        model  = Promotion
+        fields = ['id', 'discount_percent', 'discount_price', 'ended_at']
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    main_image = serializers.SerializerMethodField()
-    total_rating = serializers.SerializerMethodField()
+    """
+    Sérialiseur utilisé par l'endpoint suggestions/.
+    Expose les infos nécessaires pour la ProductCard Flutter,
+    y compris la promotion active si elle existe.
+    """
+    main_image        = serializers.SerializerMethodField()
+    total_rating      = serializers.SerializerMethodField()
     short_description = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()
-    seller_id = serializers.SerializerMethodField()
-    shop_id = serializers.SerializerMethodField()
-    is_sponsored = serializers.SerializerMethodField()  # 🔹 calculé dynamiquement
-
+    status            = serializers.SerializerMethodField()
+    seller_id         = serializers.SerializerMethodField()
+    shop_id           = serializers.SerializerMethodField()
+    is_sponsored      = serializers.SerializerMethodField()
+    promotion         = serializers.SerializerMethodField()  # ← nouveau
+ 
     class Meta:
-        model = Product
+        model  = Product
         fields = [
-            "id",
-            "seller_id",
-            "shop_id",
-            "name",
-            "price",
-            "main_image",
-            "short_description",
-            "total_rating",
-            "status",
-            "is_sponsored",
+            'id',
+            'seller_id',
+            'shop_id',
+            'name',
+            'price',
+            'main_image',
+            'short_description',
+            'total_rating',
+            'status',
+            'is_sponsored',
+            'promotion',   # ← nouveau
         ]
-
+ 
     def get_main_image(self, obj):
-        request = self.context.get("request")  # 🔹 indispensable pour construire l’URL absolue
+        request  = self.context.get('request')
         main_img = obj.images.filter(is_main_image=True).first()
         if main_img and main_img.image:
             return {
-                "id": main_img.id,
-                "image": request.build_absolute_uri(main_img.image.url) if request else main_img.image.url,
-                "is_main_image": main_img.is_main_image,
+                'id':           main_img.id,
+                'image':        request.build_absolute_uri(main_img.image.url)
+                                if request else main_img.image.url,
+                'is_main_image': main_img.is_main_image,
             }
         return None
-
-
+ 
     def get_seller_id(self, obj):
         return obj.seller.user.id
-
-
+ 
     def get_shop_id(self, obj):
         return obj.seller.id
-
+ 
     def get_total_rating(self, obj):
-        stats = obj.feedback_set.aggregate(avg=Avg("rating"), count=Count("id"))
+        stats = obj.feedback_set.aggregate(avg=Avg('rating'), count=Count('id'))
         return {
-            "average": round(stats["avg"], 1) if stats["avg"] else 0,
-            "count": stats["count"],
+            'average': round(stats['avg'], 1) if stats['avg'] else 0,
+            'count':   stats['count'],
         }
-
+ 
     def get_short_description(self, obj):
         max_length = 80
-        return obj.description[:max_length] + "..." if len(obj.description) > max_length else obj.description
-
+        return (
+            obj.description[:max_length] + '...'
+            if len(obj.description) > max_length
+            else obj.description
+        )
+ 
     def get_status(self, obj):
         now = timezone.now()
-
-        # 1. Vérifier s’il a une promo active
+ 
+        # Promo active → badge promo
         promo = obj.promotions.filter(ended_at__gte=now).first()
         if promo:
-            return "promo"
-
-        # 2. Vérifier popularité (ex: nb d’items au panier)
+            return 'promo'
+ 
+        # Popularité (seuil : 10 ajouts au panier)
         cart_count = CartItem.objects.filter(product=obj).count()
-        if cart_count >= 10:  # seuil ajustable
-            return "popular"
-
-        # 3. Produit récent
+        if cart_count >= 10:
+            return 'popular'
+ 
+        # Produit récent (30 derniers jours)
         if obj.created_at >= now - timedelta(days=30):
-            return "new"
-
+            return 'new'
+ 
         return obj.status
-
+ 
     def get_is_sponsored(self, obj):
-        """Un produit est sponsorisé si une pub active existe"""
         now = timezone.now()
-        return obj.ads.filter(ad_type="sponsored", ended_at__gte=now).exists()
+        return obj.ads.filter(
+            ad_type='sponsored', ended_at__gte=now
+        ).exists()
+ 
+    def get_promotion(self, obj):
+        """
+        Retourne la promo active du produit, ou null.
+        Champs retournés :
+          - id
+          - discount_percent  (int ou null)
+          - discount_price    (decimal ou null)
+          - ended_at          (datetime ISO ou null)
+        """
+        now   = timezone.now()
+        promo = obj.promotions.filter(ended_at__gte=now).first()
+        if not promo:
+            return None
+        return ActivePromotionInlineSerializer(promo).data
 
 # serializers.py
 from rest_framework import serializers
@@ -731,6 +766,7 @@ class PaymentSerializer(serializers.ModelSerializer):
 
 
 class ActivePromotionSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Promotion
         fields = ["id", "discount_percent", "discount_price", "ended_at"]

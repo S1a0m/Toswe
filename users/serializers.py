@@ -37,18 +37,30 @@ class BrandSerializer(serializers.ModelSerializer):
 
 
 class SellerListSerializer(serializers.ModelSerializer):
-    total_subscribers = serializers.SerializerMethodField()
     seller_user_id = serializers.SerializerMethodField()
+    total_rating = serializers.SerializerMethodField()
 
     class Meta:
         model = SellerProfile
-        fields = ['id', 'seller_user_id', 'shop_name', 'logo', 'total_subscribers', 'is_verified', 'is_brand']
+        fields = ['id', 'seller_user_id', 'shop_name', 'logo', 'total_rating', 'is_verified', 'is_brand']
+
+    def get_total_rating(self, obj):
+        # Récupérer tous les produits du vendeur
+        products = obj.product_set.all()
+
+        # Agréger la moyenne et le nombre d'avis
+        stats = Feedback.objects.filter(product__in=products).aggregate(
+            avg=Avg("rating"), count=Count("id")
+        )
+
+        return {
+            "average": round(stats["avg"], 1) if stats["avg"] else 0,
+            "count": stats["count"] or 0
+        }
 
     def get_seller_user_id(self, obj):
         return obj.user.id
 
-    def get_total_subscribers(self, obj):
-        return obj.subscribers.count()
 
 
 class ShopHeaderSerializer(serializers.ModelSerializer):

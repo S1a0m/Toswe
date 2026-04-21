@@ -477,6 +477,7 @@ class SellerProfileViewSet(viewsets.ModelViewSet):
     serializer_class = SellerProfileSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
+    pagination_class = None  # désactive la pagination pour les listes de vendeurs
 
     @action(detail=False, methods=["get"])
     def my_stats(self, request):
