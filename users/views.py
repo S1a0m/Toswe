@@ -498,7 +498,7 @@ class SellerProfileViewSet(viewsets.ModelViewSet):
             order__status="delivered",
             product__seller=seller
         ).aggregate(
-            sales_30d=Count("quantity"),
+            sales_30d=Sum("quantity"),
             revenue_30d=Sum(F("quantity") * F("price"))
         )
 

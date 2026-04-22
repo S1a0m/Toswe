@@ -334,3 +334,31 @@ class OfferSubscription(models.Model):
             and self.expires_at is not None
             and self.expires_at > timezone.now()
         )
+    
+
+class WithdrawalRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending',   'En attente'),
+        ('approved',  'Approuvée'),
+        ('rejected',  'Rejetée'),
+        ('paid',      'Payée'),
+    ]
+    PAYMENT_METHODS = [
+        ('mtn_momo',   'MTN MoMo'),
+        ('moov_money', 'Moov Money'),
+    ]
+
+    seller         = models.ForeignKey('users.SellerProfile', on_delete=models.CASCADE, related_name='withdrawals')
+    amount         = models.PositiveIntegerField()
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS)
+    phone_number   = models.CharField(max_length=20)
+    status         = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    created_at     = models.DateTimeField(auto_now_add=True)
+    processed_at   = models.DateTimeField(null=True, blank=True)
+    admin_note     = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Retrait #{self.id} — {self.seller.user.username} — {self.amount} CFA"

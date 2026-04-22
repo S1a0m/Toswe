@@ -425,7 +425,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         child=serializers.FileField(), write_only=True, required=False
     )
     category = serializers.PrimaryKeyRelatedField(
-        queryset=Category.objects.all(), required=False, allow_null=True
+        queryset=Category.objects.all()
     )
 
     class Meta:
@@ -459,18 +459,15 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         if not seller_profile:
             raise serializers.ValidationError("Impossible : utilisateur non vendeur.")
 
-        # Vérification du quota de produits
-        current_count = seller_profile.product_set.count()
-        if seller_profile.is_premium:
-            if current_count >= 500:
-                raise serializers.ValidationError("Limite de 500 produits atteinte pour les vendeurs premium.")
-        else:
-            if current_count >= 20:
-                raise serializers.ValidationError("Limite de 20 produits atteinte pour les vendeurs non premium.")
-
-            # Vérification restriction vidéos
-            if "videos" in attrs and attrs["videos"]:
-                raise serializers.ValidationError("Les vendeurs non premium ne peuvent pas ajouter de vidéos.")
+        # Vérification quota seulement à la création
+        if not self.instance:  # ← self.instance est None à la création, défini à l'update
+            current_count = seller_profile.product_set.count()
+            if seller_profile.is_premium:
+                if current_count >= 500:
+                    raise serializers.ValidationError("Limite de 500 produits atteinte.")
+            else:
+                if current_count >= 20:
+                    raise serializers.ValidationError("Limite de 20 produits atteinte.")
 
         return attrs
 
@@ -498,7 +495,28 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             for f in videos:
                 ProductVideo.objects.create(product=product, video=f)
 
+            print(f"Produit créé : {product.name} (ID: {product.id}), {product.category} avec {len(images)} images et {len(videos)} vidéos.")
+
         return product
+    
+
+    def update(self, instance, validated_data):
+        images = validated_data.pop("images", [])
+        validated_data.pop("videos", [])  # on ignore les vidéos
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if images:
+            instance.images.filter(is_main_image=True).delete()
+            ProductImage.objects.create(
+                product=instance,
+                image=images[0],
+                is_main_image=True,
+            )
+
+        return instance
 
 
 
@@ -689,7 +707,8 @@ class OrderSerializer(serializers.ModelSerializer):
         for seller in sellers:
             notif = Notification.objects.create(
                 user=seller.user,
-                message=f"Nouvelle commande #{order.id} contenant vos produits.",
+                title="Nouvelle commande",
+                message=f"Vous avez reçu une nouvelle commande #{order.id}",
             )
             try:
                 from asgiref.sync import async_to_sync
@@ -712,28 +731,39 @@ class OrderSerializer(serializers.ModelSerializer):
 
 class OrderForSellerSerializer(serializers.ModelSerializer):
     items = serializers.SerializerMethodField()
+    total = serializers.SerializerMethodField()
 
     class Meta:
-        model = Order
+        model  = Order
         fields = [
             "id",
-            "phone_number",
-            "contact_method",
-            "address",
+            "city",            # ← ville de livraison (info logistique utile)
+            "delivery_mode",   # ← domicile ou relais
             "status",
             "created_at",
+            "total",
             "items",
+            # phone_number, contact_method, address_description → RETIRÉS
         ]
 
     def get_items(self, obj):
-        """Retourne seulement les items appartenant au vendeur connecté"""
-        request = self.context.get("request")
+        request        = self.context.get("request")
         seller_profile = getattr(request.user, "seller_profile", None)
         if not seller_profile:
             return []
-
         seller_items = obj.items.filter(product__seller=seller_profile)
-        return OrderItemSerializer(seller_items, many=True).data
+        return OrderItemSerializer(
+            seller_items, many=True, context={"request": request}
+        ).data
+
+    def get_total(self, obj):
+        request        = self.context.get("request")
+        seller_profile = getattr(request.user, "seller_profile", None)
+        if not seller_profile:
+            return 0
+        # Total uniquement sur les items du vendeur
+        seller_items = obj.items.filter(product__seller=seller_profile)
+        return sum(item.price * item.quantity for item in seller_items)
 
 # === LIVRAISON ===
 
@@ -853,10 +883,7 @@ class SellerOfferSerializer(serializers.ModelSerializer):
  
 class SubscribeOfferSerializer(serializers.Serializer):
     offer_id       = serializers.IntegerField()
-    payment_method = serializers.ChoiceField(
-        choices=["mtn_momo", "moov_money"]
-    )
-    phone_number   = serializers.CharField(max_length=20)
+    transaction_id = serializers.CharField(max_length=100)
  
  
 class OfferSubscriptionSerializer(serializers.ModelSerializer):

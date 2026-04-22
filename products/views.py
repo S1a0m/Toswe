@@ -26,7 +26,7 @@ from toswe.permissions import IsUserAuthenticated
 
 from decimal import Decimal, ROUND_DOWN
 
-from toswe.utils import track_user_interaction
+from toswe.utils import track_user_interaction, KKiaPayGateway
 from users.authentication import JWTAuthentication
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -91,7 +91,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         products = Product.objects.filter(
             mode="published",
-            is_online=True,
+            #is_online=True,
         )
 
         if category_id and str(category_id).isdigit() and int(category_id) != 0:
@@ -499,10 +499,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     # (utilise create/update natifs du ModelViewSet)
     # Override perform_create pour lier au vendeur connecté
     def perform_create(self, serializer):
-        user = self.request.user
-        if not hasattr(user, "seller_profile"):
-            raise PermissionError("Vous n'êtes pas un vendeur.")
-        serializer.save(seller=user.seller_profile)
+        print("perform_create appelé avec data:", serializer.validated_data)
+        serializer.save()
  
     # ── Toggle publication ────────────────────────────────────
     @action(detail=True, methods=["post"], url_path="toggle_mode")
@@ -723,12 +721,11 @@ class OrderViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
 
     def get_authenticators(self):
-        """
-        Désactive l'authentification JWT uniquement pour la création 
-        si tu veux éviter l'erreur de token expiré.
-        """
-        if self.request and self.request.method == 'POST':
-            return []
+        try:
+            if self.action == 'create':
+                return []
+        except AttributeError:
+            pass
         return super().get_authenticators()
 
     def get_serializer_class(self):
@@ -768,6 +765,16 @@ class OrderViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_200_OK,
             )
+        
+        if request.user.is_authenticated:
+            from users.models import Notification
+            Notification.objects.create(
+                user    = request.user,
+                title   = "Commande confirmée",
+                message = f"Votre commande #{order.id} a été enregistrée ✅",
+            )
+
+            print(f"Nouvelle commande #{order.id} créée pour l'utilisateur {request.user.username}")
  
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -886,8 +893,35 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def as_seller(self, request):
+        user = request.user
+        if not user.is_authenticated or not hasattr(user, "seller_profile"):
+            return Response({"detail": "Accès réservé aux vendeurs."}, status=403)
+
+        seller_profile = user.seller_profile
+
+        qs = Order.objects.filter(
+            items__product__seller=seller_profile
+        ).prefetch_related(
+            Prefetch(
+                "items",
+                queryset=OrderItem.objects.filter(
+                    product__seller=seller_profile
+                ).select_related("product")
+            )
+        ).distinct().order_by("-created_at")
+
+        # ← Force OrderForSellerSerializer, pas OrderSerializer
+        serializer = OrderForSellerSerializer(
+            qs, many=True, context={"request": request}
+        )
+        print(f"Données retournées pour as_seller (vendeur {user.username}):", serializer.data)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"])
+    def my_orders_count(self, request):
         """
-        Liste toutes les commandes contenant au moins un produit du vendeur connecté.
+        Retourne le nombre total de commandes contenant au moins un produit du vendeur connecté.
+        Utile pour afficher un badge de notification dans le dashboard vendeur Flutter.
         """
         user = request.user
         if not user.is_authenticated or not hasattr(user, "seller_profile"):
@@ -897,14 +931,13 @@ class OrderViewSet(viewsets.ModelViewSet):
         if not seller_profile:
             return Response({"detail": "Pas de profil vendeur trouvé."}, status=404)
 
-        qs = Order.objects.filter(
+        count = Order.objects.filter(
             items__product__seller=seller_profile
-        ).prefetch_related(
-            Prefetch("items", queryset=OrderItem.objects.select_related("product"))
-        ).distinct()
+        ).distinct().count()
 
-        serializer = self.get_serializer(qs, many=True)
-        return Response(serializer.data)
+        print(f"Le vendeur {user.username} a {count} commande(s) au total.")
+
+        return Response({"orders_count": count})
 
     @action(detail=False, methods=["get"])
     def my_balance(self, request):
@@ -1024,7 +1057,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             )
 
         # Annuler
-        order.status = "cancelled"
+        order.status = "canceled"
         order.save()
         Notification.objects.create(
             user=request.user,
@@ -1037,6 +1070,92 @@ class OrderViewSet(viewsets.ModelViewSet):
             {"detail": "Commande annulée avec succès."},
             status=status.HTTP_200_OK
         )
+    
+
+    @action(detail=False, methods=["post"])
+    def request_withdrawal(self, request):
+        from products.models import WithdrawalRequest
+        from decimal import Decimal, ROUND_DOWN
+
+        user = request.user
+        if not hasattr(user, "seller_profile"):
+            return Response({"detail": "Pas vendeur."}, status=403)
+
+        seller = user.seller_profile
+
+        # Recalcule le solde réel
+        commission_rate = Decimal("0.10")
+        active_sub = (
+            OfferSubscription.objects
+            .filter(seller=seller, status="active", expires_at__gt=timezone.now())
+            .select_related("offer")
+            .first()
+        )
+        if active_sub:
+            commission_rate = active_sub.offer.commission_percent / Decimal("100")
+
+        items = OrderItem.objects.filter(
+            product__seller=seller,
+            order__status="delivered",
+            seller_paid=False,
+        )
+
+        total_seller_revenue = Decimal("0")
+        for item in items:
+            commission_per_unit = (item.price * commission_rate).quantize(
+                Decimal("1"), rounding=ROUND_DOWN
+            )
+            total_seller_revenue += (item.price - commission_per_unit) * item.quantity
+
+        available = int(total_seller_revenue)
+
+        if available <= 0:
+            return Response({"detail": "Solde insuffisant."}, status=400)
+
+        payment_method = request.data.get("payment_method")
+        phone_number   = request.data.get("phone_number", "").strip()
+
+        if payment_method not in ("mtn_momo", "moov_money"):
+            return Response({"detail": "Mode de paiement invalide."}, status=400)
+        if len(phone_number) < 8:
+            return Response({"detail": "Numéro de téléphone invalide."}, status=400)
+
+        # Vérifie qu'il n'y a pas déjà une demande en attente
+        pending = WithdrawalRequest.objects.filter(
+            seller=seller, status="pending"
+        ).exists()
+        if pending:
+            return Response(
+                {"detail": "Vous avez déjà une demande en attente."},
+                status=400
+            )
+
+        withdrawal = WithdrawalRequest.objects.create(
+            seller=seller,
+            amount=available,
+            payment_method=payment_method,
+            phone_number=phone_number,
+        )
+
+        # Marque les items comme payés
+        items.update(seller_paid=True)
+
+        # Notification in-app
+        from users.models import Notification
+        Notification.objects.create(
+            user=user,
+            title="Demande de retrait envoyée",
+            message=f"Votre demande de retrait de {available} CFA a bien été enregistrée. Traitement sous 24–48h."
+        )
+
+        return Response({
+            "id":             withdrawal.id,
+            "amount":         withdrawal.amount,
+            "payment_method": withdrawal.payment_method,
+            "phone_number":   withdrawal.phone_number,
+            "status":         withdrawal.status,
+            "created_at":     withdrawal.created_at,
+        }, status=201)
 
 
 class SellerOfferViewSet(viewsets.ReadOnlyModelViewSet):
@@ -1051,86 +1170,61 @@ class SellerOfferViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
  
     # ── Souscrire à une offre ─────────────────────────────────
-    @action(
-        detail=False, methods=["post"],
-        permission_classes=[IsAuthenticated],
-        url_path="subscribe",
-    )
+    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated], url_path="subscribe")
+    @transaction.atomic
     def subscribe(self, request):
         serializer = SubscribeOfferSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
- 
+
         user = request.user
         seller = getattr(user, "seller_profile", None)
         if not seller:
-            return Response(
-                {"detail": "Vous n'êtes pas un vendeur."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
- 
-        # Récupère l'offre
+            return Response({"detail": "Vous n'êtes pas un vendeur."}, status=403)
+
         try:
-            offer = SellerOffer.objects.get(
-                id=data["offer_id"], is_active=True
-            )
+            offer = SellerOffer.objects.get(id=data["offer_id"], is_active=True)
         except SellerOffer.DoesNotExist:
+            return Response({"detail": "Offre introuvable."}, status=404)
+
+        # ── Vérification KKiaPay ─────────────────────────────────
+        transaction_id = data["transaction_id"]
+        verified = KKiaPayGateway.verify(transaction_id, offer.price)
+        if not verified:
             return Response(
-                {"detail": "Offre introuvable ou inactive."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
- 
-        # ── Paiement ────────────────────────────────────────
-        payment_method = data["payment_method"]
-        phone = data["phone_number"]
- 
-        if payment_method == "moov_money":
-            success = PaymentGateway.pay_with_moov(phone, offer.price)
-        else:
-            success = PaymentGateway.pay_with_mtn(phone, offer.price)
- 
-        if not success:
-            return Response(
-                {"detail": "Échec du paiement. Vérifie ton solde et réessaie."},
+                {"detail": "Transaction KKiaPay invalide ou montant incorrect."},
                 status=status.HTTP_402_PAYMENT_REQUIRED,
             )
- 
-        # ── Désactive l'abonnement actif précédent ───────────
+
+        # ── Désactive l'abonnement actif précédent ───────────────
         OfferSubscription.objects.filter(
             seller=seller, status="active"
         ).update(status="cancelled")
- 
-        # ── Crée le nouvel abonnement ────────────────────────
+
+        # ── Crée le nouvel abonnement ────────────────────────────
         now = timezone.now()
         sub = OfferSubscription.objects.create(
             seller=seller,
             offer=offer,
             status="active",
-            payment_method=payment_method,
-            phone_number=phone,
+            payment_method="kkiapay",
+            phone_number="",
             amount_paid=offer.price,
             starts_at=now,
             expires_at=now + timedelta(days=offer.duration_days),
         )
- 
-        # ── Notification in-app ──────────────────────────────
+
         Notification.objects.create(
             user=user,
             title=f"Offre {offer.name} activée 🎉",
             message=(
-                f"Votre offre {offer.name} est maintenant active jusqu'au "
-                f"{sub.expires_at.strftime('%d/%m/%Y')}. "
-                f"Profitez de {offer.commission_percent}% de commission seulement !"
+                f"Votre offre {offer.name} est active jusqu'au "
+                f"{sub.expires_at.strftime('%d/%m/%Y')}."
             ),
         )
- 
-        # ── Email de confirmation ────────────────────────────
         _send_offer_confirmation_email(user, offer, sub)
- 
-        return Response(
-            OfferSubscriptionSerializer(sub).data,
-            status=status.HTTP_201_CREATED,
-        )
+
+        return Response(OfferSubscriptionSerializer(sub).data, status=201)
  
     # ── Abonnement courant du vendeur ─────────────────────────
     @action(

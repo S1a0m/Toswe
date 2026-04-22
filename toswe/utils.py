@@ -326,3 +326,43 @@ def is_eligible_to_be_seller(user):
         user.phone_number and
         user.address
     )
+
+
+import requests
+
+class KKiaPayGateway:
+    # Rappel : En prod, utilise une variable d'environnement
+    SECRET_KEY = 'tpk_90193740a46111f097c5fd44e08ddf8c'
+    # L'URL de base sans le slash final pour la concaténation
+    VERIFY_URL = 'https://api-sandbox.kkiapay.me/api/v1/transactions/status'
+
+    @classmethod
+    def verify(cls, transaction_id: str, expected_amount: int) -> bool:
+        try:
+            # Construction de l'URL correcte : /status/{transaction_id}
+            url = f"{cls.VERIFY_URL}/{transaction_id}"
+            
+            res = requests.get(
+                url,
+                headers={
+                    'Accept': 'application/json',
+                    'x-api-key': cls.SECRET_KEY
+                },
+                timeout=10,
+            )
+            
+            if res.status_code != 200:
+                return False
+                
+            data = res.json()
+            
+            # Vérification rigoureuse du statut et du montant
+            is_success = data.get('status') in ('SUCCESS', 'PAYMENT_SUCCESS')
+            # KKiaPay renvoie parfois le montant sous forme de String ou Int
+            actual_amount = int(data.get('amount', 0)) 
+            
+            return is_success and actual_amount == expected_amount
+            
+        except Exception as e:
+            # En développement, tu peux logger l'erreur : print(f"Erreur vérification : {e}")
+            return False
