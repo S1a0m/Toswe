@@ -1,7 +1,7 @@
 from django.core import signing
 from django.db.models import Q, Count, Case, When, Value, BooleanField, IntegerField, Prefetch
 from rest_framework import viewsets, status
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -9,6 +9,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticate
 from rest_framework.response import Response
 from rest_framework.decorators import action, permission_classes
 from django.utils.timezone import now
+
+import requests
+from django.shortcuts import get_object_or_404
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 
 from users.models import CustomUser, UserInteractionEvent, Notification, SellerProfile
 from products.models import Product, Cart, Order, Delivery, Payment, CartItem, Ad, Promotion, OrderItem, Announcement, OfferSubscription
@@ -708,13 +714,22 @@ class CartViewSet(viewsets.ModelViewSet):
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [JWTAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
         if self.action == "create":
             return [AllowAny()]
         return [IsAuthenticated()]
+
+    def get_authenticators(self):
+        """
+        Désactive l'authentification JWT uniquement pour la création 
+        si tu veux éviter l'erreur de token expiré.
+        """
+        if self.request and self.request.method == 'POST':
+            return []
+        return super().get_authenticators()
 
     def get_serializer_class(self):
         if self.action in ["list", "as_seller"]:
@@ -733,20 +748,95 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Order.objects.none()
     
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
+        if not serializer.is_valid():
+            print("ERREURS SERIALIZER:", serializer.errors)  # ← ajoute ça
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        print("DATA REÇUE:", request.data)
         serializer.is_valid(raise_exception=True)
-        order = serializer.save()  # ça crée l'order peu importe
-
+        order = serializer.save()
+ 
+        # ── Non connecté → renvoie quand même l'id pour le suivi ──
         if not request.user.is_authenticated:
-            # 🔹 Retourne juste un message, sans les détails de l'order
             return Response(
-                {"message": "Commande enregistrée. Connectez-vous pour voir vos commandes."},
-                status=status.HTTP_200_OK
+                {
+                    "id":      order.id,          # ← id retourné pour Flutter
+                    "status":  "pending",
+                    "message": "Commande enregistrée. Connectez-vous pour voir vos commandes.",
+                },
+                status=status.HTTP_200_OK,
             )
-
-        # 🔹 Sinon (authentifié) → comportement normal
+ 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+ 
+ 
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[AllowAny],
+        authentication_classes=[],
+        url_path="mark_delivered",
+    )
+    def mark_delivered(self, request, pk=None):
+        """
+        Vérifie le paiement KKiaPay via API REST et marque la commande comme livrée.
+        """
+        order = get_object_or_404(Order, pk=pk)
+
+        if order.status == "delivered":
+            return Response({"detail": "Commande déjà livrée."}, status=400)
+
+        transaction_id = request.data.get("transaction_id")
+        if not transaction_id:
+            return Response({"detail": "transaction_id manquant."}, status=400)
+
+        # ── Configuration Kkiapay ───────────────────────────────
+        # Note : Utilise de préférence tes clés dans ton fichier settings.py
+        PRIVATE_KEY = "tpk_90193740a46111f097c5fd44e08ddf8c"
+        VERIFY_URL = f"https://api.kkiapay.me/api/v1/transactions/status/{transaction_id}"
+
+        # ── Vérification KKiaPay via API REST ───────────────────
+        try:
+            response = requests.get(
+                VERIFY_URL,
+                headers={
+                    "Accept": "application/json",
+                    "X-API-KEY": PRIVATE_KEY
+                },
+                timeout=10 # Toujours mettre un timeout pour ne pas bloquer le serveur
+            )
+            
+            if response.status_code != 200:
+                return Response({"detail": "Impossible de contacter KKiaPay."}, status=400)
+
+            txn = response.json()
+            
+            # La structure de réponse API est : {"status": "SUCCESS", "amount": 1000, ...}
+            if txn.get("status") != "SUCCESS":
+                return Response({"detail": "Paiement non confirmé ou échoué."}, status=400)
+                
+        except requests.exceptions.RequestException as e:
+            return Response({"detail": f"Erreur réseau lors de la vérification : {e}"}, status=400)
+        except Exception as e:
+            return Response({"detail": f"Erreur inattendue : {e}"}, status=400)
+
+        # ── Mise à jour de la commande ──────────────────────────
+        order.status = "delivered"
+        order.save()
+
+        if order.user:
+            from users.models import Notification
+            Notification.objects.create(
+                user    = order.user,
+                title   = "Paiement confirmé",
+                message = f"La commande #{order.id} a été payée et confirmée ✅",
+            )
+
+        return Response({"detail": "Commande validée.", "order_id": order.id})
+
 
     def retrieve(self, request, *args, **kwargs):
         """

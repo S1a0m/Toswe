@@ -119,32 +119,43 @@ class CartItem(models.Model):
 
 class Order(models.Model):
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
+        ('pending',   'Pending'),
         ('confirmed', 'Confirmed'),
-        ('shipped', 'Shipped'),
+        ('shipped',   'Shipped'),
         ('delivered', 'Delivered'),
-        ('cancelled', 'Cancelled')
+        ('cancelled', 'Cancelled'),
     ]
-
+ 
+    DELIVERY_MODE_CHOICES = [
+        ('home',  'Livraison à domicile'),
+        ('relay', 'Point relais'),
+    ]
+ 
     user = models.ForeignKey(
         'users.CustomUser',
         on_delete=models.SET_NULL,
-        null=True, blank=True
+        null=True, blank=True,
     )
-    phone_number = models.CharField(max_length=20, default='')
+    phone_number   = models.CharField(max_length=20, default='')
     contact_method = models.CharField(
         max_length=20,
         choices=[("whatsapp", "WhatsApp"), ("call", "Appel")],
-        default="call"
+        default="call",
     )
-    address = models.TextField(default='')
-
+    city                = models.CharField(max_length=100, blank=True, default='')
+    address_description = models.TextField(blank=True, null=True)
+    delivery_mode       = models.CharField(         # ← max_length + choices ajoutés
+        max_length=10,
+        choices=DELIVERY_MODE_CHOICES,
+        default='home',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-    pdf = models.FileField(upload_to="orders/pdf/", null=True, blank=True)
-
+    status     = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    pdf        = models.FileField(upload_to="orders/pdf/", null=True, blank=True)
+ 
     def __str__(self):
         return f"Order #{self.id} - {self.phone_number}"
+
 
 
 class OrderItem(models.Model):

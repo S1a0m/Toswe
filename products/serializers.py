@@ -621,6 +621,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
         fields = ["id", "product", "product_id", "quantity", "price", "main_image"]
+        read_only_fields = ["price"] 
 
     def get_main_image(self, obj):
         main_img = obj.product.images.filter(is_main_image=True).first()
@@ -641,63 +642,73 @@ class OrderListSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
     total = serializers.SerializerMethodField()
-
+ 
     class Meta:
         model = Order
         fields = [
-            "id", "user", "phone_number", "contact_method", "address",
-            "status", "created_at", "total", "items" #, "pdf"
+            "id", "user", "phone_number", "contact_method",
+            "city", "address_description", "delivery_mode",   # ← delivery_mode ajouté
+            "status", "created_at", "total", "items",
         ]
         read_only_fields = ["id", "user", "status", "created_at"]
-
+ 
     def get_total(self, obj):
         return sum(item.price * item.quantity for item in obj.items.all())
-
+ 
     def create(self, validated_data):
         items_data = validated_data.pop("items", [])
-        user = self.context["request"].user if self.context["request"].user.is_authenticated else None
-
+        user = (
+            self.context["request"].user
+            if self.context["request"].user.is_authenticated
+            else None
+        )
         order = Order.objects.create(user=user, **validated_data)
-
+ 
         for item in items_data:
             product = item["product"]
             OrderItem.objects.create(
                 order=order,
                 product=product,
                 quantity=item["quantity"],
-                price=product.price
+                price=product.price,
             )
-
-        # Génération du PDF
+ 
+        # Génération PDF
         from toswe.utils import generate_order_pdf
+        print(f"Génération du PDF pour la commande #{order.id}...")
         pdf_content = generate_order_pdf(order)
         order.pdf.save(f"order_{order.id}.pdf", pdf_content)
         order.save()
-
-        # 🔔 Envoi des notifications ICI (après ajout des items)
+ 
+        # Notifications vendeurs
         from users.models import Notification, SellerProfile
-        seller_ids = list(order.items.values_list("product__seller_id", flat=True).distinct())
+        seller_ids = list(
+            order.items.values_list("product__seller_id", flat=True).distinct()
+        )
         sellers = SellerProfile.objects.filter(id__in=seller_ids)
-
         for seller in sellers:
             notif = Notification.objects.create(
                 user=seller.user,
-                message=f"Nouvelle commande contenant vos produits (commande #{order.id})."
+                message=f"Nouvelle commande #{order.id} contenant vos produits.",
             )
-            from asgiref.sync import async_to_sync
-            from channels.layers import get_channel_layer
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                f"user_{seller.user.id}",
-                {
-                    "type": "send_notification",
-                    "message": notif.message,
-                    "timestamp": str(notif.created_at),
-                }
-            )
-        send_email("Commande", "Nouvelle commande Précieux", "remveille@gmail.com")
-
+            try:
+                from asgiref.sync import async_to_sync
+                from channels.layers import get_channel_layer
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{seller.user.id}",
+                    {
+                        "type": "send_notification",
+                        "message": notif.message,
+                        "timestamp": str(notif.created_at),
+                    },
+                )
+            except Exception:
+                pass  # WebSocket optionnel
+ 
+        send_email("Commande", f"Nouvelle commande #{order.id}", "remveille@gmail.com")
         return order
+
 
 class OrderForSellerSerializer(serializers.ModelSerializer):
     items = serializers.SerializerMethodField()
