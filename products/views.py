@@ -133,7 +133,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         # Si une catégorie est spécifiée et vide → on renvoie [] proprement
         if not products.exists() and not category_id:
             products = Product.objects.filter(
-                mode="published", is_online=True
+                mode="published" #, is_online=True
             ).order_by("-created_at")
 
         page = self.paginate_queryset(products)
@@ -374,6 +374,8 @@ class ProductViewSet(viewsets.ModelViewSet):
         """
         from django.db.models import Avg, Count, OuterRef, Subquery, FloatField
         from django.db.models.functions import Coalesce
+
+        self.pagination_class = None
     
         query     = request.query_params.get("q", "").strip()
         sort      = request.query_params.get("sort", "new")
@@ -388,10 +390,13 @@ class ProductViewSet(viewsets.ModelViewSet):
     
         products = (
             Product.objects
-            .filter(name__icontains=query, mode="published", is_online=True)
+            .filter(name__icontains=query, mode="published" #, is_online=True
+                    )
             .select_related("seller__user")
             .prefetch_related("images", "promotions", "ads")
         )
+
+        print(f"Produits trouvés pour la recherche '{query}': {products.count()}", "LISTE DES PRODUITS:", list(products.values("id", "name")))
     
         # ── Filtres optionnels ────────────────────────────────────
         if max_price:
@@ -771,7 +776,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             Notification.objects.create(
                 user    = request.user,
                 title   = "Commande confirmée",
-                message = f"Votre commande #{order.id} a été enregistrée ✅",
+                message = f"Votre commande #{order.id} a été enregistrée. Merci pour votre achat ! 🎉",
             )
 
             print(f"Nouvelle commande #{order.id} créée pour l'utilisateur {request.user.username}")

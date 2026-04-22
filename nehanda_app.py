@@ -43,6 +43,9 @@ from sqlalchemy.orm import sessionmaker, declarative_base, relationship, Session
 
 from nehanda_system_prompt import get_nehanda_system_prompt
 
+from dotenv import load_dotenv
+import os
+
 # ── Logging ───────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("nehanda")
@@ -55,8 +58,10 @@ django.setup()
 from django.conf import settings as django_settings
 from users.models import CustomUser
 
+load_dotenv()
+
 # ── Gemini ────────────────────────────────────────────────────
-_gemini_key = "AIzaSyCCouzM4pu3U36HUOC760_7cVXtxs4u5j8"    # f"os.getenv({"GEMINI_API_KEY"})"
+_gemini_key = os.getenv("GEMINI_API_KEY")
 if not _gemini_key:
     raise RuntimeError("GEMINI_API_KEY manquante.")
 gemini_client = genai.Client(api_key=_gemini_key)
@@ -169,13 +174,37 @@ class AIDecision(BaseModel):
     parameters: dict[str, Any] = {}
     response:   str
 
+
+BASE_URL = "http://192.168.1.84:8000"
+
+def _full_image_url(path: str | None) -> str | None:
+    if not path:
+        return None
+    # Normalise les URLs localhost vers l'IP réseau
+    if "127.0.0.1" in path or "localhost" in path:
+        from urllib.parse import urlparse
+        parsed = urlparse(path)
+        path = path.replace(f"{parsed.scheme}://{parsed.netloc}", BASE_URL)
+        return path
+    if path.startswith("http"):
+        return path
+    clean = path.lstrip("/")
+    if not clean.startswith("media/"):
+        clean = f"media/{clean}"
+    return f"{BASE_URL}/{clean}"
+
 # ═════════════════════════════════════════════════════════════
 # Helper : dict produit Django → ProductCard
 # ═════════════════════════════════════════════════════════════
 
 def _build_product_card(p: dict) -> ProductCard:
     main_img  = p.get("main_image")
-    image_url = main_img.get("image") if isinstance(main_img, dict) else main_img
+    print("DEBUG main_image:", main_img)
+    if isinstance(main_img, dict):
+        raw_url = main_img.get("image")
+    else:
+        raw_url = main_img  # string directe ou None
+    image_url = _full_image_url(raw_url)
     rating    = p.get("total_rating") or {}
     promotion = p.get("promotion")    or {}
     shop_name = (

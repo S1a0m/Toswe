@@ -12,10 +12,6 @@ def order_created_notification(sender, instance, created, **kwargs):
     if created:
         # Si l'utilisateur est connecté → notification pour lui
         if instance.user:
-            notif = Notification.objects.create(
-                user=instance.user,
-                message="Votre commande a été enregistrée."
-            )
 
             # Envoi en temps réel au client connecté
             channel_layer = get_channel_layer()
