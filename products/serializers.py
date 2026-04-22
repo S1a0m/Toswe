@@ -47,11 +47,15 @@ class ProductSearchSerializer(serializers.ModelSerializer):
     promotion         = serializers.SerializerMethodField()
     is_sponsored      = serializers.SerializerMethodField()
     in_stock          = serializers.BooleanField(read_only=True)
+
+    description       = serializers.CharField(read_only=True)  # ← description complète
+    category_name     = serializers.CharField(source="category.name", read_only=True, default=None)  # ← catégorie
  
     class Meta:
         model = Product
         fields = [
-            "id", "name", "price", "main_image", "shop_name",
+            "id", "name", "price", "main_image", "shop_name","description",
+            "category_name", 
             "total_rating", "short_description", "promotion",
             "is_sponsored", "in_stock",
         ]

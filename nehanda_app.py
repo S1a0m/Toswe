@@ -120,6 +120,8 @@ class ProductCard(BaseModel):
     has_active_ad:     bool            = False
     shop_name:         Optional[str]   = None
     short_description: Optional[str]   = None
+    description:       Optional[str]   = None        # ← nouveau
+    category_name:     Optional[str]   = None   # ← nouveau
 
 
 class ChatIn(BaseModel):
@@ -172,12 +174,10 @@ class AIDecision(BaseModel):
 # ═════════════════════════════════════════════════════════════
 
 def _build_product_card(p: dict) -> ProductCard:
-    main_img = p.get("main_image")
+    main_img  = p.get("main_image")
     image_url = main_img.get("image") if isinstance(main_img, dict) else main_img
-
     rating    = p.get("total_rating") or {}
     promotion = p.get("promotion")    or {}
-
     shop_name = (
         p.get("shop_name")
         or (p.get("seller") or {}).get("shop_name")
@@ -200,6 +200,8 @@ def _build_product_card(p: dict) -> ProductCard:
         has_active_ad     = p.get("is_sponsored", False),
         shop_name         = shop_name,
         short_description = p.get("short_description"),
+        description       = p.get("description"),        # ← nouveau
+        category_name     = p.get("category_name"),      # ← nouveau
     )
 
 # ═════════════════════════════════════════════════════════════
@@ -1127,6 +1129,15 @@ async def tool_get_product_status_closing(
         rating_sig = _rating_signal(card)
         if rating_sig:
             parts.append(rating_sig)
+
+
+        # Description complète
+        if card.description:
+            parts.append(f"\n📝 **Description** : {card.description}")
+
+        # Catégorie
+        if card.category_name:
+            parts.append(f"🏷️ **Catégorie** : {card.category_name}")
 
         if card.has_active_ad:
             parts.append("📢 Produit mis en avant — très demandé en ce moment.")
