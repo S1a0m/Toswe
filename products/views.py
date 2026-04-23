@@ -94,6 +94,10 @@ class ProductViewSet(viewsets.ModelViewSet):
             #is_online=True,
         )
 
+        africa_brand = request.query_params.get("africa_brand")
+        if africa_brand == "true":
+            products = products.filter(seller__is_brand=True)
+
         if category_id and str(category_id).isdigit() and int(category_id) != 0:
             products = products.filter(category__id=int(category_id))
 

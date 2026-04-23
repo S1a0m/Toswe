@@ -11,7 +11,7 @@ from django.conf.urls.static import static
 # )
 
 from products.views import ProductViewSet, CartViewSet, OrderViewSet, DeliveryViewSet, PaymentViewSet, FeedbackViewSet, CategoryViewSet, AdViewSet, PromotionViewSet, SellerOfferViewSet, AnnouncementViewSet
-from users.views import UserViewSet, NotificationViewSet, RefreshTokenView, SellerProfileViewSet
+from users.views import UserViewSet, NotificationViewSet, RefreshTokenView, SellerProfileViewSet, VendorViewSet
 
 router = routers.SimpleRouter()
 
@@ -32,6 +32,8 @@ router.register(r'seller-offers', SellerOfferViewSet, basename='seller-offers')
 router.register(r'announcement', AnnouncementViewSet, basename='announcement')
 router.register(r"ad", AdViewSet, basename="ad")
 router.register(r'payment', PaymentViewSet, basename='payment')
+
+router.register(r'vendors', VendorViewSet, basename='vendors')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

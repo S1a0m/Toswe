@@ -1,7 +1,7 @@
-from django.db.models import Sum, F, When, Case, IntegerField
+from django.db.models import Sum, F, When, Case, IntegerField, Prefetch
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework import status
+from rest_framework import status, viewsets, pagination
 import requests
 from django.db import models
 from rest_framework.views import APIView
@@ -712,6 +712,39 @@ class SellerProfileViewSet(viewsets.ModelViewSet):
         serializer = BrandSerializer(sellers, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+class VendorPagination(pagination.PageNumberPagination):
+    page_size = 5  # Nombre de vendeurs par page
+    page_size_query_param = 'page_size'
+    max_page_size = 50
+
+class VendorViewSet(viewsets.ModelViewSet):
+    """
+    Affiche uniquement les vendeurs qui sont des marques (is_brand=True).
+    Supporte la pagination et optimise la récupération des images produits.
+    """
+    serializer_class = VendorSerializer
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    pagination_class = VendorPagination
+    
+    # On limite les actions car tu ne veux que l'affichage (GET)
+    http_method_names = ['get']
+
+    def get_queryset(self):
+        # 1. On filtre uniquement les marques
+        # 2. On utilise prefetch_related pour éviter le problème N+1 sur les images
+        #    en récupérant d'un coup les images principales des produits.
+        return SellerProfile.objects.filter(
+            is_brand=True
+        ).prefetch_related(
+            Prefetch(
+                'product_set',
+                queryset=Product.objects.filter(mode="published"),
+                to_attr='published_products'
+            ),
+            'product_set__images'
+        ).order_by('-rating', 'shop_name')
 
 class DelivererProfileViewSet(viewsets.ModelViewSet):
     queryset = DelivererProfile.objects.all()

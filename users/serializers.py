@@ -234,6 +234,49 @@ class SellerProfileSerializer(serializers.ModelSerializer):
         if stats:
             return SellerStatisticsSerializer(stats, context=self.context).data
         return None
+    
+
+class VendorSerializer(serializers.ModelSerializer):
+    total_ratings = serializers.SerializerMethodField()
+    products_count = serializers.SerializerMethodField()
+    products_preview = serializers.SerializerMethodField()
+    class Meta:
+        model = SellerProfile
+        fields = ['id', 'shop_name', 'logo', 'about', 'is_brand', 'total_ratings', 'products_count', 'products_preview']
+
+    def get_total_ratings(self, obj):
+        products = obj.product_set.all()
+        stats = Feedback.objects.filter(product__in=products).aggregate(
+            avg=Avg("rating"), count=Count("id")
+        )
+        return {
+            "average": round(stats["avg"], 1) if stats["avg"] else 0,
+            "count": stats["count"] or 0
+        }
+    
+    def get_products_count(self, obj):
+        return Product.objects.filter(seller=obj).count()
+    
+    def get_products_preview(self, obj):
+        # 1. On récupère les 3 premiers produits publiés du vendeur
+        products = Product.objects.filter(seller=obj, mode="published")[:3]
+        request = self.context.get("request")
+        preview_urls = []
+
+        for product in products:
+            # 2. Pour chaque produit, on cherche l'image marquée 'is_main_image'
+            main_img = product.images.filter(is_main_image=True).first()
+            
+            # 3. Si pas d'image principale, on prend la toute première disponible
+            if not main_img:
+                main_img = product.images.first()
+
+            # 4. On construit l'URL complète
+            if main_img and main_img.image:
+                url = request.build_absolute_uri(main_img.image.url)
+                preview_urls.append(url)
+
+        return preview_urls
 
 
 class DelivererProfileSerializer(serializers.ModelSerializer):
