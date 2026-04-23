@@ -13,6 +13,7 @@ import logging
 import httpx
 
 from fastapi import FastAPI, Request, Response, HTTPException
+from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
@@ -26,8 +27,8 @@ logger = logging.getLogger("messenger")
 # MESSENGER_PAGE_TOKEN     → token de la Page Facebook (depuis Meta for Developers)
 # NEHANDA_API_URL          → URL de ton API Nehanda (ex: http://localhost:8001)
 
-VERIFY_TOKEN    = os.getenv("MESSENGER_VERIFY_TOKEN", "nehanda_toswe_secret")
-PAGE_TOKEN      = os.getenv("MESSENGER_PAGE_TOKEN", "")
+VERIFY_TOKEN    = os.getenv("MESSENGER_VERIFY_TOKEN", "Nehanda_Secret_2026")
+PAGE_TOKEN = os.getenv("MESSENGER_PAGE_TOKEN", "").strip().split('#')[0].strip()
 NEHANDA_API_URL = os.getenv("NEHANDA_API_URL", "http://127.0.0.1:8001")
 
 if not PAGE_TOKEN:
@@ -291,23 +292,23 @@ async def handle_postback(sender_id: str, postback: dict) -> None:
 # ═════════════════════════════════════════════════════════════
 
 @app.get("/webhook")
-async def verify_webhook(request: Request) -> Response:
-    """
-    Vérification du webhook par Meta.
-    Meta envoie un GET avec hub.verify_token et hub.challenge.
-    Si le token correspond, on renvoie hub.challenge.
-    """
-    params = dict(request.query_params)
-    mode      = params.get("hub.mode")
-    token     = params.get("hub.verify_token")
-    challenge = params.get("hub.challenge")
+async def verify_webhook(request: Request):
+    # On récupère les paramètres peu importe le format (point ou underscore)
+    mode = request.query_params.get("hub.mode") or request.query_params.get("hub_mode")
+    token = request.query_params.get("hub.verify_token") or request.query_params.get("hub_verify_token")
+    challenge = request.query_params.get("hub.challenge") or request.query_params.get("hub_challenge")
+
+    # Log de précision pour voir ce qui arrive réellement
+    logger.info(f"Tentative de vérification - Mode: {mode}, Token reçu: {token}")
 
     if mode == "subscribe" and token == VERIFY_TOKEN:
         logger.info("Webhook vérifié par Meta ✅")
-        return Response(content=challenge, media_type="text/plain")
+        # On utilise PlainTextResponse pour éviter les guillemets JSON
+        from fastapi.responses import PlainTextResponse
+        return PlainTextResponse(content=str(challenge))
 
-    logger.warning("Vérification webhook échouée — token: %s", token)
-    raise HTTPException(status_code=403, detail="Token invalide")
+    logger.warning(f"Échec de vérification - Reçu: {token} | Attendu: {VERIFY_TOKEN}")
+    return PlainTextResponse(content="Token invalide", status_code=403)
 
 
 @app.post("/webhook")
@@ -332,6 +333,7 @@ async def receive_webhook(request: Request) -> dict:
 
             # Message texte ou quick reply
             if "message" in event and not event["message"].get("is_echo"):
+                print(f"DEBUG TOKEN: {PAGE_TOKEN[:10]}...{PAGE_TOKEN[-10:]}")
                 await handle_message(sender_id, event["message"])
 
             # Clic sur un bouton postback
