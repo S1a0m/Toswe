@@ -3,52 +3,93 @@
 # Démarrage :
 #   uvicorn messenger:app --host 0.0.0.0 --port 8002
 #
-# Ce fichier est indépendant de nehanda_app.py.
-# Il reçoit les messages Messenger, appelle l'API Nehanda,
-# et renvoie les réponses + carousels produits.
+# Sessions persistantes via SQLite (même DB que Nehanda)
 
 import os
 import json
 import logging
 import httpx
 
-from fastapi import FastAPI, Request, Response, HTTPException
+from datetime import datetime
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+
+from sqlalchemy import create_engine, Column, String, Integer, DateTime
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("messenger")
 
-# ── Config (à mettre dans .env) ───────────────────────────────
-# MESSENGER_VERIFY_TOKEN   → token que TU choisis pour vérifier le webhook Meta
-# MESSENGER_PAGE_TOKEN     → token de la Page Facebook (depuis Meta for Developers)
-# NEHANDA_API_URL          → URL de ton API Nehanda (ex: http://localhost:8001)
-
+# ── Config ────────────────────────────────────────────────────
 VERIFY_TOKEN    = os.getenv("MESSENGER_VERIFY_TOKEN", "Nehanda_Secret_2026")
-PAGE_TOKEN = os.getenv("MESSENGER_PAGE_TOKEN", "").strip().split('#')[0].strip()
+PAGE_TOKEN      = os.getenv("MESSENGER_PAGE_TOKEN", "").strip().split('#')[0].strip()
 NEHANDA_API_URL = os.getenv("NEHANDA_API_URL", "http://127.0.0.1:8001")
+
+# Même base SQLite que Nehanda — une seule source de vérité
+CONV_DB_URL = os.getenv("CONVERSATIONS_DB_URL", "sqlite:///./conversations.db")
 
 if not PAGE_TOKEN:
     logger.warning("MESSENGER_PAGE_TOKEN manquant — les envois échoueront.")
 
-app = FastAPI(title="Nehanda Messenger Bot", version="1.0.0")
+# ═════════════════════════════════════════════════════════════
+# Base de données — table messenger_sessions
+# ═════════════════════════════════════════════════════════════
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+engine       = create_engine(
+    CONV_DB_URL,
+    future=True,
+    connect_args={"check_same_thread": False}
+    if CONV_DB_URL.startswith("sqlite") else {},
 )
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
+Base         = declarative_base()
 
-# ═════════════════════════════════════════════════════════════
-# Mémoire des conversations (user_id → conversation_id Nehanda)
-# En production : remplace par Redis ou une DB
-# ═════════════════════════════════════════════════════════════
 
-_sessions: dict[str, int] = {}
+class MessengerSession(Base):
+    """
+    Associe un sender_id Messenger à un conversation_id Nehanda.
+    Persiste entre les redémarrages du serveur.
+    """
+    __tablename__ = "messenger_sessions"
+
+    sender_id       = Column(String(64), primary_key=True, index=True)
+    conversation_id = Column(Integer, nullable=False)
+    updated_at      = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+
+Base.metadata.create_all(bind=engine)
+logger.info("Table messenger_sessions prête.")
+
+
+# ── Helpers session ───────────────────────────────────────────
+
+def get_conv_id(sender_id: str) -> int | None:
+    """Récupère le conversation_id depuis la DB."""
+    with SessionLocal() as db:
+        row = db.get(MessengerSession, sender_id)
+        return row.conversation_id if row else None
+
+
+def save_conv_id(sender_id: str, conversation_id: int) -> None:
+    """Sauvegarde ou met à jour la session en DB."""
+    with SessionLocal() as db:
+        row = db.get(MessengerSession, sender_id)
+        if row:
+            row.conversation_id = conversation_id
+            row.updated_at      = datetime.utcnow()
+        else:
+            db.add(MessengerSession(
+                sender_id=sender_id,
+                conversation_id=conversation_id,
+            ))
+        db.commit()
+
 
 # ═════════════════════════════════════════════════════════════
 # Helpers Messenger Graph API
@@ -58,7 +99,6 @@ GRAPH_URL = "https://graph.facebook.com/v19.0/me/messages"
 
 
 async def _send_raw(payload: dict) -> None:
-    """Envoie un payload brut à l'API Messenger."""
     async with httpx.AsyncClient(timeout=10) as client:
         r = await client.post(
             GRAPH_URL,
@@ -70,8 +110,6 @@ async def _send_raw(payload: dict) -> None:
 
 
 async def send_text(recipient_id: str, text: str) -> None:
-    """Envoie un message texte simple."""
-    # Messenger limite à 2000 caractères par message
     chunks = [text[i:i+1800] for i in range(0, len(text), 1800)]
     for chunk in chunks:
         await _send_raw({
@@ -81,7 +119,6 @@ async def send_text(recipient_id: str, text: str) -> None:
 
 
 async def send_typing(recipient_id: str) -> None:
-    """Affiche l'indicateur de frappe."""
     await _send_raw({
         "recipient":     {"id": recipient_id},
         "sender_action": "typing_on",
@@ -89,23 +126,16 @@ async def send_typing(recipient_id: str) -> None:
 
 
 async def send_carousel(recipient_id: str, products: list[dict]) -> None:
-    """
-    Envoie un carousel de cartes produits.
-    Messenger supporte max 10 éléments par carousel.
-    Chaque carte : image + titre + sous-titre + bouton.
-    """
     if not products:
         return
 
     elements = []
     for p in products[:10]:
-        # Prix affiché (promo ou normal)
         if p.get("has_promo") and p.get("promo_price"):
             price_str = f"{int(p['promo_price'])} CFA (promo -{p.get('promo_percent', '')}%)"
         else:
             price_str = f"{p.get('price', 0)} CFA"
 
-        # Sous-titre : prix + note + boutique
         subtitle_parts = [price_str]
         if p.get("rating_avg") and p.get("rating_count", 0) >= 3:
             subtitle_parts.append(f"⭐ {p['rating_avg']}/5 ({p['rating_count']} avis)")
@@ -114,11 +144,9 @@ async def send_carousel(recipient_id: str, products: list[dict]) -> None:
         if not p.get("in_stock", True):
             subtitle_parts.append("❌ Épuisé")
 
-        # Urgence promo
         if p.get("promo_ends_at"):
-            from datetime import datetime
             try:
-                ends = datetime.strptime(p["promo_ends_at"], "%Y-%m-%d")
+                ends  = datetime.strptime(p["promo_ends_at"], "%Y-%m-%d")
                 delta = (ends - datetime.now()).days
                 if delta == 0:
                     subtitle_parts.append("⏰ Promo expire aujourd'hui !")
@@ -129,24 +157,18 @@ async def send_carousel(recipient_id: str, products: list[dict]) -> None:
             except ValueError:
                 pass
 
-        subtitle = " · ".join(subtitle_parts)[:80]  # limite Messenger
-
-        # Bouton → lien vers l'app ou le site
+        subtitle    = " · ".join(subtitle_parts)[:80]
         product_url = f"https://toswe-africa.com/product/{p['id']}"
 
         card: dict = {
             "title":    p.get("name", "Produit")[:80],
             "subtitle": subtitle,
-            "buttons": [
-                {
-                    "type":  "web_url",
-                    "url":   product_url,
-                    "title": "🛒 Voir sur Tôswè",
-                }
-            ],
+            "buttons": [{
+                "type":  "web_url",
+                "url":   product_url,
+                "title": "🛒 Voir sur Tôswè",
+            }],
         }
-
-        # Image si disponible
         if p.get("image_url"):
             card["image_url"] = p["image_url"]
 
@@ -168,18 +190,13 @@ async def send_carousel(recipient_id: str, products: list[dict]) -> None:
 
 async def send_quick_replies(recipient_id: str, text: str,
                              replies: list[str]) -> None:
-    """Envoie un message avec des boutons de réponse rapide."""
     await _send_raw({
         "recipient": {"id": recipient_id},
         "message": {
             "text": text,
             "quick_replies": [
-                {
-                    "content_type": "text",
-                    "title":        r[:20],
-                    "payload":      r,
-                }
-                for r in replies[:13]  # limite Messenger : 13 quick replies
+                {"content_type": "text", "title": r[:20], "payload": r}
+                for r in replies[:13]
             ],
         },
     })
@@ -191,10 +208,11 @@ async def send_quick_replies(recipient_id: str, text: str,
 
 async def call_nehanda(sender_id: str, message: str) -> tuple[str, list[dict]]:
     """
-    Envoie un message à l'API Nehanda et retourne (réponse, produits).
-    Maintient la session conversation par sender_id.
+    Appelle Nehanda avec la session persistante du sender.
+    Si la session n'existe pas en DB → Nehanda crée une nouvelle conversation
+    et on sauvegarde l'ID retourné.
     """
-    conv_id = _sessions.get(sender_id)
+    conv_id = get_conv_id(sender_id)   # ← lecture en DB, pas en RAM
 
     payload: dict = {"message": message}
     if conv_id:
@@ -210,15 +228,14 @@ async def call_nehanda(sender_id: str, message: str) -> tuple[str, list[dict]]:
             r.raise_for_status()
             data = r.json()
 
-        # Sauvegarde de la conversation
         new_conv_id = data.get("conversation_id")
         if new_conv_id:
-            _sessions[sender_id] = new_conv_id
+            save_conv_id(sender_id, new_conv_id)   # ← écriture en DB
 
-        response_text = data.get("response", "Désolé, je n'ai pas pu répondre.")
-        products      = data.get("products", [])
-
-        return response_text, products
+        return (
+            data.get("response", "Désolé, je n'ai pas pu répondre."),
+            data.get("products", []),
+        )
 
     except httpx.TimeoutException:
         return "Nehanda est un peu lente là 😔 — réessaie dans quelques secondes !", []
@@ -228,13 +245,10 @@ async def call_nehanda(sender_id: str, message: str) -> tuple[str, list[dict]]:
 
 
 # ═════════════════════════════════════════════════════════════
-# Traitement des événements Messenger
+# Traitement des événements
 # ═════════════════════════════════════════════════════════════
 
 async def handle_message(sender_id: str, message_data: dict) -> None:
-    """Traite un message entrant."""
-
-    # Ignore les messages sans texte (stickers, gifs, etc.)
     text = message_data.get("text", "").strip()
     if not text:
         await send_text(
@@ -245,22 +259,14 @@ async def handle_message(sender_id: str, message_data: dict) -> None:
         return
 
     logger.info("Message de %s : %s", sender_id, text[:50])
-
-    # Indicateur de frappe pendant que Nehanda réfléchit
     await send_typing(sender_id)
 
-    # Appel Nehanda
     reply, products = await call_nehanda(sender_id, text)
-
-    # Envoi de la réponse texte
     await send_text(sender_id, reply)
 
-    # Envoi du carousel si des produits sont retournés
     if products:
         await send_carousel(sender_id, products)
-
-    # Quick replies contextuels si pas de produits
-    elif not products and len(text) < 30:
+    elif len(text) < 30:
         await send_quick_replies(
             sender_id,
             "Voici ce que je peux faire pour toi 👇",
@@ -274,12 +280,9 @@ async def handle_message(sender_id: str, message_data: dict) -> None:
 
 
 async def handle_postback(sender_id: str, postback: dict) -> None:
-    """Traite les clics sur les boutons postback."""
     payload = postback.get("payload", "")
     title   = postback.get("title", "")
     logger.info("Postback de %s : %s", sender_id, payload)
-
-    # Traite le postback comme un message texte normal
     await send_typing(sender_id)
     reply, products = await call_nehanda(sender_id, title or payload)
     await send_text(sender_id, reply)
@@ -291,32 +294,33 @@ async def handle_postback(sender_id: str, postback: dict) -> None:
 # Endpoints FastAPI
 # ═════════════════════════════════════════════════════════════
 
+app = FastAPI(title="Nehanda Messenger Bot", version="1.1.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 @app.get("/webhook")
 async def verify_webhook(request: Request):
-    # On récupère les paramètres peu importe le format (point ou underscore)
-    mode = request.query_params.get("hub.mode") or request.query_params.get("hub_mode")
-    token = request.query_params.get("hub.verify_token") or request.query_params.get("hub_verify_token")
+    mode      = request.query_params.get("hub.mode") or request.query_params.get("hub_mode")
+    token     = request.query_params.get("hub.verify_token") or request.query_params.get("hub_verify_token")
     challenge = request.query_params.get("hub.challenge") or request.query_params.get("hub_challenge")
 
-    # Log de précision pour voir ce qui arrive réellement
-    logger.info(f"Tentative de vérification - Mode: {mode}, Token reçu: {token}")
+    logger.info("Vérification webhook — mode: %s, token: %s", mode, token)
 
     if mode == "subscribe" and token == VERIFY_TOKEN:
-        logger.info("Webhook vérifié par Meta ✅")
-        # On utilise PlainTextResponse pour éviter les guillemets JSON
-        from fastapi.responses import PlainTextResponse
+        logger.info("Webhook vérifié ✅")
         return PlainTextResponse(content=str(challenge))
 
-    logger.warning(f"Échec de vérification - Reçu: {token} | Attendu: {VERIFY_TOKEN}")
+    logger.warning("Échec vérification — reçu: %s | attendu: %s", token, VERIFY_TOKEN)
     return PlainTextResponse(content="Token invalide", status_code=403)
 
 
 @app.post("/webhook")
 async def receive_webhook(request: Request) -> dict:
-    """
-    Réception des événements Messenger.
-    Meta envoie les messages, quick replies et postbacks ici.
-    """
     try:
         body = await request.json()
     except Exception:
@@ -331,23 +335,27 @@ async def receive_webhook(request: Request) -> dict:
             if not sender_id:
                 continue
 
-            # Message texte ou quick reply
             if "message" in event and not event["message"].get("is_echo"):
-                print(f"DEBUG TOKEN: {PAGE_TOKEN[:10]}...{PAGE_TOKEN[-10:]}")
                 await handle_message(sender_id, event["message"])
-
-            # Clic sur un bouton postback
             elif "postback" in event:
                 await handle_postback(sender_id, event["postback"])
 
-    # Meta attend toujours un 200 OK rapidement
     return {"status": "ok"}
 
 
 @app.get("/health")
 async def health() -> dict:
+    # Vérifie que la DB est accessible
+    try:
+        with SessionLocal() as db:
+            count = db.query(MessengerSession).count()
+        db_status = f"ok ({count} sessions)"
+    except Exception as e:
+        db_status = f"erreur: {e}"
+
     return {
         "status":      "ok",
-        "service":     "Nehanda Messenger Bot",
+        "service":     "Nehanda Messenger Bot v1.1",
         "nehanda_url": NEHANDA_API_URL,
+        "db":          db_status,
     }

@@ -522,6 +522,167 @@ async def tool_get_price(
         return "Je n'ai pas pu récupérer le prix.", []
 
 
+# ── Nouveautés et promos ──────────────────────────────────────
+async def tool_get_new_and_promos(**_) -> tuple[str, List[ProductCard]]:
+    """
+    Retourne les nouveautés (status=new) et les produits en promo active.
+    Utile pour répondre à "quelles sont vos nouveautés / vos promos ?"
+    """
+    try:
+        async with httpx.AsyncClient(timeout=8) as c:
+            # Nouveautés
+            r_new = await c.get(
+                f"{DRF_API_BASE}/product/suggestions/",
+                params={"limit": 6}
+            )
+            r_new.raise_for_status()
+            raw_new = r_new.json()
+
+        products = raw_new if isinstance(raw_new, list) else raw_new.get("results", [])
+        if not products:
+            return "Pas encore de nouveautés sur la plateforme 😔", []
+
+        cards = [_build_product_card(p) for p in products[:8]]
+
+        # Sépare nouveautés et promos
+        promos   = [c for c in cards if c.has_promo]
+        new_ones = [c for c in cards if not c.has_promo]
+
+        parts = []
+
+        if promos:
+            parts.append("🏷️ **Promotions en cours** :")
+            for c in promos:
+                parts.append(
+                    f"• **{c.name}** — ~~{c.price} CFA~~ → "
+                    f"**{int(c.promo_price or c.price)} CFA** "
+                    f"(-{c.promo_percent}%)"
+                    + (f" ⏰ jusqu'au {c.promo_ends_at}" if c.promo_ends_at else "")
+                )
+
+        if new_ones:
+            parts.append("\n✨ **Nouveautés** :")
+            for c in new_ones[:4]:
+                parts.append(
+                    f"• **{c.name}** — {c.price} CFA"
+                    + ("" if c.in_stock else " *(épuisé)*")
+                )
+
+        return "\n".join(parts), cards
+
+    except Exception as exc:
+        logger.warning("tool_get_new_and_promos: %s", exc)
+        return "Je n'ai pas pu récupérer les nouveautés. Réessaie !", []
+
+
+# ── Passer une commande via Nehanda (Messenger / chat) ────────
+async def tool_create_order(
+    product_name:       str = "",
+    product_id:         Optional[int] = None,
+    quantity:           int = 1,
+    phone_number:       str = "",
+    contact_method:     str = "call",     # "call" | "whatsapp"
+    city:               str = "",
+    address_description: str = "",
+    delivery_mode:      str = "home",     # "home" | "relay"
+    **_
+) -> tuple[str, List[ProductCard]]:
+    """
+    Passe une commande directement depuis Nehanda.
+    Utilisé principalement depuis Messenger quand le client
+    donne tous les détails en conversation.
+
+    Flux :
+    1. Trouve le produit si pas d'ID fourni
+    2. Valide les champs obligatoires
+    3. Poste la commande sur l'API Django
+    4. Retourne la confirmation avec le numéro de commande
+    """
+
+    # ── 1. Validation des champs obligatoires ─────────────────
+    missing = []
+    if not phone_number or len(phone_number.strip()) < 8:
+        missing.append("ton numéro de téléphone")
+    if not city.strip() and delivery_mode == "home":
+        missing.append("ta ville de livraison")
+    if missing:
+        return (
+            f"Pour finaliser ta commande, j'ai besoin de : {', '.join(missing)}. "
+            f"Peux-tu me les donner ? 😊",
+            []
+        )
+
+    # ── 2. Résolution du produit ──────────────────────────────
+    if not product_id and product_name:
+        try:
+            async with httpx.AsyncClient(timeout=8) as c:
+                r = await c.get(
+                    f"{DRF_API_BASE}/product/search_products/",
+                    params={"q": product_name}
+                )
+                r.raise_for_status()
+                raw = r.json()
+            lst = raw if isinstance(raw, list) else raw.get("results", [])
+            if not lst:
+                return (
+                    f"Je n'ai pas trouvé de produit nommé « {product_name} » 😔 "
+                    f"Peux-tu préciser le nom exact ?",
+                    []
+                )
+            product_id = lst[0]["id"]
+        except Exception as exc:
+            logger.warning("tool_create_order — recherche produit: %s", exc)
+            return "Je n'ai pas pu trouver ce produit. Réessaie !", []
+
+    if not product_id:
+        return "Précise le nom ou l'identifiant du produit que tu veux commander.", []
+
+    # ── 3. Appel API Django ───────────────────────────────────
+    payload = {
+        "phone_number":        phone_number.strip(),
+        "contact_method":      contact_method,
+        "city":                city.strip() if delivery_mode == "home" else "Point relais",
+        "address_description": address_description.strip(),
+        "delivery_mode":       delivery_mode,
+        "items": [
+            {"product_id": product_id, "quantity": quantity}
+        ],
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as c:
+            r = await c.post(
+                f"{DRF_API_BASE}/order/",
+                json=payload,
+                headers={"Content-Type": "application/json"},
+            )
+            r.raise_for_status()
+            data = r.json()
+
+        order_id = data.get("id", "?")
+
+        return (
+            f"✅ **Commande #{order_id} enregistrée !**\n\n"
+            f"Notre équipe va te contacter au **{phone_number}** "
+            f"({'WhatsApp' if contact_method == 'whatsapp' else 'appel'}) "
+            f"pour confirmer la livraison.\n\n"
+            f"🛡️ Tu ne seras débité qu'à la réception.\n"
+            f"📦 Garde ce numéro : **#{order_id}** pour suivre ta commande.",
+            []
+        )
+
+    except httpx.HTTPStatusError as exc:
+        logger.warning("tool_create_order — API: %s — %s", exc.response.status_code, exc.response.text)
+        try:
+            detail = exc.response.json().get("detail", "Erreur inconnue")
+        except Exception:
+            detail = "Erreur serveur"
+        return f"Je n'ai pas pu enregistrer ta commande 😔 : {detail}", []
+    except Exception as exc:
+        logger.warning("tool_create_order: %s", exc)
+        return "Une erreur s'est produite. Réessaie dans quelques instants !", []
+
+
 # ── Suivi de commande ─────────────────────────────────────────
 async def tool_track_order(
     order_id: Optional[int] = None, **_
@@ -561,6 +722,8 @@ TOOL_REGISTRY: dict[str, Any] = {
     "suggest_products_for_goal": tool_suggest_products_for_goal,
     "get_product_price":         tool_get_price,
     "track_order":               tool_track_order,
+    "get_new_and_promos":        tool_get_new_and_promos,   # ← nouveau
+    "create_order":              tool_create_order,          # ← nouveau
     "none":                      tool_none,
 }
 
@@ -583,6 +746,8 @@ Tu ne dois JAMAIS prétendre ajouter au panier ou passer une commande.
 Si l'utilisateur demande à commander ou ajouter au panier, tu dois :
 1. Lui montrer le(s) produit(s) concerné(s) via les actions disponibles.
 2. L'inviter à utiliser le bouton "Ajouter au panier" ou "Commander" dans l'app.
+
+Si une recherche ou une promo ne donne rien, ne dis pas juste 'je n'ai rien'. Propose de chercher autre chose ou demande au client ce qu'il veut cuisiner/faire aujourd'hui.
 
 Exemple :
 Message : "ajoute l'huile de palme à mon panier"
@@ -613,6 +778,25 @@ ACTIONS DISPONIBLES — DÉTAILS
 
 - "get_product_price"         → Prix d'un produit avec info promo si applicable.
                                  Params : product_name (str) OU product_id (int)
+
+- "get_new_and_promos"  → Retourne les nouveautés et promotions actives.
+                           Params : aucun
+                           Utilise quand le client demande :
+                           "quelles sont vos nouveautés ?", "vous avez des promos ?",
+                           "qu'est-ce qui est nouveau ?", "quelles offres en ce moment ?"
+
+- "create_order"        → Passe une commande directement via Nehanda.
+                           UTILISE SEULEMENT quand le client donne TOUS les détails
+                           nécessaires : produit, téléphone, ville/adresse.
+                           Si des infos manquent → demande-les avant d'appeler.
+                           Params :
+                             product_name (str) OU product_id (int)
+                             quantity (int, défaut 1)
+                             phone_number (str) — OBLIGATOIRE
+                             contact_method (str) — "call" ou "whatsapp"
+                             city (str) — OBLIGATOIRE si delivery_mode="home"
+                             address_description (str) — point de repère
+                             delivery_mode (str) — "home" ou "relay"
 
 - "track_order"               → Suivi de commande par numéro.
                                  Params : order_id (int)
@@ -646,6 +830,12 @@ Message : "quelles tenues pour la saison des pluies ?"
 
 Message : "quel est le prix de l'huile de coco ?"
 {"intent":"price_check","action":"get_product_price","parameters":{"product_name":"huile de coco"},"response":"Je vérifie le prix de l'huile de coco pour toi 💵..."}
+
+Message : "je veux commander 2 savons karité, mon numéro c'est 97000000, je suis à Cotonou Akpakpa"
+{"intent":"direct_order","action":"create_order","parameters":{"product_name":"savon karité","quantity":2,"phone_number":"97000000","city":"Cotonou","address_description":"Akpakpa","delivery_mode":"home","contact_method":"call"},"response":"Je passe ta commande tout de suite 🛒..."}
+
+Message : "quelles sont vos nouveautés ?"
+{"intent":"new_and_promos","action":"get_new_and_promos","parameters":{},"response":"Voici ce qui vient d'arriver sur Tôswè ✨ !"}
 """
 
 # ═════════════════════════════════════════════════════════════
@@ -1395,5 +1585,6 @@ TOOL_REGISTRY.update({
     "compare_products":          tool_compare_products_closing,
     "suggest_products_for_goal": tool_suggest_for_goal_closing,
     "get_product_price":         tool_get_price_closing,
+    "get_new_and_promos":        tool_get_new_and_promos,
     # track_order et none restent inchangés
 })
