@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-%rp@@$hkm6b73@%y31nk%8m4gc4892%wz0#0d!qwm^b4^fip+*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', 'http://192.168.1.84', 'http://192.168.46.69', 'http://192.168.1.70', 'http://192.168.43.69']
+ALLOWED_HOSTS = ['*', 'http://192.168.1.84', 'http://192.168.46.69', 'http://192.168.1.70', 'http://192.168.43.69', 'https://twilight-emu-discern.ngrok-free.dev']
 
 
 # Application definition
@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -57,7 +58,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'toswe.urls'
@@ -172,6 +172,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://192.168.1.70",
     "http://192.168.46.69",
     "http://192.168.43.69",
+    "https://twilight-emu-discern.ngrok-free.dev",
 ]
 
 CORS_ALLOW_HEADERS = [

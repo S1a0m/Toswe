@@ -85,7 +85,7 @@ class SellerProfile(models.Model):
     is_premium = models.BooleanField(default=False)
     premium_expires_at = models.DateTimeField(null=True, blank=True)
 
-    show_on_market = models.BooleanField(default=False)
+    show_on_market = models.BooleanField(default=True)
 
     rating = models.FloatField(default=0)
 
